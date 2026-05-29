@@ -2,8 +2,8 @@
   "use strict";
 
   const MAP_IMAGE = "SR-map-Skyrim.jpg";
-  const MAP_WIDTH = 2560;
-  const MAP_HEIGHT = 1920;
+  const MAP_WIDTH = 8192;
+  const MAP_HEIGHT = 6144;
   const STORAGE_KEY = "keizaal-ranger-map-state-v1";
 
   const categories = [
@@ -31,7 +31,7 @@
 
   const map = L.map("map", {
     crs: L.CRS.Simple,
-    minZoom: -2,
+    minZoom: -4,
     maxZoom: 3,
     zoomSnap: 0.25,
     zoomDelta: 0.5,
@@ -144,7 +144,7 @@
     try {
       const saved = JSON.parse(raw);
       if (Array.isArray(saved.features)) {
-        state.features = saved.features.filter(isValidFeature);
+        state.features = normalizeFeatures(saved.features.filter(isValidFeature), saved.map);
       }
       if (saved.filters && typeof saved.filters === "object") {
         categories.forEach((category) => {
@@ -528,7 +528,7 @@
           throw new Error("Missing features array");
         }
 
-        const nextFeatures = imported.features.filter(isValidFeature);
+        const nextFeatures = normalizeFeatures(imported.features.filter(isValidFeature), imported.map);
         const replace = window.confirm("Replace the current atlas? Choose Cancel to merge instead.");
         state.features = replace ? nextFeatures : mergeFeatures(state.features, nextFeatures);
         state.selectedId = null;
@@ -602,6 +602,28 @@
       byId.set(feature.id, feature);
     });
     return Array.from(byId.values());
+  }
+
+  function normalizeFeatures(features, sourceMap) {
+    const sourceWidth = Number(sourceMap && sourceMap.width);
+    const sourceHeight = Number(sourceMap && sourceMap.height);
+
+    if (!sourceWidth || !sourceHeight || (sourceWidth === MAP_WIDTH && sourceHeight === MAP_HEIGHT)) {
+      return features;
+    }
+
+    const scaleX = MAP_WIDTH / sourceWidth;
+    const scaleY = MAP_HEIGHT / sourceHeight;
+
+    return features.map((feature) => ({
+      ...feature,
+      points: feature.points.map((point) =>
+        clampPoint({
+          lng: Math.round(point.x * scaleX),
+          lat: Math.round(point.y * scaleY),
+        }),
+      ),
+    }));
   }
 
   function isValidFeature(feature) {
