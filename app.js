@@ -2,8 +2,8 @@
   "use strict";
 
   const MAP_IMAGE = "SR-map-Skyrim.jpg";
-  const MAP_WIDTH = 2048;
-  const MAP_HEIGHT = 1536;
+  const MAP_WIDTH = 2560;
+  const MAP_HEIGHT = 1920;
   const STORAGE_KEY = "keizaal-ranger-map-state-v1";
 
   const categories = [
