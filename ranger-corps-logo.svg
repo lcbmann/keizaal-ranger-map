@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="Ranger Corps arrow and antlers">
+  <rect width="1024" height="1024" fill="#f6f2e8"/>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M510 913C458 799 370 742 273 689 180 638 121 545 111 442" stroke="#173f24" stroke-width="58"/>
+    <path d="M514 913C566 799 654 742 751 689 844 638 903 545 913 442" stroke="#173f24" stroke-width="58"/>
+    <path d="M255 672C180 574 153 464 177 342c14-71 43-138 86-199" stroke="#173f24" stroke-width="58"/>
+    <path d="M769 672c75-98 102-208 78-330-14-71-43-138-86-199" stroke="#173f24" stroke-width="58"/>
+    <path d="M268 542c-54-38-88-89-102-151" stroke="#173f24" stroke-width="45"/>
+    <path d="M756 542c54-38 88-89 102-151" stroke="#173f24" stroke-width="45"/>
+    <path d="M338 690c-47-11-85-43-112-96" stroke="#173f24" stroke-width="45"/>
+    <path d="M686 690c47-11 85-43 112-96" stroke="#173f24" stroke-width="45"/>
+    <path d="M325 298c-38 55-70 88-106 114" stroke="#173f24" stroke-width="45"/>
+    <path d="M699 298c38 55 70 88 106 114" stroke="#173f24" stroke-width="45"/>
+    <path d="M512 160v590" stroke="#727a73" stroke-width="31"/>
+    <path d="M512 160 456 340l56-42 56 42z" fill="#727a73" stroke="#727a73" stroke-width="10"/>
+    <path d="M465 653v119M559 653v119M465 684l-42 39M559 684l42 39M465 735l-42 39M559 735l42 39" stroke="#727a73" stroke-width="30"/>
+  </g>
+</svg>

@@ -7,17 +7,24 @@
   const STORAGE_KEY = "keizaal-ranger-map-state-v1";
 
   const categories = [
-    { id: "loot", label: "Loot", color: "#b77a26", short: "L" },
-    { id: "npc", label: "NPC", color: "#4e76a1", short: "N" },
-    { id: "danger", label: "Danger", color: "#9b2f2a", short: "D" },
-    { id: "camp", label: "Camp", color: "#5c7440", short: "C" },
-    { id: "range", label: "Range", color: "#35694b", short: "R" },
-    { id: "route", label: "Route", color: "#7d5b9b", short: "P" },
-    { id: "guild", label: "Guild", color: "#6b5a35", short: "G" },
-    { id: "other", label: "Other", color: "#6d6d6d", short: "O" },
+    { id: "cache", label: "Cache", color: "#9a6424", short: "C" },
+    { id: "contact", label: "Contact", color: "#466f75", short: "K" },
+    { id: "threat", label: "Threat", color: "#8e332b", short: "T" },
+    { id: "camp", label: "Camp", color: "#5f7038", short: "C" },
+    { id: "range", label: "Range", color: "#2f6548", short: "R" },
+    { id: "route", label: "Trail", color: "#68472e", short: "P" },
+    { id: "post", label: "Ranger Post", color: "#6d5a32", short: "R" },
+    { id: "landmark", label: "Landmark", color: "#5d5950", short: "L" },
   ];
 
   const categoryById = Object.fromEntries(categories.map((category) => [category.id, category]));
+  const categoryAliases = {
+    danger: "threat",
+    guild: "post",
+    loot: "cache",
+    npc: "contact",
+    other: "landmark",
+  };
 
   const state = {
     features: [],
@@ -35,7 +42,13 @@
     maxZoom: 3,
     zoomSnap: 0.25,
     zoomDelta: 0.5,
+    wheelDebounceTime: 20,
+    wheelPxPerZoomLevel: 80,
     attributionControl: false,
+    dragging: true,
+    scrollWheelZoom: true,
+    touchZoom: true,
+    inertia: true,
     doubleClickZoom: false,
   });
 
@@ -70,7 +83,6 @@
     titleInput: document.getElementById("titleInput"),
     categoryInput: document.getElementById("categoryInput"),
     rangerInput: document.getElementById("rangerInput"),
-    timerInput: document.getElementById("timerInput"),
     confidenceInput: document.getElementById("confidenceInput"),
     notesInput: document.getElementById("notesInput"),
     saveFeatureBtn: document.getElementById("saveFeatureBtn"),
@@ -83,6 +95,8 @@
     option.textContent = category.label;
     elements.categoryInput.appendChild(option);
   });
+
+  let lastDragEndedAt = 0;
 
   init();
 
@@ -118,6 +132,14 @@
     elements.deleteFeatureBtn.addEventListener("click", deleteSelectedFeature);
 
     map.on("click", handleMapClick);
+    map.on("dragend", () => {
+      lastDragEndedAt = Date.now();
+    });
+    map.on("zoomstart zoom zoomend", () => {
+      if (!map.dragging.enabled()) {
+        map.dragging.enable();
+      }
+    });
     map.on("dblclick", () => {
       if (state.mode === "route" || state.mode === "range") {
         finishDrawing();
@@ -183,21 +205,25 @@
 
     const statusByMode = {
       select: "Select features or drag the map",
-      marker: "Click the map to place a POI",
-      route: "Click points for a patrol route",
+      marker: "Click the map to place a field mark",
+      route: "Click points for a trail",
       range: "Click points for a range boundary",
     };
     setStatus(statusByMode[mode] || "Ready");
   }
 
   function handleMapClick(event) {
+    if (Date.now() - lastDragEndedAt < 140) {
+      return;
+    }
+
     const point = clampPoint(event.latlng);
 
     if (state.mode === "marker") {
       const feature = createFeature({
         type: "marker",
-        category: "other",
-        title: "New POI",
+        category: "landmark",
+        title: "New mark",
         points: [point],
       });
       state.features.push(feature);
@@ -223,7 +249,6 @@
       category: input.category,
       title: input.title,
       ranger: "",
-      timer: "",
       confidence: "scouted",
       notes: "",
       points: input.points,
@@ -247,7 +272,7 @@
   }
 
   function createLayer(feature) {
-    const category = categoryById[feature.category] || categoryById.other;
+    const category = categoryById[feature.category] || categoryById.landmark;
     const selected = feature.id === state.selectedId;
 
     if (feature.type === "marker") {
@@ -266,17 +291,46 @@
     }
 
     const latLngs = feature.points.map((point) => [point.y, point.x]);
-    const options = {
+    if (feature.type === "route") {
+      return createRouteLayer(latLngs, category, selected, feature);
+    }
+
+    const layer = L.polygon(latLngs, {
       color: category.color,
-      weight: selected ? 5 : 3,
-      opacity: selected ? 1 : 0.88,
+      weight: selected ? 4 : 2.5,
+      opacity: selected ? 0.95 : 0.78,
       fillColor: category.color,
-      fillOpacity: feature.type === "range" ? 0.18 : 0,
-    };
-    const layer = feature.type === "range" ? L.polygon(latLngs, options) : L.polyline(latLngs, options);
+      fillOpacity: selected ? 0.18 : 0.12,
+      lineCap: "round",
+      lineJoin: "round",
+    });
     layer.on("click", () => selectFeature(feature.id));
     layer.bindTooltip(feature.title || category.label);
     return layer;
+  }
+
+  function createRouteLayer(latLngs, category, selected, feature) {
+    const underlay = L.polyline(latLngs, {
+      color: "#efe3c2",
+      weight: selected ? 10 : 8,
+      opacity: 0.55,
+      lineCap: "round",
+      lineJoin: "round",
+    });
+    const ink = L.polyline(latLngs, {
+      color: category.color,
+      weight: selected ? 4 : 3,
+      opacity: selected ? 0.96 : 0.84,
+      dashArray: "18 16 4 16",
+      lineCap: "round",
+      lineJoin: "round",
+    });
+    const group = L.layerGroup([underlay, ink]);
+    [underlay, ink].forEach((layer) => {
+      layer.on("click", () => selectFeature(feature.id));
+      layer.bindTooltip(feature.title || category.label);
+    });
+    return group;
   }
 
   function renderDraft() {
@@ -292,11 +346,11 @@
 
     state.drawPoints.forEach((point) => {
       L.circleMarker([point.y, point.x], {
-        radius: 4,
-        color: "#ffffff",
-        weight: 2,
+        radius: 5,
+        color: "#3c2816",
+        weight: 1.5,
         fillColor: category.color,
-        fillOpacity: 1,
+        fillOpacity: 0.82,
       }).addTo(draftLayer);
     });
 
@@ -305,15 +359,17 @@
         state.mode === "range"
           ? L.polygon(latLngs, {
               color: category.color,
-              weight: 3,
+              weight: 2.5,
               fillColor: category.color,
-              fillOpacity: 0.18,
-              dashArray: "6 6",
+              fillOpacity: 0.14,
+              dashArray: "8 10",
+              lineCap: "round",
+              lineJoin: "round",
             })
-          : L.polyline(latLngs, {
-              color: category.color,
-              weight: 3,
-              dashArray: "6 6",
+          : createRouteLayer(latLngs, category, true, {
+              id: "draft",
+              title: "Draft trail",
+              category: "route",
             });
       layer.addTo(draftLayer);
       state.draftLayer = layer;
@@ -324,14 +380,14 @@
     const isRange = state.mode === "range";
     const minimum = isRange ? 3 : 2;
     if (state.drawPoints.length < minimum) {
-      setStatus(isRange ? "Range needs at least 3 points" : "Route needs at least 2 points");
+      setStatus(isRange ? "Range needs at least 3 points" : "Trail needs at least 2 points");
       return;
     }
 
     const feature = createFeature({
       type: isRange ? "range" : "route",
       category: isRange ? "range" : "route",
-      title: isRange ? "New range" : "New route",
+      title: isRange ? "New range" : "New trail",
       points: state.drawPoints.slice(),
     });
 
@@ -402,7 +458,7 @@
       .slice()
       .sort((a, b) => a.title.localeCompare(b.title))
       .forEach((feature) => {
-        const category = categoryById[feature.category] || categoryById.other;
+        const category = categoryById[feature.category] || categoryById.landmark;
         const button = document.createElement("button");
         button.className = `feature-card${feature.id === state.selectedId ? " is-selected" : ""}`;
         button.type = "button";
@@ -428,9 +484,8 @@
 
     elements.featureId.value = feature ? feature.id : "";
     elements.titleInput.value = feature ? feature.title : "";
-    elements.categoryInput.value = feature ? feature.category : "other";
+    elements.categoryInput.value = feature ? feature.category : "landmark";
     elements.rangerInput.value = feature ? feature.ranger : "";
-    elements.timerInput.value = feature ? feature.timer : "";
     elements.confidenceInput.value = feature ? feature.confidence : "scouted";
     elements.notesInput.value = feature ? feature.notes : "";
 
@@ -438,7 +493,6 @@
       elements.titleInput,
       elements.categoryInput,
       elements.rangerInput,
-      elements.timerInput,
       elements.confidenceInput,
       elements.notesInput,
       elements.saveFeatureBtn,
@@ -464,7 +518,6 @@
     feature.title = elements.titleInput.value.trim() || "Untitled";
     feature.category = elements.categoryInput.value;
     feature.ranger = elements.rangerInput.value.trim();
-    feature.timer = elements.timerInput.value.trim();
     feature.confidence = elements.confidenceInput.value;
     feature.notes = elements.notesInput.value.trim();
     feature.updatedAt = new Date().toISOString();
@@ -508,7 +561,7 @@
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `keizaal-ranger-map-${new Date().toISOString().slice(0, 10)}.json`;
+    link.download = `ranger-corps-field-atlas-skyrim-${new Date().toISOString().slice(0, 10)}.json`;
     link.click();
     URL.revokeObjectURL(url);
     setStatus("Exported atlas");
@@ -537,7 +590,7 @@
         setStatus(`Imported ${nextFeatures.length} entries`);
       } catch (error) {
         console.error(error);
-        window.alert("This file does not look like a Keizaal Ranger Map export.");
+        window.alert("This file does not look like a Ranger's Corps Field Atlas export.");
       } finally {
         elements.importInput.value = "";
       }
@@ -574,7 +627,7 @@
         return true;
       }
 
-      const haystack = [feature.title, feature.category, feature.ranger, feature.timer, feature.confidence, feature.notes]
+      const haystack = [feature.title, feature.category, feature.ranger, feature.confidence, feature.notes]
         .join(" ")
         .toLowerCase();
       return haystack.includes(state.search);
@@ -607,23 +660,23 @@
   function normalizeFeatures(features, sourceMap) {
     const sourceWidth = Number(sourceMap && sourceMap.width);
     const sourceHeight = Number(sourceMap && sourceMap.height);
+    const scaleX = sourceWidth && sourceWidth !== MAP_WIDTH ? MAP_WIDTH / sourceWidth : 1;
+    const scaleY = sourceHeight && sourceHeight !== MAP_HEIGHT ? MAP_HEIGHT / sourceHeight : 1;
 
-    if (!sourceWidth || !sourceHeight || (sourceWidth === MAP_WIDTH && sourceHeight === MAP_HEIGHT)) {
-      return features;
-    }
-
-    const scaleX = MAP_WIDTH / sourceWidth;
-    const scaleY = MAP_HEIGHT / sourceHeight;
-
-    return features.map((feature) => ({
-      ...feature,
-      points: feature.points.map((point) =>
+    return features.map((feature) => {
+      const { timer, ...rest } = feature;
+      const category = categoryById[rest.category] ? rest.category : categoryAliases[rest.category] || "landmark";
+      return {
+        ...rest,
+        category,
+        points: rest.points.map((point) =>
         clampPoint({
           lng: Math.round(point.x * scaleX),
           lat: Math.round(point.y * scaleY),
         }),
-      ),
-    }));
+        ),
+      };
+    });
   }
 
   function isValidFeature(feature) {
