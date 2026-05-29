@@ -5,8 +5,10 @@
   const MAP_WIDTH = 8192;
   const MAP_HEIGHT = 6144;
   const STORAGE_KEY = "keizaal-ranger-map-state-v1";
+  const DEFAULT_FEATURES_VERSION = 1;
 
   const categories = [
+    { id: "settlement", label: "Settlement", color: "#365f80", short: "S" },
     { id: "cache", label: "Cache", color: "#9a6424", short: "C" },
     { id: "contact", label: "Contact", color: "#466f75", short: "K" },
     { id: "threat", label: "Threat", color: "#8e332b", short: "T" },
@@ -25,6 +27,25 @@
     npc: "contact",
     other: "landmark",
   };
+
+  const defaultFeatures = [
+    defaultMarker("default-solitude", "Solitude", 2390, 1045, "Hold capital marked on the printed atlas."),
+    defaultMarker("default-markarth", "Markarth", 870, 3130, "Hold capital marked on the printed atlas."),
+    defaultMarker("default-morthal", "Morthal", 3790, 2040, "Hold capital marked on the printed atlas."),
+    defaultMarker("default-dawnstar", "Dawnstar", 4765, 1055, "Hold capital marked on the printed atlas."),
+    defaultMarker("default-winterhold", "Winterhold", 6080, 1090, "Hold capital marked on the printed atlas."),
+    defaultMarker("default-windhelm", "Windhelm", 6065, 2700, "Hold capital marked on the printed atlas."),
+    defaultMarker("default-whiterun", "Whiterun", 4495, 3250, "Hold capital marked on the printed atlas."),
+    defaultMarker("default-falkreath", "Falkreath", 4110, 4910, "Hold capital marked on the printed atlas."),
+    defaultMarker("default-riften", "Riften", 6735, 4865, "Hold capital marked on the printed atlas."),
+    defaultMarker("default-riverwood", "Riverwood", 4640, 4455, "Town marked on the printed atlas."),
+    defaultMarker("default-rorikstead", "Rorikstead", 2670, 3200, "Town marked on the printed atlas."),
+    defaultMarker("default-ivarstead", "Ivarstead", 5800, 4710, "Town marked on the printed atlas."),
+    defaultMarker("default-helgen", "Helgen", 4840, 5190, "Town marked on the printed atlas."),
+    defaultMarker("default-karthwasten", "Karthwasten", 1585, 2480, "Town marked on the printed atlas."),
+    defaultMarker("default-dragon-bridge", "Dragon Bridge", 2095, 1465, "Town marked on the printed atlas."),
+    defaultMarker("default-shors-stone", "Shor's Stone", 7065, 4430, "Town marked on the printed atlas."),
+  ];
 
   const state = {
     features: [],
@@ -78,6 +99,7 @@
     categoryFilters: document.getElementById("categoryFilters"),
     featureList: document.getElementById("featureList"),
     statusBar: document.getElementById("statusBar"),
+    emptySelection: document.getElementById("emptySelection"),
     editorForm: document.getElementById("editorForm"),
     featureId: document.getElementById("featureId"),
     titleInput: document.getElementById("titleInput"),
@@ -160,18 +182,28 @@
   function loadState() {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) {
+      state.features = defaultFeatures.map(cloneFeature);
+      saveState();
       return;
     }
 
     try {
       const saved = JSON.parse(raw);
+      let shouldSave = false;
       if (Array.isArray(saved.features)) {
         state.features = normalizeFeatures(saved.features.filter(isValidFeature), saved.map);
+      }
+      if (saved.defaultsVersion !== DEFAULT_FEATURES_VERSION) {
+        state.features = mergeFeatures(state.features, defaultFeatures.map(cloneFeature));
+        shouldSave = true;
       }
       if (saved.filters && typeof saved.filters === "object") {
         categories.forEach((category) => {
           state.filters[category.id] = saved.filters[category.id] !== false;
         });
+      }
+      if (shouldSave) {
+        saveState();
       }
     } catch (error) {
       console.warn("Could not load saved map state", error);
@@ -187,6 +219,7 @@
         height: MAP_HEIGHT,
       },
       savedAt: new Date().toISOString(),
+      defaultsVersion: DEFAULT_FEATURES_VERSION,
       filters: state.filters,
       features: state.features,
     };
@@ -254,6 +287,28 @@
       points: input.points,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+    };
+  }
+
+  function defaultMarker(id, title, x, y, notes) {
+    return {
+      id,
+      type: "marker",
+      category: "settlement",
+      title,
+      ranger: "",
+      confidence: "confirmed",
+      notes,
+      points: [{ x, y }],
+      createdAt: "2026-05-29T00:00:00.000Z",
+      updatedAt: "2026-05-29T00:00:00.000Z",
+    };
+  }
+
+  function cloneFeature(feature) {
+    return {
+      ...feature,
+      points: feature.points.map((point) => ({ ...point })),
     };
   }
 
@@ -482,6 +537,8 @@
     const feature = getSelectedFeature();
     const disabled = !feature;
 
+    elements.editorForm.hidden = disabled;
+    elements.emptySelection.hidden = !disabled;
     elements.featureId.value = feature ? feature.id : "";
     elements.titleInput.value = feature ? feature.title : "";
     elements.categoryInput.value = feature ? feature.category : "landmark";

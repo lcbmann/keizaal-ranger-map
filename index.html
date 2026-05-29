@@ -23,6 +23,30 @@
             <p>Keizaal field copy</p>
           </div>
         </div>
+        <div class="draw-toolbar" aria-label="Map tools">
+          <div class="segmented" role="group">
+            <button class="tool-button is-active" type="button" data-mode="select" title="Select and pan">
+              <span aria-hidden="true">P</span>
+              <span>Select</span>
+            </button>
+            <button class="tool-button" type="button" data-mode="marker" title="Place a field mark">
+              <span aria-hidden="true">M</span>
+              <span>Mark</span>
+            </button>
+            <button class="tool-button" type="button" data-mode="route" title="Draw a trail">
+              <span aria-hidden="true">R</span>
+              <span>Trail</span>
+            </button>
+            <button class="tool-button" type="button" data-mode="range" title="Draw a range boundary">
+              <span aria-hidden="true">B</span>
+              <span>Range</span>
+            </button>
+          </div>
+          <div class="draw-actions">
+            <button id="finishDrawBtn" class="button primary" type="button" disabled>Finish</button>
+            <button id="cancelDrawBtn" class="button secondary" type="button" disabled>Cancel</button>
+          </div>
+        </div>
         <div class="topbar-actions">
           <button id="exportBtn" class="button secondary" type="button">Copy</button>
           <label class="button secondary file-button">
@@ -34,42 +58,15 @@
       </header>
 
       <main class="workspace">
-        <aside class="panel">
-          <section class="tool-section">
-            <h2>Tools</h2>
-            <div class="segmented" role="group" aria-label="Map tools">
-              <button class="tool-button is-active" type="button" data-mode="select" title="Select and pan">
-                <span aria-hidden="true">P</span>
-                <span>Select</span>
-              </button>
-              <button class="tool-button" type="button" data-mode="marker" title="Place a field mark">
-                <span aria-hidden="true">M</span>
-                <span>Mark</span>
-              </button>
-              <button class="tool-button" type="button" data-mode="route" title="Draw a trail">
-                <span aria-hidden="true">R</span>
-                <span>Trail</span>
-              </button>
-              <button class="tool-button" type="button" data-mode="range" title="Draw a range boundary">
-                <span aria-hidden="true">B</span>
-                <span>Range</span>
-              </button>
-            </div>
-            <div class="draw-actions">
-              <button id="finishDrawBtn" class="button primary" type="button" disabled>Finish</button>
-              <button id="cancelDrawBtn" class="button secondary" type="button" disabled>Cancel</button>
-            </div>
-          </section>
+        <section class="map-stage" aria-label="Interactive Skyrim map">
+          <div id="map"></div>
+          <div id="statusBar" class="status-bar">Ready</div>
+        </section>
 
-          <section class="tool-section">
-            <h2>Filters</h2>
-            <label class="field-label" for="searchInput">Search</label>
-            <input id="searchInput" class="text-input" type="search" placeholder="Name, note, ranger" />
-            <div id="categoryFilters" class="filter-list" aria-label="Category filters"></div>
-          </section>
-
+        <aside class="panel ledger-panel">
           <section class="tool-section inspector">
             <h2>Selected</h2>
+            <p id="emptySelection" class="empty-state selection-empty">Choose a mark, trail, or range from the map or ledger.</p>
             <form id="editorForm" class="editor-form">
               <input id="featureId" type="hidden" />
               <label class="field-label" for="titleInput">Title</label>
@@ -102,16 +99,12 @@
               </div>
             </form>
           </section>
-        </aside>
 
-        <section class="map-stage" aria-label="Interactive Skyrim map">
-          <div id="map"></div>
-          <div id="statusBar" class="status-bar">Ready</div>
-        </section>
-
-        <aside class="panel list-panel">
-          <section class="tool-section">
+          <section class="tool-section atlas-section">
             <h2>Atlas</h2>
+            <label class="field-label" for="searchInput">Search</label>
+            <input id="searchInput" class="text-input" type="search" placeholder="Name, note, ranger" />
+            <div id="categoryFilters" class="filter-list" aria-label="Category filters"></div>
             <div id="featureList" class="feature-list"></div>
           </section>
         </aside>
