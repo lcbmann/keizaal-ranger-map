@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Keizaal Ranger Map</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <div>
+            <h1>Keizaal Ranger Map</h1>
+            <p>Ranger Corps field atlas</p>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <button id="exportBtn" class="button secondary" type="button">Export</button>
+          <label class="button secondary file-button">
+            Import
+            <input id="importInput" type="file" accept="application/json" />
+          </label>
+          <button id="clearBtn" class="button danger" type="button">Clear</button>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <aside class="panel">
+          <section class="tool-section">
+            <h2>Tools</h2>
+            <div class="segmented" role="group" aria-label="Map tools">
+              <button class="tool-button is-active" type="button" data-mode="select" title="Select and pan">
+                <span aria-hidden="true">P</span>
+                <span>Select</span>
+              </button>
+              <button class="tool-button" type="button" data-mode="marker" title="Place a point of interest">
+                <span aria-hidden="true">M</span>
+                <span>POI</span>
+              </button>
+              <button class="tool-button" type="button" data-mode="route" title="Draw a patrol route">
+                <span aria-hidden="true">R</span>
+                <span>Route</span>
+              </button>
+              <button class="tool-button" type="button" data-mode="range" title="Draw a range boundary">
+                <span aria-hidden="true">B</span>
+                <span>Range</span>
+              </button>
+            </div>
+            <div class="draw-actions">
+              <button id="finishDrawBtn" class="button primary" type="button" disabled>Finish</button>
+              <button id="cancelDrawBtn" class="button secondary" type="button" disabled>Cancel</button>
+            </div>
+          </section>
+
+          <section class="tool-section">
+            <h2>Filters</h2>
+            <label class="field-label" for="searchInput">Search</label>
+            <input id="searchInput" class="text-input" type="search" placeholder="Name, note, ranger" />
+            <div id="categoryFilters" class="filter-list" aria-label="Category filters"></div>
+          </section>
+
+          <section class="tool-section inspector">
+            <h2>Selected</h2>
+            <form id="editorForm" class="editor-form">
+              <input id="featureId" type="hidden" />
+              <label class="field-label" for="titleInput">Title</label>
+              <input id="titleInput" class="text-input" type="text" disabled />
+
+              <label class="field-label" for="categoryInput">Category</label>
+              <select id="categoryInput" class="text-input" disabled></select>
+
+              <label class="field-label" for="rangerInput">Ranger</label>
+              <input id="rangerInput" class="text-input" type="text" disabled />
+
+              <div class="field-grid">
+                <div>
+                  <label class="field-label" for="timerInput">Timer</label>
+                  <input id="timerInput" class="text-input" type="text" disabled />
+                </div>
+                <div>
+                  <label class="field-label" for="confidenceInput">Confidence</label>
+                  <select id="confidenceInput" class="text-input" disabled>
+                    <option value="rumor">Rumor</option>
+                    <option value="scouted">Scouted</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="stale">Stale</option>
+                  </select>
+                </div>
+              </div>
+
+              <label class="field-label" for="notesInput">Notes</label>
+              <textarea id="notesInput" class="text-input textarea" rows="5" disabled></textarea>
+
+              <div class="editor-actions">
+                <button id="saveFeatureBtn" class="button primary" type="submit" disabled>Save</button>
+                <button id="deleteFeatureBtn" class="button danger" type="button" disabled>Delete</button>
+              </div>
+            </form>
+          </section>
+        </aside>
+
+        <section class="map-stage" aria-label="Interactive Skyrim map">
+          <div id="map"></div>
+          <div id="statusBar" class="status-bar">Ready</div>
+        </section>
+
+        <aside class="panel list-panel">
+          <section class="tool-section">
+            <h2>Atlas</h2>
+            <div id="featureList" class="feature-list"></div>
+          </section>
+        </aside>
+      </main>
+    </div>
+
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
+    <script src="app.js"></script>
+  </body>
+</html>
