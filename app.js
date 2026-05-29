@@ -59,6 +59,7 @@
     draftLayer: null,
     pointerStart: null,
     freehandDrawing: false,
+    undoStack: [],
   };
 
   const map = L.map("map", {
@@ -96,6 +97,7 @@
     toolButtons: Array.from(document.querySelectorAll(".tool-button")),
     finishDrawBtn: document.getElementById("finishDrawBtn"),
     cancelDrawBtn: document.getElementById("cancelDrawBtn"),
+    undoBtn: document.getElementById("undoBtn"),
     exportBtn: document.getElementById("exportBtn"),
     importInput: document.getElementById("importInput"),
     clearBtn: document.getElementById("clearBtn"),
@@ -141,6 +143,7 @@
 
     elements.finishDrawBtn.addEventListener("click", finishDrawing);
     elements.cancelDrawBtn.addEventListener("click", cancelDrawing);
+    elements.undoBtn.addEventListener("click", undoLastAction);
     elements.exportBtn.addEventListener("click", exportState);
     elements.importInput.addEventListener("change", importState);
     elements.clearBtn.addEventListener("click", clearAtlas);
@@ -177,6 +180,17 @@
     });
 
     window.addEventListener("keydown", (event) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z") {
+        const editable =
+          event.target instanceof Element && event.target.closest("input, textarea, select, [contenteditable='true']");
+        if (editable) {
+          return;
+        }
+        event.preventDefault();
+        undoLastAction();
+        return;
+      }
+
       if (event.key === "Escape") {
         if (state.drawPoints.length) {
           cancelDrawing();
@@ -234,17 +248,58 @@
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
   }
 
+  function pushUndo(label) {
+    state.undoStack.push({
+      drawPoints: state.drawPoints.map((point) => ({ ...point })),
+      features: state.features.map(cloneFeature),
+      label,
+      mode: state.mode,
+      selectedId: state.selectedId,
+    });
+    if (state.undoStack.length > 50) {
+      state.undoStack.shift();
+    }
+    updateUndoButton();
+  }
+
+  function undoLastAction() {
+    const snapshot = state.undoStack.pop();
+    updateUndoButton();
+    if (!snapshot) {
+      setStatus("Nothing to undo");
+      return;
+    }
+
+    state.features = snapshot.features.map(cloneFeature);
+    state.selectedId = snapshot.selectedId;
+    state.drawPoints = snapshot.drawPoints.map((point) => ({ ...point }));
+    state.mode = snapshot.mode;
+    state.pointerStart = null;
+    state.freehandDrawing = false;
+    map.dragging[state.mode === "route" || state.mode === "range" ? "disable" : "enable"]();
+    map.getContainer().classList.toggle("is-drawing", state.mode === "route" || state.mode === "range");
+    draftLayer.clearLayers();
+    renderDraft();
+    updateDrawButtons();
+    updateModeButtons();
+    saveState();
+    renderAll();
+    setStatus(`Undid ${snapshot.label}`);
+  }
+
+  function updateUndoButton() {
+    elements.undoBtn.disabled = state.undoStack.length === 0;
+  }
+
   function setMode(mode) {
     if (state.mode !== mode) {
-      cancelDrawing(false);
+      cancelDrawing(false, false);
     }
     state.mode = mode;
     map.dragging[mode === "route" || mode === "range" ? "disable" : "enable"]();
     map.getContainer().classList.toggle("is-drawing", mode === "route" || mode === "range");
 
-    elements.toolButtons.forEach((button) => {
-      button.classList.toggle("is-active", button.dataset.mode === mode);
-    });
+    updateModeButtons();
 
     const statusByMode = {
       select: "Select features or drag the map",
@@ -252,14 +307,20 @@
       route: "Drag to sketch a trail, or click points. Save Trail commits it",
       range: "Drag to sketch a range, or click points. Save Range commits it",
     };
+    setStatus(statusByMode[mode] || "Ready");
+  }
+
+  function updateModeButtons() {
+    elements.toolButtons.forEach((button) => {
+      button.classList.toggle("is-active", button.dataset.mode === state.mode);
+    });
     const finishLabels = {
       marker: "Save Mark",
       range: "Save Range",
       route: "Save Trail",
       select: "Finish",
     };
-    elements.finishDrawBtn.textContent = finishLabels[mode] || "Finish";
-    setStatus(statusByMode[mode] || "Ready");
+    elements.finishDrawBtn.textContent = finishLabels[state.mode] || "Finish";
   }
 
   function handleMapClick(event) {
@@ -270,6 +331,7 @@
     const point = clampPoint(event.latlng);
 
     if (state.mode === "marker") {
+      pushUndo("draft mark placement");
       state.drawPoints = [point];
       renderDraft();
       updateDrawButtons();
@@ -278,6 +340,7 @@
     }
 
     if (state.mode === "route" || state.mode === "range") {
+      pushUndo(`draft ${state.mode === "range" ? "range" : "trail"} point`);
       addDrawPoint(point);
       renderDraft();
       updateDrawButtons();
@@ -310,6 +373,7 @@
 
     if (!state.freehandDrawing) {
       state.freehandDrawing = true;
+      pushUndo(`draft ${state.mode === "range" ? "range" : "trail"} sketch`);
       addDrawPoint(clampPoint(state.pointerStart.latlng));
     }
 
@@ -533,9 +597,10 @@
         title: "New mark",
         points: state.drawPoints.slice(0, 1),
       });
+      pushUndo("mark save");
       state.features.push(feature);
       saveState();
-      cancelDrawing(false);
+      cancelDrawing(false, false);
       renderAll();
       selectFeature(feature.id);
       setMode("select");
@@ -556,15 +621,19 @@
       points: state.drawPoints.slice(),
     });
 
+    pushUndo(`${isRange ? "range" : "trail"} save`);
     state.features.push(feature);
     saveState();
-    cancelDrawing(false);
+    cancelDrawing(false, false);
     renderAll();
     selectFeature(feature.id);
     setMode("select");
   }
 
-  function cancelDrawing(showStatus = true) {
+  function cancelDrawing(showStatus = true, recordUndo = true) {
+    if (recordUndo && (state.drawPoints.length || state.pointerStart || state.freehandDrawing)) {
+      pushUndo("draft cancel");
+    }
     state.drawPoints = [];
     state.draftLayer = null;
     state.pointerStart = null;
@@ -682,6 +751,7 @@
       return;
     }
 
+    pushUndo(`${feature.title} edit`);
     feature.title = elements.titleInput.value.trim() || "Untitled";
     feature.category = elements.categoryInput.value;
     feature.confidence = elements.confidenceInput.value;
@@ -704,6 +774,7 @@
       return;
     }
 
+    pushUndo(`${feature.title} delete`);
     state.features = state.features.filter((item) => item.id !== feature.id);
     state.selectedId = null;
     saveState();
@@ -749,6 +820,7 @@
 
         const nextFeatures = normalizeFeatures(imported.features.filter(isValidFeature), imported.map);
         const replace = window.confirm("Replace the current atlas? Choose Cancel to merge instead.");
+        pushUndo("import");
         state.features = replace ? nextFeatures : mergeFeatures(state.features, nextFeatures);
         state.selectedId = null;
         saveState();
@@ -775,6 +847,7 @@
       return;
     }
 
+    pushUndo("clear");
     state.features = [];
     state.selectedId = null;
     saveState();
