@@ -357,6 +357,10 @@ textarea {
   cursor: grab;
 }
 
+.leaflet-container.is-drawing {
+  cursor: crosshair;
+}
+
 .leaflet-dragging .leaflet-container,
 .leaflet-dragging .leaflet-grab {
   cursor: grabbing;
@@ -501,6 +505,12 @@ textarea {
 .poi-marker.is-selected {
   outline: 3px solid rgba(255, 237, 183, 0.68);
   outline-offset: 2px;
+}
+
+.poi-marker.is-draft {
+  outline: 3px dashed rgba(255, 237, 183, 0.78);
+  outline-offset: 3px;
+  filter: saturate(0.9);
 }
 
 .empty-state {

@@ -57,6 +57,8 @@
     mode: "select",
     drawPoints: [],
     draftLayer: null,
+    pointerStart: null,
+    freehandDrawing: false,
   };
 
   const map = L.map("map", {
@@ -120,6 +122,7 @@
   });
 
   let lastDragEndedAt = 0;
+  let suppressNextClickUntil = 0;
 
   init();
 
@@ -155,11 +158,15 @@
     elements.deleteFeatureBtn.addEventListener("click", deleteSelectedFeature);
 
     map.on("click", handleMapClick);
+    map.on("mousedown", handleDrawStart);
+    map.on("mousemove", handleDrawMove);
+    map.on("mouseup", handleDrawEnd);
+    map.on("mouseout", handleDrawEnd);
     map.on("dragend", () => {
       lastDragEndedAt = Date.now();
     });
     map.on("zoomstart zoom zoomend", () => {
-      if (!map.dragging.enabled()) {
+      if (state.mode !== "route" && state.mode !== "range" && !map.dragging.enabled()) {
         map.dragging.enable();
       }
     });
@@ -228,10 +235,12 @@
   }
 
   function setMode(mode) {
-    state.mode = mode;
-    if (mode !== "route" && mode !== "range") {
+    if (state.mode !== mode) {
       cancelDrawing(false);
     }
+    state.mode = mode;
+    map.dragging[mode === "route" || mode === "range" ? "disable" : "enable"]();
+    map.getContainer().classList.toggle("is-drawing", mode === "route" || mode === "range");
 
     elements.toolButtons.forEach((button) => {
       button.classList.toggle("is-active", button.dataset.mode === mode);
@@ -239,41 +248,101 @@
 
     const statusByMode = {
       select: "Select features or drag the map",
-      marker: "Click the map to place a field mark",
-      route: "Click points for a trail",
-      range: "Click points for a range boundary",
+      marker: "Click to place a draft mark, then Save Mark or Cancel",
+      route: "Drag to sketch a trail, or click points. Save Trail commits it",
+      range: "Drag to sketch a range, or click points. Save Range commits it",
     };
+    const finishLabels = {
+      marker: "Save Mark",
+      range: "Save Range",
+      route: "Save Trail",
+      select: "Finish",
+    };
+    elements.finishDrawBtn.textContent = finishLabels[mode] || "Finish";
     setStatus(statusByMode[mode] || "Ready");
   }
 
   function handleMapClick(event) {
-    if (Date.now() - lastDragEndedAt < 140) {
+    if (Date.now() - lastDragEndedAt < 140 || Date.now() < suppressNextClickUntil) {
       return;
     }
 
     const point = clampPoint(event.latlng);
 
     if (state.mode === "marker") {
-      const feature = createFeature({
-        type: "marker",
-        category: "landmark",
-        title: "New mark",
-        points: [point],
-      });
-      state.features.push(feature);
-      saveState();
-      renderAll();
-      selectFeature(feature.id);
-      setMode("select");
+      state.drawPoints = [point];
+      renderDraft();
+      updateDrawButtons();
+      setStatus("Draft mark placed. Save Mark commits it; Cancel discards it");
       return;
     }
 
     if (state.mode === "route" || state.mode === "range") {
-      state.drawPoints.push(point);
+      addDrawPoint(point);
       renderDraft();
       updateDrawButtons();
       setStatus(`${state.drawPoints.length} point${state.drawPoints.length === 1 ? "" : "s"} placed`);
     }
+  }
+
+  function handleDrawStart(event) {
+    if (state.mode !== "route" && state.mode !== "range") {
+      return;
+    }
+
+    state.pointerStart = {
+      latlng: event.latlng,
+      layerPoint: map.latLngToLayerPoint(event.latlng),
+    };
+    state.freehandDrawing = false;
+  }
+
+  function handleDrawMove(event) {
+    if (!state.pointerStart || (state.mode !== "route" && state.mode !== "range")) {
+      return;
+    }
+
+    const current = map.latLngToLayerPoint(event.latlng);
+    const moved = current.distanceTo(state.pointerStart.layerPoint);
+    if (!state.freehandDrawing && moved < 7) {
+      return;
+    }
+
+    if (!state.freehandDrawing) {
+      state.freehandDrawing = true;
+      addDrawPoint(clampPoint(state.pointerStart.latlng));
+    }
+
+    addDrawPoint(clampPoint(event.latlng), 7);
+    renderDraft();
+    updateDrawButtons();
+    setStatus(`Sketching ${state.mode === "range" ? "range" : "trail"} (${state.drawPoints.length} points)`);
+  }
+
+  function handleDrawEnd() {
+    if (!state.pointerStart) {
+      return;
+    }
+
+    if (state.freehandDrawing) {
+      suppressNextClickUntil = Date.now() + 180;
+      setStatus(`Draft ${state.mode === "range" ? "range" : "trail"} ready. Save commits it; Cancel discards it`);
+    }
+
+    state.pointerStart = null;
+    state.freehandDrawing = false;
+  }
+
+  function addDrawPoint(point, minPixelDistance = 0) {
+    const previous = state.drawPoints[state.drawPoints.length - 1];
+    if (previous && minPixelDistance) {
+      const previousLayerPoint = map.latLngToLayerPoint([previous.y, previous.x]);
+      const nextLayerPoint = map.latLngToLayerPoint([point.y, point.x]);
+      if (previousLayerPoint.distanceTo(nextLayerPoint) < minPixelDistance) {
+        return;
+      }
+    }
+    state.drawPoints.push(point);
   }
 
   function createFeature(input) {
@@ -399,9 +468,29 @@
     const category = state.mode === "range" ? categoryById.range : categoryById.route;
     const latLngs = state.drawPoints.map((point) => [point.y, point.x]);
 
-    state.drawPoints.forEach((point) => {
+    if (state.mode === "marker") {
+      const markerCategory = categoryById.landmark;
+      const point = state.drawPoints[0];
+      L.marker([point.y, point.x], {
+        icon: L.divIcon({
+          className: "",
+          html: `<div class="poi-marker marker-landmark is-draft" style="--marker-color:${markerCategory.color}">${getCategoryIcon("landmark")}</div>`,
+          iconSize: [32, 32],
+          iconAnchor: [16, 32],
+        }),
+      }).addTo(draftLayer);
+      state.draftLayer = draftLayer;
+      return;
+    }
+
+    const visibleDraftPoints =
+      state.drawPoints.length > 20
+        ? [state.drawPoints[0], state.drawPoints[state.drawPoints.length - 1]]
+        : state.drawPoints;
+
+    visibleDraftPoints.forEach((point) => {
       L.circleMarker([point.y, point.x], {
-        radius: 5,
+        radius: state.drawPoints.length > 20 ? 4 : 5,
         color: "#3c2816",
         weight: 1.5,
         fillColor: category.color,
@@ -432,6 +521,27 @@
   }
 
   function finishDrawing() {
+    if (state.mode === "marker") {
+      if (state.drawPoints.length < 1) {
+        setStatus("Place a draft mark first");
+        return;
+      }
+
+      const feature = createFeature({
+        type: "marker",
+        category: "landmark",
+        title: "New mark",
+        points: state.drawPoints.slice(0, 1),
+      });
+      state.features.push(feature);
+      saveState();
+      cancelDrawing(false);
+      renderAll();
+      selectFeature(feature.id);
+      setMode("select");
+      return;
+    }
+
     const isRange = state.mode === "range";
     const minimum = isRange ? 3 : 2;
     if (state.drawPoints.length < minimum) {
@@ -457,6 +567,8 @@
   function cancelDrawing(showStatus = true) {
     state.drawPoints = [];
     state.draftLayer = null;
+    state.pointerStart = null;
+    state.freehandDrawing = false;
     draftLayer.clearLayers();
     updateDrawButtons();
     if (showStatus) {
