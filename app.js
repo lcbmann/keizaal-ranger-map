@@ -5,18 +5,19 @@
   const MAP_WIDTH = 8192;
   const MAP_HEIGHT = 6144;
   const STORAGE_KEY = "keizaal-ranger-map-state-v1";
-  const DEFAULT_FEATURES_VERSION = 1;
+  const DEFAULT_FEATURES_VERSION = 2;
 
   const categories = [
-    { id: "settlement", label: "Settlement", color: "#365f80", short: "S" },
-    { id: "cache", label: "Cache", color: "#9a6424", short: "C" },
-    { id: "contact", label: "Contact", color: "#466f75", short: "K" },
-    { id: "threat", label: "Threat", color: "#8e332b", short: "T" },
-    { id: "camp", label: "Camp", color: "#5f7038", short: "C" },
-    { id: "range", label: "Range", color: "#2f6548", short: "R" },
-    { id: "route", label: "Trail", color: "#68472e", short: "P" },
-    { id: "post", label: "Ranger Post", color: "#6d5a32", short: "R" },
-    { id: "landmark", label: "Landmark", color: "#5d5950", short: "L" },
+    { id: "city", label: "City", color: "#2f5878", icon: "city" },
+    { id: "town", label: "Town", color: "#3f6f78", icon: "town" },
+    { id: "cache", label: "Cache", color: "#9a6424" },
+    { id: "contact", label: "Contact", color: "#466f75" },
+    { id: "threat", label: "Threat", color: "#8e332b" },
+    { id: "camp", label: "Camp", color: "#5f7038" },
+    { id: "range", label: "Range", color: "#2f6548" },
+    { id: "route", label: "Trail", color: "#68472e" },
+    { id: "post", label: "Ranger Post", color: "#6d5a32" },
+    { id: "landmark", label: "Landmark", color: "#5d5950" },
   ];
 
   const categoryById = Object.fromEntries(categories.map((category) => [category.id, category]));
@@ -26,25 +27,26 @@
     loot: "cache",
     npc: "contact",
     other: "landmark",
+    settlement: "city",
   };
 
   const defaultFeatures = [
-    defaultMarker("default-solitude", "Solitude", 2390, 1045, "Hold capital marked on the printed atlas."),
-    defaultMarker("default-markarth", "Markarth", 870, 3130, "Hold capital marked on the printed atlas."),
-    defaultMarker("default-morthal", "Morthal", 3790, 2040, "Hold capital marked on the printed atlas."),
-    defaultMarker("default-dawnstar", "Dawnstar", 4765, 1055, "Hold capital marked on the printed atlas."),
-    defaultMarker("default-winterhold", "Winterhold", 6080, 1090, "Hold capital marked on the printed atlas."),
-    defaultMarker("default-windhelm", "Windhelm", 6065, 2700, "Hold capital marked on the printed atlas."),
-    defaultMarker("default-whiterun", "Whiterun", 4495, 3250, "Hold capital marked on the printed atlas."),
-    defaultMarker("default-falkreath", "Falkreath", 4110, 4910, "Hold capital marked on the printed atlas."),
-    defaultMarker("default-riften", "Riften", 6735, 4865, "Hold capital marked on the printed atlas."),
-    defaultMarker("default-riverwood", "Riverwood", 4640, 4455, "Town marked on the printed atlas."),
-    defaultMarker("default-rorikstead", "Rorikstead", 2670, 3200, "Town marked on the printed atlas."),
-    defaultMarker("default-ivarstead", "Ivarstead", 5800, 4710, "Town marked on the printed atlas."),
-    defaultMarker("default-helgen", "Helgen", 4840, 5190, "Town marked on the printed atlas."),
-    defaultMarker("default-karthwasten", "Karthwasten", 1585, 2480, "Town marked on the printed atlas."),
-    defaultMarker("default-dragon-bridge", "Dragon Bridge", 2095, 1465, "Town marked on the printed atlas."),
-    defaultMarker("default-shors-stone", "Shor's Stone", 7065, 4430, "Town marked on the printed atlas."),
+    defaultMarker("default-dawnstar", "Dawnstar", "city", 4604, 4871),
+    defaultMarker("default-winterhold", "Winterhold", "city", 5989, 4794),
+    defaultMarker("default-windhelm", "Windhelm", "city", 6414, 3707),
+    defaultMarker("default-riften", "Riften", "city", 7253, 1312),
+    defaultMarker("default-falkreath", "Falkreath", "city", 3475, 1382),
+    defaultMarker("default-markarth", "Markarth", "city", 868, 3097),
+    defaultMarker("default-solitude", "Solitude", "city", 2785, 4907),
+    defaultMarker("default-morthal", "Morthal", "city", 3349, 4119),
+    defaultMarker("default-whiterun", "Whiterun", "city", 4452, 2956),
+    defaultMarker("default-dragon-bridge", "Dragon Bridge", "town", 2095, 4429),
+    defaultMarker("default-karthwasten", "Karthwasten", "town", 1591, 3625),
+    defaultMarker("default-rorikstead", "Rorikstead", "town", 2471, 3049),
+    defaultMarker("default-helgen", "Helgen", "town", 4286, 1532),
+    defaultMarker("default-ivarstead", "Ivarstead", "town", 5385, 1819),
+    defaultMarker("default-shors-stone", "Shor's Stone", "town", 6924, 1827),
+    defaultMarker("default-riverwood", "Riverwood", "town", 4376, 2119),
   ];
 
   const state = {
@@ -104,7 +106,6 @@
     featureId: document.getElementById("featureId"),
     titleInput: document.getElementById("titleInput"),
     categoryInput: document.getElementById("categoryInput"),
-    rangerInput: document.getElementById("rangerInput"),
     confidenceInput: document.getElementById("confidenceInput"),
     notesInput: document.getElementById("notesInput"),
     saveFeatureBtn: document.getElementById("saveFeatureBtn"),
@@ -194,7 +195,7 @@
         state.features = normalizeFeatures(saved.features.filter(isValidFeature), saved.map);
       }
       if (saved.defaultsVersion !== DEFAULT_FEATURES_VERSION) {
-        state.features = mergeFeatures(state.features, defaultFeatures.map(cloneFeature));
+        state.features = applyDefaultFeatures(state.features);
         shouldSave = true;
       }
       if (saved.filters && typeof saved.filters === "object") {
@@ -281,7 +282,6 @@
       type: input.type,
       category: input.category,
       title: input.title,
-      ranger: "",
       confidence: "scouted",
       notes: "",
       points: input.points,
@@ -290,15 +290,15 @@
     };
   }
 
-  function defaultMarker(id, title, x, y, notes) {
+  function defaultMarker(id, title, category, x, y) {
+    const city = category === "city";
     return {
       id,
       type: "marker",
-      category: "settlement",
+      category,
       title,
-      ranger: "",
       confidence: "confirmed",
-      notes,
+      notes: city ? "Hold capital marked on the printed atlas." : "Town marked on the printed atlas.",
       points: [{ x, y }],
       createdAt: "2026-05-29T00:00:00.000Z",
       updatedAt: "2026-05-29T00:00:00.000Z",
@@ -335,9 +335,9 @@
       const marker = L.marker([point.y, point.x], {
         icon: L.divIcon({
           className: "",
-          html: `<div class="poi-marker${selected ? " is-selected" : ""}" style="background:${category.color}"><span>${escapeHtml(category.short)}</span></div>`,
-          iconSize: [28, 28],
-          iconAnchor: [14, 28],
+          html: `<div class="poi-marker marker-${escapeHtml(feature.category)}${selected ? " is-selected" : ""}" style="--marker-color:${category.color}">${getCategoryIcon(feature.category)}</div>`,
+          iconSize: [32, 32],
+          iconAnchor: [16, 32],
         }),
       });
       marker.on("click", () => selectFeature(feature.id));
@@ -521,7 +521,7 @@
           <strong>${escapeHtml(feature.title || category.label)}</strong>
           <span class="feature-meta">
             <i class="swatch" style="background:${category.color}" aria-hidden="true"></i>
-            ${escapeHtml(category.label)}${feature.ranger ? ` / ${escapeHtml(feature.ranger)}` : ""}
+            ${escapeHtml(category.label)}
           </span>
           ${feature.notes ? `<span class="feature-note">${escapeHtml(truncate(feature.notes, 90))}</span>` : ""}
         `;
@@ -542,14 +542,12 @@
     elements.featureId.value = feature ? feature.id : "";
     elements.titleInput.value = feature ? feature.title : "";
     elements.categoryInput.value = feature ? feature.category : "landmark";
-    elements.rangerInput.value = feature ? feature.ranger : "";
     elements.confidenceInput.value = feature ? feature.confidence : "scouted";
     elements.notesInput.value = feature ? feature.notes : "";
 
     [
       elements.titleInput,
       elements.categoryInput,
-      elements.rangerInput,
       elements.confidenceInput,
       elements.notesInput,
       elements.saveFeatureBtn,
@@ -574,7 +572,6 @@
 
     feature.title = elements.titleInput.value.trim() || "Untitled";
     feature.category = elements.categoryInput.value;
-    feature.ranger = elements.rangerInput.value.trim();
     feature.confidence = elements.confidenceInput.value;
     feature.notes = elements.notesInput.value.trim();
     feature.updatedAt = new Date().toISOString();
@@ -684,7 +681,7 @@
         return true;
       }
 
-      const haystack = [feature.title, feature.category, feature.ranger, feature.confidence, feature.notes]
+      const haystack = [feature.title, feature.category, feature.confidence, feature.notes]
         .join(" ")
         .toLowerCase();
       return haystack.includes(state.search);
@@ -714,6 +711,17 @@
     return Array.from(byId.values());
   }
 
+  function applyDefaultFeatures(features) {
+    const defaultIds = new Set(defaultFeatures.map((feature) => feature.id));
+    const defaultTitles = new Set(defaultFeatures.map((feature) => feature.title.toLowerCase()));
+    const defaultishCategories = new Set(["city", "landmark", "settlement", "town"]);
+    const preserved = features.filter((feature) => {
+      const title = feature.title.toLowerCase();
+      return !defaultIds.has(feature.id) && !(feature.type === "marker" && defaultTitles.has(title) && defaultishCategories.has(feature.category));
+    });
+    return preserved.concat(defaultFeatures.map(cloneFeature));
+  }
+
   function normalizeFeatures(features, sourceMap) {
     const sourceWidth = Number(sourceMap && sourceMap.width);
     const sourceHeight = Number(sourceMap && sourceMap.height);
@@ -721,7 +729,7 @@
     const scaleY = sourceHeight && sourceHeight !== MAP_HEIGHT ? MAP_HEIGHT / sourceHeight : 1;
 
     return features.map((feature) => {
-      const { timer, ...rest } = feature;
+      const { ranger, timer, ...rest } = feature;
       const category = categoryById[rest.category] ? rest.category : categoryAliases[rest.category] || "landmark";
       return {
         ...rest,
@@ -756,6 +764,22 @@
 
   function setStatus(message) {
     elements.statusBar.textContent = message;
+  }
+
+  function getCategoryIcon(category) {
+    const icons = {
+      cache: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9h14v10H5z"/><path d="M7 9l2-4h6l2 4"/><path d="M9 13h6"/></svg>',
+      camp: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19 12 5l8 14z"/><path d="M12 5v14"/><path d="M7 19h10"/></svg>',
+      city: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V8l3 2 4-4 4 4 3-2v12z"/><path d="M9 20v-5h6v5"/><path d="M8 12h1M15 12h1"/></svg>',
+      contact: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3"/><path d="M6 20c1-4 11-4 12 0"/></svg>',
+      landmark: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4 19 20H5z"/><path d="M9 20h6"/></svg>',
+      post: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v16"/><path d="M5 8c2 2 5 2 7 0 2 2 5 2 7 0"/><path d="M7 20h10"/></svg>',
+      range: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7 12 4l7 4v9l-7 3-7-3z"/><path d="M9 10h6v4H9z"/></svg>',
+      route: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 18c5-9 9 1 14-8"/><circle cx="5" cy="18" r="1.5"/><circle cx="19" cy="10" r="1.5"/></svg>',
+      threat: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4 21 20H3z"/><path d="M12 9v5"/><path d="M12 17h.01"/></svg>',
+      town: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V10l7-5 7 5v10z"/><path d="M10 20v-6h4v6"/><path d="M8 12h2M14 12h2"/></svg>',
+    };
+    return icons[category] || icons.landmark;
   }
 
   function truncate(value, length) {

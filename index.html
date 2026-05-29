@@ -26,19 +26,19 @@
         <div class="draw-toolbar" aria-label="Map tools">
           <div class="segmented" role="group">
             <button class="tool-button is-active" type="button" data-mode="select" title="Select and pan">
-              <span aria-hidden="true">P</span>
+              <span class="tool-glyph tool-glyph-select" aria-hidden="true"></span>
               <span>Select</span>
             </button>
             <button class="tool-button" type="button" data-mode="marker" title="Place a field mark">
-              <span aria-hidden="true">M</span>
+              <span class="tool-glyph tool-glyph-mark" aria-hidden="true"></span>
               <span>Mark</span>
             </button>
             <button class="tool-button" type="button" data-mode="route" title="Draw a trail">
-              <span aria-hidden="true">R</span>
+              <span class="tool-glyph tool-glyph-trail" aria-hidden="true"></span>
               <span>Trail</span>
             </button>
             <button class="tool-button" type="button" data-mode="range" title="Draw a range boundary">
-              <span aria-hidden="true">B</span>
+              <span class="tool-glyph tool-glyph-range" aria-hidden="true"></span>
               <span>Range</span>
             </button>
           </div>
@@ -75,9 +75,6 @@
               <label class="field-label" for="categoryInput">Category</label>
               <select id="categoryInput" class="text-input" disabled></select>
 
-              <label class="field-label" for="rangerInput">Ranger</label>
-              <input id="rangerInput" class="text-input" type="text" disabled />
-
               <div class="field-grid">
                 <div class="field-span">
                   <label class="field-label" for="confidenceInput">Confidence</label>
@@ -103,7 +100,7 @@
           <section class="tool-section atlas-section">
             <h2>Atlas</h2>
             <label class="field-label" for="searchInput">Search</label>
-            <input id="searchInput" class="text-input" type="search" placeholder="Name, note, ranger" />
+            <input id="searchInput" class="text-input" type="search" placeholder="Name or note" />
             <div id="categoryFilters" class="filter-list" aria-label="Category filters"></div>
             <div id="featureList" class="feature-list"></div>
           </section>
