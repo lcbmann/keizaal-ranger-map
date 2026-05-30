@@ -96,6 +96,9 @@
 
   const elements = {
     toolButtons: Array.from(document.querySelectorAll(".tool-button")),
+    draftBar: document.getElementById("draftBar"),
+    draftTitle: document.getElementById("draftTitle"),
+    draftHint: document.getElementById("draftHint"),
     finishDrawBtn: document.getElementById("finishDrawBtn"),
     cancelDrawBtn: document.getElementById("cancelDrawBtn"),
     undoBtn: document.getElementById("undoBtn"),
@@ -308,12 +311,13 @@
     map.getContainer().classList.toggle("is-drawing", mode === "route" || mode === "range");
 
     updateModeButtons();
+    updateDrawButtons();
 
     const statusByMode = {
       select: "Select features or drag the map",
-      marker: "Click to place a draft mark, then Save Mark or Cancel",
-      route: "Drag to sketch a trail, or click points. Save Trail commits it",
-      range: "Drag to sketch a range, or click points. Save Range commits it",
+      marker: "Click the map to place a mark",
+      route: "Drag to sketch a trail, or click points",
+      range: "Drag to sketch a range boundary, or click points",
     };
     setStatus(statusByMode[mode] || "Ready");
   }
@@ -322,13 +326,6 @@
     elements.toolButtons.forEach((button) => {
       button.classList.toggle("is-active", button.dataset.mode === state.mode);
     });
-    const finishLabels = {
-      marker: "Save Mark",
-      range: "Save Range",
-      route: "Save Trail",
-      select: "Finish",
-    };
-    elements.finishDrawBtn.textContent = finishLabels[state.mode] || "Finish";
   }
 
   function handleMapClick(event) {
@@ -351,7 +348,7 @@
       updateDrawButtons();
       renderAll();
       renderDraft();
-      setStatus("Draft mark placed. Save Mark commits it; Cancel discards it");
+      setStatus("Draft mark placed. Name it in Selected, then create it");
       return;
     }
 
@@ -406,7 +403,7 @@
 
     if (state.freehandDrawing) {
       suppressNextClickUntil = Date.now() + 180;
-      setStatus(`Draft ${state.mode === "range" ? "range" : "trail"} ready. Save commits it; Cancel discards it`);
+      setStatus(`Draft ${state.mode === "range" ? "range" : "trail"} ready`);
     }
 
     state.pointerStart = null;
@@ -560,6 +557,7 @@
           iconAnchor: [16, 32],
         }),
       }).addTo(draftLayer);
+      addDraftMapControls(point);
       state.draftLayer = draftLayer;
       return;
     }
@@ -578,6 +576,8 @@
         fillOpacity: 0.82,
       }).addTo(draftLayer);
     });
+
+    addDraftMapControls(state.drawPoints[state.drawPoints.length - 1]);
 
     if (state.drawPoints.length > 1) {
       const layer =
@@ -601,6 +601,53 @@
     }
   }
 
+  function addDraftMapControls(point) {
+    if (!point) {
+      return;
+    }
+
+    const canSave = canSaveDraft();
+    const control = L.marker([point.y, point.x], {
+      interactive: true,
+      icon: L.divIcon({
+        className: "",
+        html: `
+          <div class="draft-map-actions" aria-label="Draft actions">
+            <button class="draft-map-action draft-map-save" type="button" title="Save draft" aria-label="Save draft"${canSave ? "" : " disabled"}>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4 10-10" /></svg>
+            </button>
+            <button class="draft-map-action draft-map-discard" type="button" title="Discard draft" aria-label="Discard draft">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6 18 18M18 6 6 18" /></svg>
+            </button>
+          </div>
+        `,
+        iconSize: [70, 32],
+        iconAnchor: [-10, 16],
+      }),
+    }).addTo(draftLayer);
+
+    const container = control.getElement();
+    if (!container) {
+      return;
+    }
+
+    L.DomEvent.disableClickPropagation(container);
+    L.DomEvent.disableScrollPropagation(container);
+    const saveButton = container.querySelector(".draft-map-save");
+    const discardButton = container.querySelector(".draft-map-discard");
+    saveButton.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      finishDrawing();
+    });
+    discardButton.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      cancelDrawing();
+      renderAll();
+    });
+  }
+
   function finishDrawing() {
     if (state.mode === "marker") {
       if (!state.draftFeature && state.drawPoints.length < 1) {
@@ -617,6 +664,7 @@
       renderAll();
       selectFeature(feature.id);
       setMode("select");
+      setStatus(`Created ${feature.title}`);
       return;
     }
 
@@ -641,11 +689,16 @@
     renderAll();
     selectFeature(feature.id);
     setMode("select");
+    setStatus(`Created ${feature.title}`);
   }
 
   function cancelDrawing(showStatus = true, recordUndo = true) {
+    const draftId = state.draftFeature ? state.draftFeature.id : null;
     if (recordUndo && (state.drawPoints.length || state.draftFeature || state.pointerStart || state.freehandDrawing)) {
       pushUndo("draft cancel");
+    }
+    if (draftId && state.selectedId === draftId) {
+      state.selectedId = null;
     }
     state.drawPoints = [];
     state.draftFeature = null;
@@ -655,14 +708,61 @@
     draftLayer.clearLayers();
     updateDrawButtons();
     if (showStatus) {
-      setStatus("Drawing canceled");
+      setStatus("Draft discarded");
     }
   }
 
   function updateDrawButtons() {
-    const drawing = state.drawPoints.length > 0;
-    elements.finishDrawBtn.disabled = !drawing;
-    elements.cancelDrawBtn.disabled = !drawing;
+    const hasDraft = Boolean(state.draftFeature || state.drawPoints.length);
+    const kind = getDraftKindLabel();
+    const canSave = canSaveDraft();
+
+    elements.draftBar.hidden = !hasDraft;
+    elements.finishDrawBtn.disabled = !canSave;
+    elements.cancelDrawBtn.disabled = !hasDraft;
+    elements.finishDrawBtn.textContent = `Save ${kind}`;
+    elements.cancelDrawBtn.textContent = "Discard";
+
+    if (!hasDraft) {
+      return;
+    }
+
+    elements.draftTitle.textContent = `Unsaved ${kind}`;
+    if (state.mode === "marker") {
+      elements.draftHint.textContent = "Fill out the selected mark, then create it here or in the inspector.";
+    } else {
+      const minimum = state.mode === "range" ? 3 : 2;
+      const remaining = Math.max(0, minimum - state.drawPoints.length);
+      elements.draftHint.textContent = remaining
+        ? `${remaining} more point${remaining === 1 ? "" : "s"} needed before this ${kind.toLowerCase()} can be saved.`
+        : `Keep drawing or save this ${kind.toLowerCase()} now.`;
+    }
+  }
+
+  function getDraftKindLabel() {
+    if (state.mode === "marker") {
+      return "Mark";
+    }
+    if (state.mode === "range") {
+      return "Range";
+    }
+    if (state.mode === "route") {
+      return "Trail";
+    }
+    return "Draft";
+  }
+
+  function canSaveDraft() {
+    if (state.mode === "marker") {
+      return Boolean(state.draftFeature);
+    }
+    if (state.mode === "range") {
+      return state.drawPoints.length >= 3;
+    }
+    if (state.mode === "route") {
+      return state.drawPoints.length >= 2;
+    }
+    return false;
   }
 
   function renderFilters() {
@@ -740,6 +840,10 @@
     elements.confidenceInput.value = feature ? feature.confidence : "scouted";
     elements.notesInput.value = feature ? feature.notes : "";
 
+    const isDraft = Boolean(feature && state.draftFeature && feature.id === state.draftFeature.id);
+    elements.saveFeatureBtn.textContent = isDraft ? "Create Mark" : "Save";
+    elements.deleteFeatureBtn.textContent = isDraft ? "Discard" : "Delete";
+
     [
       elements.titleInput,
       elements.categoryInput,
@@ -769,9 +873,7 @@
       applyEditorValues(state.draftFeature);
       state.draftFeature.updatedAt = new Date().toISOString();
       state.drawPoints = state.draftFeature.points.map((point) => ({ ...point }));
-      renderDraft();
-      renderEditor();
-      setStatus("Draft updated. Save Mark commits it; Cancel discards it");
+      finishDrawing();
       return;
     }
 
@@ -795,6 +897,12 @@
   function deleteSelectedFeature() {
     const feature = getSelectedFeature();
     if (!feature) {
+      return;
+    }
+
+    if (state.draftFeature && feature.id === state.draftFeature.id) {
+      cancelDrawing(true);
+      renderAll();
       return;
     }
 
