@@ -55,6 +55,7 @@
     search: "",
     selectedId: null,
     mode: "select",
+    draftFeature: null,
     drawPoints: [],
     draftLayer: null,
     pointerStart: null,
@@ -151,6 +152,11 @@
     elements.searchInput.addEventListener("input", (event) => {
       state.search = event.target.value.trim().toLowerCase();
       renderAll();
+    });
+
+    [elements.titleInput, elements.categoryInput, elements.confidenceInput, elements.notesInput].forEach((element) => {
+      element.addEventListener("input", syncDraftFromEditor);
+      element.addEventListener("change", syncDraftFromEditor);
     });
 
     elements.editorForm.addEventListener("submit", (event) => {
@@ -251,6 +257,7 @@
   function pushUndo(label) {
     state.undoStack.push({
       drawPoints: state.drawPoints.map((point) => ({ ...point })),
+      draftFeature: state.draftFeature ? cloneFeature(state.draftFeature) : null,
       features: state.features.map(cloneFeature),
       label,
       mode: state.mode,
@@ -272,6 +279,7 @@
 
     state.features = snapshot.features.map(cloneFeature);
     state.selectedId = snapshot.selectedId;
+    state.draftFeature = snapshot.draftFeature ? cloneFeature(snapshot.draftFeature) : null;
     state.drawPoints = snapshot.drawPoints.map((point) => ({ ...point }));
     state.mode = snapshot.mode;
     state.pointerStart = null;
@@ -332,9 +340,17 @@
 
     if (state.mode === "marker") {
       pushUndo("draft mark placement");
-      state.drawPoints = [point];
-      renderDraft();
+      state.draftFeature = createFeature({
+        type: "marker",
+        category: "landmark",
+        title: "New mark",
+        points: [point],
+      });
+      state.drawPoints = state.draftFeature.points.map((draftPoint) => ({ ...draftPoint }));
+      state.selectedId = state.draftFeature.id;
       updateDrawButtons();
+      renderAll();
+      renderDraft();
       setStatus("Draft mark placed. Save Mark commits it; Cancel discards it");
       return;
     }
@@ -524,7 +540,7 @@
   function renderDraft() {
     draftLayer.clearLayers();
 
-    if (!state.drawPoints.length) {
+    if (!state.drawPoints.length && !state.draftFeature) {
       state.draftLayer = null;
       return;
     }
@@ -533,12 +549,13 @@
     const latLngs = state.drawPoints.map((point) => [point.y, point.x]);
 
     if (state.mode === "marker") {
-      const markerCategory = categoryById.landmark;
-      const point = state.drawPoints[0];
+      const draft = getDraftFeature();
+      const markerCategory = categoryById[draft.category] || categoryById.landmark;
+      const point = draft.points[0];
       L.marker([point.y, point.x], {
         icon: L.divIcon({
           className: "",
-          html: `<div class="poi-marker marker-landmark is-draft" style="--marker-color:${markerCategory.color}">${getCategoryIcon("landmark")}</div>`,
+          html: `<div class="poi-marker marker-${escapeHtml(draft.category)} is-draft" style="--marker-color:${markerCategory.color}">${getCategoryIcon(draft.category)}</div>`,
           iconSize: [32, 32],
           iconAnchor: [16, 32],
         }),
@@ -586,17 +603,13 @@
 
   function finishDrawing() {
     if (state.mode === "marker") {
-      if (state.drawPoints.length < 1) {
+      if (!state.draftFeature && state.drawPoints.length < 1) {
         setStatus("Place a draft mark first");
         return;
       }
 
-      const feature = createFeature({
-        type: "marker",
-        category: "landmark",
-        title: "New mark",
-        points: state.drawPoints.slice(0, 1),
-      });
+      const feature = cloneFeature(getDraftFeature(true));
+      feature.updatedAt = new Date().toISOString();
       pushUndo("mark save");
       state.features.push(feature);
       saveState();
@@ -631,10 +644,11 @@
   }
 
   function cancelDrawing(showStatus = true, recordUndo = true) {
-    if (recordUndo && (state.drawPoints.length || state.pointerStart || state.freehandDrawing)) {
+    if (recordUndo && (state.drawPoints.length || state.draftFeature || state.pointerStart || state.freehandDrawing)) {
       pushUndo("draft cancel");
     }
     state.drawPoints = [];
+    state.draftFeature = null;
     state.draftLayer = null;
     state.pointerStart = null;
     state.freehandDrawing = false;
@@ -692,7 +706,7 @@
 
     features
       .slice()
-      .sort((a, b) => a.title.localeCompare(b.title))
+      .sort(compareFeaturesForList)
       .forEach((feature) => {
         const category = categoryById[feature.category] || categoryById.landmark;
         const button = document.createElement("button");
@@ -751,16 +765,31 @@
       return;
     }
 
+    if (state.draftFeature && feature.id === state.draftFeature.id) {
+      applyEditorValues(state.draftFeature);
+      state.draftFeature.updatedAt = new Date().toISOString();
+      state.drawPoints = state.draftFeature.points.map((point) => ({ ...point }));
+      renderDraft();
+      renderEditor();
+      setStatus("Draft updated. Save Mark commits it; Cancel discards it");
+      return;
+    }
+
     pushUndo(`${feature.title} edit`);
-    feature.title = elements.titleInput.value.trim() || "Untitled";
-    feature.category = elements.categoryInput.value;
-    feature.confidence = elements.confidenceInput.value;
-    feature.notes = elements.notesInput.value.trim();
+    applyEditorValues(feature);
     feature.updatedAt = new Date().toISOString();
 
     saveState();
     renderAll();
     setStatus("Saved");
+  }
+
+  function syncDraftFromEditor() {
+    if (!state.draftFeature || state.selectedId !== state.draftFeature.id) {
+      return;
+    }
+    applyEditorValues(state.draftFeature);
+    renderDraft();
   }
 
   function deleteSelectedFeature() {
@@ -874,7 +903,48 @@
   }
 
   function getSelectedFeature() {
+    if (state.draftFeature && state.draftFeature.id === state.selectedId) {
+      return state.draftFeature;
+    }
     return state.features.find((feature) => feature.id === state.selectedId) || null;
+  }
+
+  function getDraftFeature(applyEditor = false) {
+    if (!state.draftFeature) {
+      return null;
+    }
+    if (applyEditor && state.selectedId === state.draftFeature.id) {
+      applyEditorValues(state.draftFeature);
+    }
+    return state.draftFeature;
+  }
+
+  function applyEditorValues(feature) {
+    feature.title = elements.titleInput.value.trim() || "Untitled";
+    feature.category = elements.categoryInput.value;
+    feature.confidence = elements.confidenceInput.value;
+    feature.notes = elements.notesInput.value.trim();
+  }
+
+  function compareFeaturesForList(a, b) {
+    const aDefault = isDefaultFeature(a);
+    const bDefault = isDefaultFeature(b);
+    if (aDefault !== bDefault) {
+      return aDefault ? 1 : -1;
+    }
+    if (aDefault && bDefault) {
+      return a.title.localeCompare(b.title);
+    }
+    const aTime = Date.parse(a.createdAt || "") || 0;
+    const bTime = Date.parse(b.createdAt || "") || 0;
+    if (aTime !== bTime) {
+      return bTime - aTime;
+    }
+    return a.title.localeCompare(b.title);
+  }
+
+  function isDefaultFeature(feature) {
+    return feature.id.startsWith("default-");
   }
 
   function zoomToFeature(feature) {
