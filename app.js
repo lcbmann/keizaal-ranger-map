@@ -97,6 +97,9 @@
 
   const elements = {
     toolButtons: Array.from(document.querySelectorAll(".tool-button")),
+    aboutBtn: document.getElementById("aboutBtn"),
+    aboutDialog: document.getElementById("aboutDialog"),
+    aboutCloseBtn: document.getElementById("aboutCloseBtn"),
     undoBtn: document.getElementById("undoBtn"),
     exportBtn: document.getElementById("exportBtn"),
     importBtn: document.getElementById("importBtn"),
@@ -139,6 +142,20 @@
   function bindEvents() {
     elements.toolButtons.forEach((button) => {
       button.addEventListener("click", () => setMode(button.dataset.mode));
+    });
+
+    elements.aboutBtn.addEventListener("click", () => {
+      elements.aboutDialog.showModal();
+    });
+
+    elements.aboutCloseBtn.addEventListener("click", () => {
+      elements.aboutDialog.close();
+    });
+
+    elements.aboutDialog.addEventListener("click", (event) => {
+      if (event.target === elements.aboutDialog) {
+        elements.aboutDialog.close();
+      }
     });
 
     elements.undoBtn.addEventListener("click", undoLastAction);

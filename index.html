@@ -52,6 +52,7 @@
           </div>
         </div>
         <div class="topbar-actions">
+          <button id="aboutBtn" class="button secondary" type="button">About</button>
           <button id="undoBtn" class="button secondary" type="button" title="Undo last change (Ctrl+Z)" disabled>Undo</button>
           <button id="exportBtn" class="button secondary" type="button">Copy Code</button>
           <button id="importBtn" class="button secondary" type="button">Receive Code</button>
@@ -109,6 +110,23 @@
         </aside>
       </main>
     </div>
+
+    <dialog id="aboutDialog" class="field-note">
+      <div class="field-note-inner">
+        <button id="aboutCloseBtn" class="field-note-close" type="button" aria-label="Close atlas note">&times;</button>
+        <p class="field-note-kicker">Ranger Corps Field Atlas</p>
+        <h2>To the Rangers of Skyrim</h2>
+        <p>
+          This atlas exists so no range is watched by memory alone. Mark roads, shelters, threats, caches,
+          contacts, patrol routes, and reports worth sharing. Keep entries truthful, discreet, and current.
+        </p>
+        <p>
+          A Ranger should know their own range, but the Corps is stronger when that knowledge is passed on.
+          Walk, watch, listen, remember, and report.
+        </p>
+        <p class="field-note-signature">No land unwatched.<br />Ranger-Captain Lorn Valecroft</p>
+      </div>
+    </dialog>
 
     <script
       src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
