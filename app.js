@@ -6,6 +6,7 @@
   const MAP_HEIGHT = 6144;
   const STORAGE_KEY = "keizaal-ranger-map-state-v1";
   const DEFAULT_FEATURES_VERSION = 2;
+  const SHARE_CODE_PREFIX = "RCFA1.";
 
   const categories = [
     { id: "city", label: "City", color: "#2f5878", icon: "city" },
@@ -103,7 +104,7 @@
     cancelDrawBtn: document.getElementById("cancelDrawBtn"),
     undoBtn: document.getElementById("undoBtn"),
     exportBtn: document.getElementById("exportBtn"),
-    importInput: document.getElementById("importInput"),
+    importBtn: document.getElementById("importBtn"),
     clearBtn: document.getElementById("clearBtn"),
     searchInput: document.getElementById("searchInput"),
     categoryFilters: document.getElementById("categoryFilters"),
@@ -148,8 +149,8 @@
     elements.finishDrawBtn.addEventListener("click", finishDrawing);
     elements.cancelDrawBtn.addEventListener("click", cancelDrawing);
     elements.undoBtn.addEventListener("click", undoLastAction);
-    elements.exportBtn.addEventListener("click", exportState);
-    elements.importInput.addEventListener("change", importState);
+    elements.exportBtn.addEventListener("click", copyShareCode);
+    elements.importBtn.addEventListener("click", receiveShareCode);
     elements.clearBtn.addEventListener("click", clearAtlas);
 
     elements.searchInput.addEventListener("input", (event) => {
@@ -919,7 +920,8 @@
     setStatus("Deleted");
   }
 
-  function exportState() {
+  async function copyShareCode() {
+    const shareFeatures = state.features.filter((feature) => !isDefaultFeature(feature));
     const payload = {
       version: 1,
       exportedAt: new Date().toISOString(),
@@ -928,68 +930,91 @@
         width: MAP_WIDTH,
         height: MAP_HEIGHT,
       },
-      features: state.features,
+      features: shareFeatures,
     };
 
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `ranger-corps-field-atlas-skyrim-${new Date().toISOString().slice(0, 10)}.json`;
-    link.click();
-    URL.revokeObjectURL(url);
-    setStatus("Exported atlas");
+    const code = encodeShareCode(payload);
+    try {
+      await navigator.clipboard.writeText(code);
+      setStatus(`Copied atlas code (${shareFeatures.length} custom entries)`);
+    } catch (error) {
+      window.prompt("Copy this atlas code, then send it to another ranger.", code);
+      setStatus("Atlas code ready to copy");
+    }
   }
 
-  function importState(event) {
-    const file = event.target.files[0];
-    if (!file) {
+  function receiveShareCode() {
+    const code = window.prompt("Paste a Ranger's Corps atlas code or a raw JSON export.");
+    if (!code || !code.trim()) {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      try {
-        const imported = JSON.parse(String(reader.result));
-        if (!Array.isArray(imported.features)) {
-          throw new Error("Missing features array");
-        }
-
-        const nextFeatures = normalizeFeatures(imported.features.filter(isValidFeature), imported.map);
-        const replace = window.confirm("Replace the current atlas? Choose Cancel to merge instead.");
-        pushUndo("import");
-        state.features = replace ? nextFeatures : mergeFeatures(state.features, nextFeatures);
-        state.selectedId = null;
-        saveState();
-        renderAll();
-        setStatus(`Imported ${nextFeatures.length} entries`);
-      } catch (error) {
-        console.error(error);
-        window.alert("This file does not look like a Ranger's Corps Field Atlas export.");
-      } finally {
-        elements.importInput.value = "";
+    try {
+      const imported = decodeShareCode(code.trim());
+      if (!Array.isArray(imported.features)) {
+        throw new Error("Missing features array");
       }
-    };
-    reader.readAsText(file);
+
+      const nextFeatures = normalizeFeatures(imported.features.filter(isValidFeature), imported.map);
+      const replace = window.confirm("Replace the current atlas? Choose Cancel to merge instead.");
+      pushUndo("receive code");
+      state.features = applyDefaultFeatures(replace ? nextFeatures : mergeFeatures(state.features, nextFeatures));
+      state.selectedId = null;
+      saveState();
+      renderAll();
+      setStatus(`Received ${nextFeatures.length} entries`);
+    } catch (error) {
+      console.error(error);
+      window.alert("That does not look like a Ranger's Corps atlas code.");
+    }
   }
 
   function clearAtlas() {
-    if (!state.features.length) {
-      setStatus("Atlas already empty");
+    const customFeatures = state.features.filter((feature) => !isDefaultFeature(feature));
+    if (!customFeatures.length) {
+      state.features = applyDefaultFeatures(state.features);
+      saveState();
+      renderAll();
+      setStatus("No custom entries to scrape");
       return;
     }
 
-    const confirmed = window.confirm("Clear all local map entries?");
+    const confirmed = window.confirm("Scrape all custom atlas entries? Default cities and towns will stay.");
     if (!confirmed) {
       return;
     }
 
     pushUndo("clear");
-    state.features = [];
+    state.features = defaultFeatures.map(cloneFeature);
     state.selectedId = null;
     saveState();
     renderAll();
-    setStatus("Atlas cleared");
+    setStatus("Custom entries scraped; default settlements kept");
+  }
+
+  function encodeShareCode(payload) {
+    const bytes = new TextEncoder().encode(JSON.stringify(payload));
+    let binary = "";
+    bytes.forEach((byte) => {
+      binary += String.fromCharCode(byte);
+    });
+    return `${SHARE_CODE_PREFIX}${btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "")}`;
+  }
+
+  function decodeShareCode(code) {
+    if (code.startsWith("{")) {
+      return JSON.parse(code);
+    }
+
+    if (!code.startsWith(SHARE_CODE_PREFIX)) {
+      throw new Error("Unknown share code prefix");
+    }
+
+    const body = code.slice(SHARE_CODE_PREFIX.length).replace(/-/g, "+").replace(/_/g, "/");
+    const padded = body.padEnd(body.length + ((4 - (body.length % 4)) % 4), "=");
+    const binary = atob(padded);
+    const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
+    return JSON.parse(new TextDecoder().decode(bytes));
   }
 
   function getVisibleFeatures() {

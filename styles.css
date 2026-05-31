@@ -145,14 +145,6 @@ textarea {
   border-color: #552119;
 }
 
-.file-button input {
-  position: absolute;
-  inline-size: 1px;
-  block-size: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-}
-
 .workspace {
   min-height: 0;
   height: 100%;
