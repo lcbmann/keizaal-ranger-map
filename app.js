@@ -97,11 +97,6 @@
 
   const elements = {
     toolButtons: Array.from(document.querySelectorAll(".tool-button")),
-    draftBar: document.getElementById("draftBar"),
-    draftTitle: document.getElementById("draftTitle"),
-    draftHint: document.getElementById("draftHint"),
-    finishDrawBtn: document.getElementById("finishDrawBtn"),
-    cancelDrawBtn: document.getElementById("cancelDrawBtn"),
     undoBtn: document.getElementById("undoBtn"),
     exportBtn: document.getElementById("exportBtn"),
     importBtn: document.getElementById("importBtn"),
@@ -146,8 +141,6 @@
       button.addEventListener("click", () => setMode(button.dataset.mode));
     });
 
-    elements.finishDrawBtn.addEventListener("click", finishDrawing);
-    elements.cancelDrawBtn.addEventListener("click", cancelDrawing);
     elements.undoBtn.addEventListener("click", undoLastAction);
     elements.exportBtn.addEventListener("click", copyShareCode);
     elements.importBtn.addEventListener("click", receiveShareCode);
@@ -349,7 +342,7 @@
       updateDrawButtons();
       renderAll();
       renderDraft();
-      setStatus("Draft mark placed. Name it in Selected, then create it");
+      setStatus("Draft mark placed. Add details, then use the checkmark beside it to save");
       return;
     }
 
@@ -404,7 +397,7 @@
 
     if (state.freehandDrawing) {
       suppressNextClickUntil = Date.now() + 180;
-      setStatus(`Draft ${state.mode === "range" ? "range" : "trail"} ready`);
+      setStatus(`Draft ${state.mode === "range" ? "range" : "trail"} ready. Use the checkmark to save`);
     }
 
     state.pointerStart = null;
@@ -714,43 +707,7 @@
   }
 
   function updateDrawButtons() {
-    const hasDraft = Boolean(state.draftFeature || state.drawPoints.length);
-    const kind = getDraftKindLabel();
-    const canSave = canSaveDraft();
-
-    elements.draftBar.hidden = !hasDraft;
-    elements.finishDrawBtn.disabled = !canSave;
-    elements.cancelDrawBtn.disabled = !hasDraft;
-    elements.finishDrawBtn.textContent = `Save ${kind}`;
-    elements.cancelDrawBtn.textContent = "Discard";
-
-    if (!hasDraft) {
-      return;
-    }
-
-    elements.draftTitle.textContent = `Unsaved ${kind}`;
-    if (state.mode === "marker") {
-      elements.draftHint.textContent = "Fill out the selected mark, then create it here or in the inspector.";
-    } else {
-      const minimum = state.mode === "range" ? 3 : 2;
-      const remaining = Math.max(0, minimum - state.drawPoints.length);
-      elements.draftHint.textContent = remaining
-        ? `${remaining} more point${remaining === 1 ? "" : "s"} needed before this ${kind.toLowerCase()} can be saved.`
-        : `Keep drawing or save this ${kind.toLowerCase()} now.`;
-    }
-  }
-
-  function getDraftKindLabel() {
-    if (state.mode === "marker") {
-      return "Mark";
-    }
-    if (state.mode === "range") {
-      return "Range";
-    }
-    if (state.mode === "route") {
-      return "Trail";
-    }
-    return "Draft";
+    // Draft save/discard state is shown next to the draft on the map.
   }
 
   function canSaveDraft() {
