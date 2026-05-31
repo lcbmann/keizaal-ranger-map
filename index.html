@@ -18,8 +18,17 @@
       <header class="topbar">
         <div class="brand">
           <img class="brand-mark" src="ranger-corps-logo.png" alt="" />
-          <div>
-            <h1>Ranger Corps Field Atlas</h1>
+          <div class="brand-copy">
+            <div class="brand-title-row">
+              <h1>Ranger Corps Field Atlas</h1>
+              <button id="aboutBtn" class="about-button" type="button" title="About the atlas" aria-label="About the atlas">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <circle cx="12" cy="12" r="9" />
+                  <path d="M12 10v6" />
+                  <path d="M12 7h.01" />
+                </svg>
+              </button>
+            </div>
             <p>Keizaal field copy</p>
           </div>
         </div>
@@ -52,11 +61,16 @@
           </div>
         </div>
         <div class="topbar-actions">
-          <button id="aboutBtn" class="button secondary" type="button">About</button>
-          <button id="undoBtn" class="button secondary" type="button" title="Undo last change (Ctrl+Z)" disabled>Undo</button>
-          <button id="exportBtn" class="button secondary" type="button">Copy Code</button>
-          <button id="importBtn" class="button secondary" type="button">Receive Code</button>
-          <button id="clearBtn" class="button danger" type="button">Scrape Clean</button>
+          <div class="action-group">
+            <button id="undoBtn" class="button secondary" type="button" title="Undo last change (Ctrl+Z)" disabled>Undo</button>
+          </div>
+          <div class="action-group">
+            <button id="exportBtn" class="button secondary" type="button">Copy Code</button>
+            <button id="importBtn" class="button secondary" type="button">Receive Code</button>
+          </div>
+          <div class="action-group">
+            <button id="clearBtn" class="button danger" type="button">Scrape Clean</button>
+          </div>
         </div>
       </header>
 
