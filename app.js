@@ -901,7 +901,7 @@
   }
 
   function receiveShareCode() {
-    const code = window.prompt("Paste a Ranger's Corps atlas code or a raw JSON export.");
+    const code = window.prompt("Paste a Ranger Corps atlas code or a raw JSON export.");
     if (!code || !code.trim()) {
       return;
     }
@@ -922,7 +922,7 @@
       setStatus(`Received ${nextFeatures.length} entries`);
     } catch (error) {
       console.error(error);
-      window.alert("That does not look like a Ranger's Corps atlas code.");
+      window.alert("That does not look like a Ranger Corps atlas code.");
     }
   }
 
