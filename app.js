@@ -6,7 +6,8 @@
   const MAP_HEIGHT = 6144;
   const STORAGE_KEY = "keizaal-ranger-map-state-v1";
   const DEFAULT_FEATURES_VERSION = 2;
-  const SHARE_CODE_PREFIX = "RCFA1.";
+  const SHARE_CODE_PREFIX = "RGFA1.";
+  const LEGACY_SHARE_CODE_PREFIX = "RCFA1.";
 
   const categories = [
     { id: "city", label: "City", color: "#2f5878", icon: "city" },
@@ -15,9 +16,12 @@
     { id: "contact", label: "Contact", color: "#466f75" },
     { id: "threat", label: "Threat", color: "#8e332b" },
     { id: "camp", label: "Camp", color: "#5f7038" },
+    { id: "hunting", label: "Hunting Spot", color: "#6f5f2d" },
+    { id: "ore", label: "Ore Vein", color: "#6d6f73" },
+    { id: "ingredient", label: "Ingredient", color: "#4f7a45" },
     { id: "range", label: "Range", color: "#2f6548" },
     { id: "route", label: "Trail", color: "#68472e" },
-    { id: "post", label: "Ranger Post", color: "#6d5a32" },
+    { id: "post", label: "Guild Post", color: "#6d5a32" },
     { id: "landmark", label: "Landmark", color: "#5d5950" },
   ];
 
@@ -25,9 +29,15 @@
   const categoryAliases = {
     danger: "threat",
     guild: "post",
+    herb: "ingredient",
+    hunting_spot: "hunting",
+    mine: "ore",
+    mineral: "ore",
     loot: "cache",
     npc: "contact",
     other: "landmark",
+    plant: "ingredient",
+    resource: "ore",
     settlement: "city",
   };
 
@@ -918,7 +928,7 @@
   }
 
   function receiveShareCode() {
-    const code = window.prompt("Paste a Ranger Corps atlas code or a raw JSON export.");
+    const code = window.prompt("Paste a Ranger Guild atlas code or a raw JSON export.");
     if (!code || !code.trim()) {
       return;
     }
@@ -939,7 +949,7 @@
       setStatus(`Received ${nextFeatures.length} entries`);
     } catch (error) {
       console.error(error);
-      window.alert("That does not look like a Ranger Corps atlas code.");
+      window.alert("That does not look like a Ranger Guild atlas code.");
     }
   }
 
@@ -980,11 +990,17 @@
       return JSON.parse(code);
     }
 
-    if (!code.startsWith(SHARE_CODE_PREFIX)) {
+    const prefix = code.startsWith(SHARE_CODE_PREFIX)
+      ? SHARE_CODE_PREFIX
+      : code.startsWith(LEGACY_SHARE_CODE_PREFIX)
+        ? LEGACY_SHARE_CODE_PREFIX
+        : "";
+
+    if (!prefix) {
       throw new Error("Unknown share code prefix");
     }
 
-    const body = code.slice(SHARE_CODE_PREFIX.length).replace(/-/g, "+").replace(/_/g, "/");
+    const body = code.slice(prefix.length).replace(/-/g, "+").replace(/_/g, "/");
     const padded = body.padEnd(body.length + ((4 - (body.length % 4)) % 4), "=");
     const binary = atob(padded);
     const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
@@ -1134,7 +1150,10 @@
       camp: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19 12 5l8 14z"/><path d="M12 5v14"/><path d="M7 19h10"/></svg>',
       city: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V8l3 2 4-4 4 4 3-2v12z"/><path d="M9 20v-5h6v5"/><path d="M8 12h1M15 12h1"/></svg>',
       contact: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3"/><path d="M6 20c1-4 11-4 12 0"/></svg>',
+      hunting: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 19 5"/><path d="M7 5h6v6"/><path d="M5 7l4 4"/><path d="M14 16l3 3"/></svg>',
+      ingredient: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20V9"/><path d="M12 12c-4 0-6-2-6-5 4 0 6 2 6 5z"/><path d="M12 15c4 0 6-2 6-5-4 0-6 2-6 5z"/></svg>',
       landmark: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4 19 20H5z"/><path d="M9 20h6"/></svg>',
+      ore: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 17 9 7l7-2 4 6-5 8z"/><path d="M9 7l6 12"/><path d="M16 5l-1 14"/></svg>',
       post: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v16"/><path d="M5 8c2 2 5 2 7 0 2 2 5 2 7 0"/><path d="M7 20h10"/></svg>',
       range: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7 12 4l7 4v9l-7 3-7-3z"/><path d="M9 10h6v4H9z"/></svg>',
       route: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 18c5-9 9 1 14-8"/><circle cx="5" cy="18" r="1.5"/><circle cx="19" cy="10" r="1.5"/></svg>',
