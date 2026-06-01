@@ -6,8 +6,11 @@
   const MAP_HEIGHT = 6144;
   const STORAGE_KEY = "keizaal-ranger-map-state-v1";
   const DEFAULT_FEATURES_VERSION = 2;
-  const SHARE_CODE_PREFIX = "RGFA1.";
-  const LEGACY_SHARE_CODE_PREFIX = "RCFA1.";
+  const SHARE_CODE_PREFIX = "RGFA2.";
+  const LEGACY_GUILD_SHARE_CODE_PREFIX = "RGFA1.";
+  const LEGACY_CORPS_SHARE_CODE_PREFIX = "RCFA1.";
+  const SHARE_CODE_MAX_LENGTH = 2000;
+  const SHARE_CODE_CHUNK_SIZE = 1800;
 
   const categories = [
     { id: "city", label: "City", color: "#2f5878", icon: "city" },
@@ -26,6 +29,12 @@
   ];
 
   const categoryById = Object.fromEntries(categories.map((category) => [category.id, category]));
+  const categoryCodes = Object.fromEntries(categories.map((category, index) => [category.id, index.toString(36)]));
+  const categoryIdsByCode = Object.fromEntries(categories.map((category, index) => [index.toString(36), category.id]));
+  const typeCodes = { marker: "m", range: "g", route: "t" };
+  const typesByCode = { m: "marker", g: "range", t: "route" };
+  const confidenceCodes = { confirmed: "c", rumor: "r", scouted: "s", stale: "t" };
+  const confidencesByCode = { c: "confirmed", r: "rumor", s: "scouted", t: "stale" };
   const categoryAliases = {
     danger: "threat",
     guild: "post",
@@ -906,35 +915,26 @@
 
   async function copyShareCode() {
     const shareFeatures = state.features.filter((feature) => !isDefaultFeature(feature));
-    const payload = {
-      version: 1,
-      exportedAt: new Date().toISOString(),
-      map: {
-        image: MAP_IMAGE,
-        width: MAP_WIDTH,
-        height: MAP_HEIGHT,
-      },
-      features: shareFeatures,
-    };
-
-    const code = encodeShareCode(payload);
+    const codes = encodeShareCodes(shareFeatures);
+    const code = codes.join("\n");
     try {
       await navigator.clipboard.writeText(code);
-      setStatus(`Copied atlas code (${shareFeatures.length} custom entries)`);
+      const partText = codes.length === 1 ? "1 code" : `${codes.length} codes`;
+      setStatus(`Copied ${partText} (${shareFeatures.length} custom entries, each under ${SHARE_CODE_MAX_LENGTH} chars)`);
     } catch (error) {
-      window.prompt("Copy this atlas code, then send it to another ranger.", code);
-      setStatus("Atlas code ready to copy");
+      window.prompt("Copy these atlas code(s). If there are multiple lines, send each line separately.", code);
+      setStatus(`Atlas code ready to copy (${codes.length} part${codes.length === 1 ? "" : "s"})`);
     }
   }
 
   function receiveShareCode() {
-    const code = window.prompt("Paste a Ranger Guild atlas code or a raw JSON export.");
+    const code = window.prompt("Paste a Ranger Guild atlas code, multiple code parts, or a raw JSON export.");
     if (!code || !code.trim()) {
       return;
     }
 
     try {
-      const imported = decodeShareCode(code.trim());
+      const imported = decodeShareCodes(code.trim());
       if (!Array.isArray(imported.features)) {
         throw new Error("Missing features array");
       }
@@ -976,35 +976,197 @@
     setStatus("Custom entries scraped; default settlements kept");
   }
 
-  function encodeShareCode(payload) {
-    const bytes = new TextEncoder().encode(JSON.stringify(payload));
-    let binary = "";
-    bytes.forEach((byte) => {
-      binary += String.fromCharCode(byte);
-    });
-    return `${SHARE_CODE_PREFIX}${btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "")}`;
-  }
-
-  function decodeShareCode(code) {
-    if (code.startsWith("{")) {
-      return JSON.parse(code);
+  function encodeShareCodes(features) {
+    const payload = {
+      v: 2,
+      w: MAP_WIDTH,
+      h: MAP_HEIGHT,
+      f: features.map(encodeCompactFeature),
+    };
+    const body = encodeBase64Url(JSON.stringify(payload));
+    const singleCode = `${SHARE_CODE_PREFIX}${body}`;
+    if (singleCode.length <= SHARE_CODE_MAX_LENGTH) {
+      return [singleCode];
     }
 
-    const prefix = code.startsWith(SHARE_CODE_PREFIX)
-      ? SHARE_CODE_PREFIX
-      : code.startsWith(LEGACY_SHARE_CODE_PREFIX)
-        ? LEGACY_SHARE_CODE_PREFIX
+    const chunks = [];
+    for (let index = 0; index < body.length; index += SHARE_CODE_CHUNK_SIZE) {
+      chunks.push(body.slice(index, index + SHARE_CODE_CHUNK_SIZE));
+    }
+
+    return chunks.map((chunk, index) => {
+      const code = `${SHARE_CODE_PREFIX}${index.toString(36)}.${chunks.length.toString(36)}.${chunk}`;
+      if (code.length > SHARE_CODE_MAX_LENGTH) {
+        throw new Error("Share code chunk exceeded maximum length");
+      }
+      return code;
+    });
+  }
+
+  function decodeShareCodes(input) {
+    if (input.startsWith("{")) {
+      return JSON.parse(input);
+    }
+
+    const codes = input
+      .split(/\s+/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+    if (!codes.length) {
+      throw new Error("Missing share code");
+    }
+
+    if (codes.length === 1 && isLegacyShareCode(codes[0])) {
+      return decodeLegacyShareCode(codes[0]);
+    }
+
+    const compactCodes = codes.filter((code) => code.startsWith(SHARE_CODE_PREFIX));
+    if (compactCodes.length !== codes.length) {
+      throw new Error("Mixed or unknown share code prefixes");
+    }
+
+    if (compactCodes.length === 1) {
+      const parts = compactCodes[0].split(".");
+      if (parts.length === 2) {
+        return decodeCompactPayload(decodeBase64Url(parts[1]));
+      }
+    }
+
+    const chunks = compactCodes.map((code) => {
+      const parts = code.split(".");
+      if (parts.length !== 4 || `${parts[0]}.` !== SHARE_CODE_PREFIX) {
+        throw new Error("Invalid share code part");
+      }
+      return {
+        body: parts[3],
+        index: Number.parseInt(parts[1], 36),
+        total: Number.parseInt(parts[2], 36),
+      };
+    });
+    const total = chunks[0].total;
+    const indexes = new Set(chunks.map((chunk) => chunk.index));
+    if (!Number.isFinite(total) || chunks.some((chunk) => chunk.total !== total) || indexes.size !== total) {
+      throw new Error("Missing share code parts");
+    }
+
+    const body = chunks
+      .slice()
+      .sort((a, b) => a.index - b.index)
+      .map((chunk) => chunk.body)
+      .join("");
+    return decodeCompactPayload(decodeBase64Url(body));
+  }
+
+  function isLegacyShareCode(code) {
+    return code.startsWith(LEGACY_GUILD_SHARE_CODE_PREFIX) || code.startsWith(LEGACY_CORPS_SHARE_CODE_PREFIX);
+  }
+
+  function decodeLegacyShareCode(code) {
+    const prefix = code.startsWith(LEGACY_GUILD_SHARE_CODE_PREFIX)
+      ? LEGACY_GUILD_SHARE_CODE_PREFIX
+      : code.startsWith(LEGACY_CORPS_SHARE_CODE_PREFIX)
+        ? LEGACY_CORPS_SHARE_CODE_PREFIX
         : "";
 
     if (!prefix) {
       throw new Error("Unknown share code prefix");
     }
 
-    const body = code.slice(prefix.length).replace(/-/g, "+").replace(/_/g, "/");
+    return JSON.parse(decodeBase64Url(code.slice(prefix.length)));
+  }
+
+  function encodeBase64Url(value) {
+    const bytes = new TextEncoder().encode(value);
+    let binary = "";
+    bytes.forEach((byte) => {
+      binary += String.fromCharCode(byte);
+    });
+    return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+  }
+
+  function decodeBase64Url(value) {
+    const body = value.replace(/-/g, "+").replace(/_/g, "/");
     const padded = body.padEnd(body.length + ((4 - (body.length % 4)) % 4), "=");
     const binary = atob(padded);
     const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
-    return JSON.parse(new TextDecoder().decode(bytes));
+    return new TextDecoder().decode(bytes);
+  }
+
+  function encodeCompactFeature(feature) {
+    return [
+      encodeFeatureId(feature.id),
+      typeCodes[feature.type] || feature.type,
+      categoryCodes[feature.category] || feature.category,
+      feature.title || "",
+      confidenceCodes[feature.confidence] || feature.confidence || "s",
+      feature.notes || "",
+      flattenPoints(feature.points),
+      encodeDate(feature.createdAt),
+      encodeDate(feature.updatedAt),
+    ];
+  }
+
+  function decodeCompactPayload(raw) {
+    const payload = JSON.parse(raw);
+    if (!payload || payload.v !== 2 || !Array.isArray(payload.f)) {
+      throw new Error("Invalid compact payload");
+    }
+    return {
+      map: {
+        image: MAP_IMAGE,
+        width: payload.w || MAP_WIDTH,
+        height: payload.h || MAP_HEIGHT,
+      },
+      features: payload.f.map(decodeCompactFeature),
+    };
+  }
+
+  function decodeCompactFeature(value) {
+    return {
+      id: decodeFeatureId(value[0]),
+      type: typesByCode[value[1]] || value[1],
+      category: categoryIdsByCode[value[2]] || value[2],
+      title: value[3] || "Untitled",
+      confidence: confidencesByCode[value[4]] || value[4] || "scouted",
+      notes: value[5] || "",
+      points: expandPoints(Array.isArray(value[6]) ? value[6] : []),
+      createdAt: decodeDate(value[7]),
+      updatedAt: decodeDate(value[8] || value[7]),
+    };
+  }
+
+  function flattenPoints(points) {
+    return points.flatMap((point) => [point.x, point.y]);
+  }
+
+  function expandPoints(points) {
+    const expanded = [];
+    for (let index = 0; index < points.length; index += 2) {
+      expanded.push({ x: points[index], y: points[index + 1] });
+    }
+    return expanded;
+  }
+
+  function encodeFeatureId(id) {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
+      ? id.replace(/-/g, "")
+      : id;
+  }
+
+  function decodeFeatureId(id) {
+    return /^[0-9a-f]{32}$/i.test(id)
+      ? `${id.slice(0, 8)}-${id.slice(8, 12)}-${id.slice(12, 16)}-${id.slice(16, 20)}-${id.slice(20)}`
+      : id;
+  }
+
+  function encodeDate(value) {
+    const timestamp = Date.parse(value || "");
+    return Number.isFinite(timestamp) ? timestamp.toString(36) : "";
+  }
+
+  function decodeDate(value) {
+    const timestamp = Number.parseInt(value || "", 36);
+    return Number.isFinite(timestamp) ? new Date(timestamp).toISOString() : new Date().toISOString();
   }
 
   function getVisibleFeatures() {
