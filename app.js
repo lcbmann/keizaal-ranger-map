@@ -936,7 +936,7 @@
       const codes = encodeShareCodes(shareFeatures);
       code = codes.join("\n");
       const partText = codes.length === 1 ? "1 fallback code" : `${codes.length} fallback codes`;
-      status = `Supabase key missing; copied ${partText}`;
+      status = `Supabase anon key missing; copied ${partText}`;
     }
 
     try {
