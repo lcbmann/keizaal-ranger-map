@@ -122,6 +122,17 @@
     aboutBtn: document.getElementById("aboutBtn"),
     aboutDialog: document.getElementById("aboutDialog"),
     aboutCloseBtn: document.getElementById("aboutCloseBtn"),
+    receiveDialog: document.getElementById("receiveDialog"),
+    receiveCodeInput: document.getElementById("receiveCodeInput"),
+    receiveStatus: document.getElementById("receiveStatus"),
+    receiveMergeBtn: document.getElementById("receiveMergeBtn"),
+    receiveReplaceBtn: document.getElementById("receiveReplaceBtn"),
+    receiveCancelBtn: document.getElementById("receiveCancelBtn"),
+    clearDialog: document.getElementById("clearDialog"),
+    clearSummary: document.getElementById("clearSummary"),
+    clearConfirmBtn: document.getElementById("clearConfirmBtn"),
+    clearCancelBtn: document.getElementById("clearCancelBtn"),
+    clearKeepBtn: document.getElementById("clearKeepBtn"),
     undoBtn: document.getElementById("undoBtn"),
     exportBtn: document.getElementById("exportBtn"),
     importBtn: document.getElementById("importBtn"),
@@ -166,24 +177,22 @@
       button.addEventListener("click", () => setMode(button.dataset.mode));
     });
 
-    elements.aboutBtn.addEventListener("click", () => {
-      elements.aboutDialog.showModal();
-    });
-
-    elements.aboutCloseBtn.addEventListener("click", () => {
-      elements.aboutDialog.close();
-    });
-
-    elements.aboutDialog.addEventListener("click", (event) => {
-      if (event.target === elements.aboutDialog) {
-        elements.aboutDialog.close();
-      }
-    });
+    elements.aboutBtn.addEventListener("click", () => elements.aboutDialog.showModal());
+    elements.aboutCloseBtn.addEventListener("click", () => elements.aboutDialog.close());
+    closeDialogOnBackdrop(elements.aboutDialog);
 
     elements.undoBtn.addEventListener("click", undoLastAction);
     elements.exportBtn.addEventListener("click", copyShareCode);
-    elements.importBtn.addEventListener("click", receiveShareCode);
-    elements.clearBtn.addEventListener("click", clearAtlas);
+    elements.importBtn.addEventListener("click", openReceiveDialog);
+    elements.receiveCancelBtn.addEventListener("click", () => elements.receiveDialog.close());
+    elements.receiveMergeBtn.addEventListener("click", () => receiveShareCode(false));
+    elements.receiveReplaceBtn.addEventListener("click", () => receiveShareCode(true));
+    closeDialogOnBackdrop(elements.receiveDialog);
+    elements.clearBtn.addEventListener("click", openClearDialog);
+    elements.clearConfirmBtn.addEventListener("click", clearAtlas);
+    elements.clearCancelBtn.addEventListener("click", () => elements.clearDialog.close());
+    elements.clearKeepBtn.addEventListener("click", () => elements.clearDialog.close());
+    closeDialogOnBackdrop(elements.clearDialog);
 
     elements.searchInput.addEventListener("input", (event) => {
       state.search = event.target.value.trim().toLowerCase();
@@ -239,6 +248,14 @@
         } else {
           selectFeature(null);
         }
+      }
+    });
+  }
+
+  function closeDialogOnBackdrop(dialog) {
+    dialog.addEventListener("click", (event) => {
+      if (event.target === dialog) {
+        dialog.close();
       }
     });
   }
@@ -948,11 +965,22 @@
     }
   }
 
-  async function receiveShareCode() {
-    const code = window.prompt("Paste a Ranger Guild share code, fallback code, or raw JSON export.");
-    if (!code || !code.trim()) {
+  function openReceiveDialog() {
+    elements.receiveCodeInput.value = "";
+    elements.receiveStatus.textContent = "";
+    elements.receiveDialog.showModal();
+    window.setTimeout(() => elements.receiveCodeInput.focus(), 0);
+  }
+
+  async function receiveShareCode(replace) {
+    const code = elements.receiveCodeInput.value.trim();
+    if (!code) {
+      elements.receiveStatus.textContent = "Paste a share code first.";
       return;
     }
+
+    setReceiveBusy(true);
+    elements.receiveStatus.textContent = replace ? "Checking code before replacing your custom entries..." : "Checking code before merging entries...";
 
     try {
       const imported = await resolveShareInput(code.trim());
@@ -961,20 +989,29 @@
       }
 
       const nextFeatures = normalizeFeatures(imported.features.filter(isValidFeature), imported.map);
-      const replace = window.confirm("Replace the current atlas? Choose Cancel to merge instead.");
-      pushUndo("receive code");
+      pushUndo(replace ? "receive code replace" : "receive code merge");
       state.features = applyDefaultFeatures(replace ? nextFeatures : mergeFeatures(state.features, nextFeatures));
       state.selectedId = null;
       saveState();
       renderAll();
-      setStatus(`Received ${nextFeatures.length} entries`);
+      elements.receiveDialog.close();
+      setStatus(replace ? `Replaced custom entries with ${nextFeatures.length} received entries` : `Merged ${nextFeatures.length} received entries`);
     } catch (error) {
       console.error(error);
-      window.alert("That does not look like a Ranger Guild atlas code.");
+      elements.receiveStatus.textContent = "That code could not be read. Check that every part was pasted correctly.";
+    } finally {
+      setReceiveBusy(false);
     }
   }
 
-  function clearAtlas() {
+  function setReceiveBusy(busy) {
+    elements.receiveCodeInput.disabled = busy;
+    elements.receiveMergeBtn.disabled = busy;
+    elements.receiveReplaceBtn.disabled = busy;
+    elements.receiveCancelBtn.disabled = busy;
+  }
+
+  function openClearDialog() {
     const customFeatures = state.features.filter((feature) => !isDefaultFeature(feature));
     if (!customFeatures.length) {
       state.features = applyDefaultFeatures(state.features);
@@ -984,16 +1021,18 @@
       return;
     }
 
-    const confirmed = window.confirm("Scrape all custom atlas entries? Default cities and towns will stay.");
-    if (!confirmed) {
-      return;
-    }
+    elements.clearSummary.textContent = `${customFeatures.length} custom ${customFeatures.length === 1 ? "entry" : "entries"} will be removed from this browser. Default cities and towns will stay on the atlas.`;
+    elements.clearConfirmBtn.textContent = `Scrape ${customFeatures.length} Custom ${customFeatures.length === 1 ? "Entry" : "Entries"}`;
+    elements.clearDialog.showModal();
+  }
 
+  function clearAtlas() {
     pushUndo("clear");
     state.features = defaultFeatures.map(cloneFeature);
     state.selectedId = null;
     saveState();
     renderAll();
+    elements.clearDialog.close();
     setStatus("Custom entries scraped; default settlements kept");
   }
 

@@ -142,6 +142,36 @@
       </div>
     </dialog>
 
+    <dialog id="receiveDialog" class="field-note workflow-dialog">
+      <div class="field-note-inner">
+        <button id="receiveCancelBtn" class="field-note-close" type="button" aria-label="Close receive code">&times;</button>
+        <p class="field-note-kicker">Receive Atlas Notes</p>
+        <h2>Add Shared Entries</h2>
+        <p>Paste a short share code, fallback code, or raw atlas export. Choose how it should affect your current atlas.</p>
+        <label class="field-label" for="receiveCodeInput">Share Code</label>
+        <textarea id="receiveCodeInput" class="text-input textarea code-input" rows="5" placeholder="Paste code here"></textarea>
+        <p id="receiveStatus" class="dialog-status" aria-live="polite"></p>
+        <div class="dialog-actions">
+          <button id="receiveMergeBtn" class="button primary" type="button">Merge Entries</button>
+          <button id="receiveReplaceBtn" class="button secondary" type="button">Replace Mine</button>
+        </div>
+        <p class="dialog-help">Merge keeps your notes and adds incoming entries. Replace removes your custom notes first. Default cities and towns stay either way.</p>
+      </div>
+    </dialog>
+
+    <dialog id="clearDialog" class="field-note workflow-dialog">
+      <div class="field-note-inner">
+        <button id="clearCancelBtn" class="field-note-close" type="button" aria-label="Cancel scrape clean">&times;</button>
+        <p class="field-note-kicker">Scrape Clean</p>
+        <h2>Clear Custom Entries?</h2>
+        <p id="clearSummary">This will remove your custom marks, trails, and ranges. Default cities and towns will stay.</p>
+        <div class="dialog-actions">
+          <button id="clearConfirmBtn" class="button danger" type="button">Scrape Custom Entries</button>
+          <button id="clearKeepBtn" class="button secondary" type="button">Keep Atlas</button>
+        </div>
+      </div>
+    </dialog>
+
     <script
       src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
       integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="

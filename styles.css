@@ -273,6 +273,40 @@ textarea {
   font-style: italic;
 }
 
+.workflow-dialog {
+  width: min(600px, calc(100vw - 32px));
+}
+
+.code-input {
+  min-height: 118px;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.dialog-status {
+  min-height: 20px;
+  margin: 10px 0 0 !important;
+  color: #6b3427 !important;
+  font-size: 0.86rem;
+  font-style: italic;
+}
+
+.dialog-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.dialog-help {
+  margin: 12px 0 0 !important;
+  color: var(--ink-soft) !important;
+  font-size: 0.84rem;
+  font-style: italic;
+}
+
 .workspace {
   min-height: 0;
   height: 100%;
