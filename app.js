@@ -6,6 +6,9 @@
   const MAP_HEIGHT = 6144;
   const STORAGE_KEY = "keizaal-ranger-map-state-v1";
   const DEFAULT_FEATURES_VERSION = 2;
+  const SUPABASE_CONFIG = window.RANGER_ATLAS_SUPABASE || {};
+  const SUPABASE_URL = SUPABASE_CONFIG.url || "https://qmuuqnfpbfncwacrrmri.supabase.co";
+  const SUPABASE_ANON_KEY = SUPABASE_CONFIG.anonKey || window.RANGER_ATLAS_SUPABASE_ANON_KEY || "";
   const SHARE_CODE_PREFIX = "RGFA2.";
   const LEGACY_GUILD_SHARE_CODE_PREFIX = "RGFA1.";
   const LEGACY_CORPS_SHARE_CODE_PREFIX = "RCFA1.";
@@ -915,26 +918,44 @@
 
   async function copyShareCode() {
     const shareFeatures = state.features.filter((feature) => !isDefaultFeature(feature));
-    const codes = encodeShareCodes(shareFeatures);
-    const code = codes.join("\n");
+    let code = "";
+    let status = "";
+
+    if (isSupabaseConfigured()) {
+      try {
+        code = await uploadShareCode(shareFeatures);
+        status = `Copied short share code ${code} (${shareFeatures.length} custom entries)`;
+      } catch (error) {
+        console.error("Could not upload share code", error);
+        const codes = encodeShareCodes(shareFeatures);
+        code = codes.join("\n");
+        const partText = codes.length === 1 ? "1 fallback code" : `${codes.length} fallback codes`;
+        status = `Supabase upload failed; copied ${partText}`;
+      }
+    } else {
+      const codes = encodeShareCodes(shareFeatures);
+      code = codes.join("\n");
+      const partText = codes.length === 1 ? "1 fallback code" : `${codes.length} fallback codes`;
+      status = `Supabase key missing; copied ${partText}`;
+    }
+
     try {
       await navigator.clipboard.writeText(code);
-      const partText = codes.length === 1 ? "1 code" : `${codes.length} codes`;
-      setStatus(`Copied ${partText} (${shareFeatures.length} custom entries, each under ${SHARE_CODE_MAX_LENGTH} chars)`);
+      setStatus(status);
     } catch (error) {
-      window.prompt("Copy these atlas code(s). If there are multiple lines, send each line separately.", code);
-      setStatus(`Atlas code ready to copy (${codes.length} part${codes.length === 1 ? "" : "s"})`);
+      window.prompt("Copy this atlas code.", code);
+      setStatus(status.replace("Copied", "Atlas code ready to copy"));
     }
   }
 
-  function receiveShareCode() {
-    const code = window.prompt("Paste a Ranger Guild atlas code, multiple code parts, or a raw JSON export.");
+  async function receiveShareCode() {
+    const code = window.prompt("Paste a Ranger Guild share code, fallback code, or raw JSON export.");
     if (!code || !code.trim()) {
       return;
     }
 
     try {
-      const imported = decodeShareCodes(code.trim());
+      const imported = await resolveShareInput(code.trim());
       if (!Array.isArray(imported.features)) {
         throw new Error("Missing features array");
       }
@@ -976,13 +997,65 @@
     setStatus("Custom entries scraped; default settlements kept");
   }
 
+  function isSupabaseConfigured() {
+    return Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
+  }
+
+  async function uploadShareCode(features) {
+    const payload = createCompactSharePayload(features);
+    const code = await callSupabaseRpc("create_atlas_share", { share_payload: payload });
+    if (typeof code !== "string" || !code.trim()) {
+      throw new Error("Supabase did not return a share code");
+    }
+    return code.trim().toUpperCase();
+  }
+
+  async function resolveShareInput(input) {
+    if (input.startsWith("{") || input.startsWith(SHARE_CODE_PREFIX) || input.startsWith(LEGACY_GUILD_SHARE_CODE_PREFIX) || input.startsWith(LEGACY_CORPS_SHARE_CODE_PREFIX)) {
+      return decodeShareCodes(input);
+    }
+
+    if (!isSupabaseConfigured()) {
+      throw new Error("Supabase is not configured");
+    }
+
+    const shareCode = normalizeRemoteShareCode(input);
+    if (!shareCode) {
+      throw new Error("Invalid share code");
+    }
+
+    const payload = await callSupabaseRpc("get_atlas_share", { share_code: shareCode });
+    if (!payload) {
+      throw new Error("Share code not found");
+    }
+    return decodeStoredSharePayload(payload);
+  }
+
+  async function callSupabaseRpc(functionName, body) {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${functionName}`, {
+      method: "POST",
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Supabase ${functionName} failed: ${response.status}`);
+    }
+
+    return response.json();
+  }
+
+  function normalizeRemoteShareCode(value) {
+    const normalized = value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+    return /^[A-Z0-9]{6,12}$/.test(normalized) ? normalized : "";
+  }
+
   function encodeShareCodes(features) {
-    const payload = {
-      v: 2,
-      w: MAP_WIDTH,
-      h: MAP_HEIGHT,
-      f: features.map(encodeCompactFeature),
-    };
+    const payload = createCompactSharePayload(features);
     const body = encodeBase64Url(JSON.stringify(payload));
     const singleCode = `${SHARE_CODE_PREFIX}${body}`;
     if (singleCode.length <= SHARE_CODE_MAX_LENGTH) {
@@ -1075,6 +1148,22 @@
     return JSON.parse(decodeBase64Url(code.slice(prefix.length)));
   }
 
+  function createCompactSharePayload(features) {
+    return {
+      v: 2,
+      w: MAP_WIDTH,
+      h: MAP_HEIGHT,
+      f: features.map(encodeCompactFeature),
+    };
+  }
+
+  function decodeStoredSharePayload(payload) {
+    if (payload && payload.v === 2 && Array.isArray(payload.f)) {
+      return decodeCompactPayloadObject(payload);
+    }
+    return payload;
+  }
+
   function encodeBase64Url(value) {
     const bytes = new TextEncoder().encode(value);
     let binary = "";
@@ -1108,6 +1197,10 @@
 
   function decodeCompactPayload(raw) {
     const payload = JSON.parse(raw);
+    return decodeCompactPayloadObject(payload);
+  }
+
+  function decodeCompactPayloadObject(payload) {
     if (!payload || payload.v !== 2 || !Array.isArray(payload.f)) {
       throw new Error("Invalid compact payload");
     }
