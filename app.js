@@ -78,6 +78,7 @@
     search: "",
     selectedId: null,
     mode: "select",
+    creatorName: "",
     draftFeature: null,
     drawPoints: [],
     draftLayer: null,
@@ -137,6 +138,7 @@
     exportBtn: document.getElementById("exportBtn"),
     importBtn: document.getElementById("importBtn"),
     clearBtn: document.getElementById("clearBtn"),
+    creatorInput: document.getElementById("creatorInput"),
     searchInput: document.getElementById("searchInput"),
     categoryFilters: document.getElementById("categoryFilters"),
     featureList: document.getElementById("featureList"),
@@ -147,6 +149,7 @@
     titleInput: document.getElementById("titleInput"),
     categoryInput: document.getElementById("categoryInput"),
     confidenceInput: document.getElementById("confidenceInput"),
+    creatorMeta: document.getElementById("creatorMeta"),
     notesInput: document.getElementById("notesInput"),
     saveFeatureBtn: document.getElementById("saveFeatureBtn"),
     deleteFeatureBtn: document.getElementById("deleteFeatureBtn"),
@@ -193,6 +196,11 @@
     elements.clearCancelBtn.addEventListener("click", () => elements.clearDialog.close());
     elements.clearKeepBtn.addEventListener("click", () => elements.clearDialog.close());
     closeDialogOnBackdrop(elements.clearDialog);
+
+    elements.creatorInput.addEventListener("input", (event) => {
+      state.creatorName = normalizeCreatorName(event.target.value);
+      saveState();
+    });
 
     elements.searchInput.addEventListener("input", (event) => {
       state.search = event.target.value.trim().toLowerCase();
@@ -283,6 +291,8 @@
           state.filters[category.id] = saved.filters[category.id] !== false;
         });
       }
+      state.creatorName = normalizeCreatorName(saved.creatorName || "");
+      elements.creatorInput.value = state.creatorName;
       if (shouldSave) {
         saveState();
       }
@@ -302,6 +312,7 @@
       savedAt: new Date().toISOString(),
       defaultsVersion: DEFAULT_FEATURES_VERSION,
       filters: state.filters,
+      creatorName: state.creatorName,
       features: state.features,
     };
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
@@ -473,12 +484,14 @@
   }
 
   function createFeature(input) {
+    const creator = getCurrentCreatorName();
     return {
       id: crypto.randomUUID ? crypto.randomUUID() : `feature-${Date.now()}-${Math.random().toString(16).slice(2)}`,
       type: input.type,
       category: input.category,
       title: input.title,
       confidence: "scouted",
+      creator,
       notes: "",
       points: input.points,
       createdAt: new Date().toISOString(),
@@ -537,7 +550,7 @@
         }),
       });
       marker.on("click", () => selectFeature(feature.id));
-      marker.bindTooltip(feature.title || category.label, { direction: "top", offset: [0, -24] });
+      marker.bindTooltip(getFeatureTooltip(feature, category), { direction: "top", offset: [0, -24] });
       return marker;
     }
 
@@ -556,7 +569,7 @@
       lineJoin: "round",
     });
     layer.on("click", () => selectFeature(feature.id));
-    layer.bindTooltip(feature.title || category.label);
+    layer.bindTooltip(getFeatureTooltip(feature, category));
     return layer;
   }
 
@@ -579,7 +592,7 @@
     const group = L.layerGroup([underlay, ink]);
     [underlay, ink].forEach((layer) => {
       layer.on("click", () => selectFeature(feature.id));
-      layer.bindTooltip(feature.title || category.label);
+      layer.bindTooltip(getFeatureTooltip(feature, category));
     });
     return group;
   }
@@ -832,6 +845,7 @@
             <i class="swatch" style="background:${category.color}" aria-hidden="true"></i>
             ${escapeHtml(category.label)}
           </span>
+          ${feature.creator ? `<span class="feature-creator">Mapped by ${escapeHtml(feature.creator)}</span>` : ""}
           ${feature.notes ? `<span class="feature-note">${escapeHtml(truncate(feature.notes, 90))}</span>` : ""}
         `;
         button.addEventListener("click", () => {
@@ -852,6 +866,8 @@
     elements.titleInput.value = feature ? feature.title : "";
     elements.categoryInput.value = feature ? feature.category : "landmark";
     elements.confidenceInput.value = feature ? feature.confidence : "scouted";
+    elements.creatorMeta.textContent = feature && feature.creator ? `Mapped by ${feature.creator}` : "";
+    elements.creatorMeta.hidden = !feature || !feature.creator;
     elements.notesInput.value = feature ? feature.notes : "";
 
     const isDraft = Boolean(feature && state.draftFeature && feature.id === state.draftFeature.id);
@@ -1231,6 +1247,7 @@
       flattenPoints(feature.points),
       encodeDate(feature.createdAt),
       encodeDate(feature.updatedAt),
+      feature.creator || "",
     ];
   }
 
@@ -1264,6 +1281,7 @@
       points: expandPoints(Array.isArray(value[6]) ? value[6] : []),
       createdAt: decodeDate(value[7]),
       updatedAt: decodeDate(value[8] || value[7]),
+      creator: normalizeCreatorName(value[9] || ""),
     };
   }
 
@@ -1312,7 +1330,7 @@
         return true;
       }
 
-      const haystack = [feature.title, feature.category, feature.confidence, feature.notes]
+      const haystack = [feature.title, feature.category, feature.confidence, feature.creator, feature.notes]
         .join(" ")
         .toLowerCase();
       return haystack.includes(state.search);
@@ -1406,6 +1424,7 @@
       return {
         ...rest,
         category,
+        creator: normalizeCreatorName(rest.creator || ""),
         points: rest.points.map((point) =>
         clampPoint({
           lng: Math.round(point.x * scaleX),
@@ -1436,6 +1455,22 @@
 
   function setStatus(message) {
     elements.statusBar.textContent = message;
+  }
+
+  function getCurrentCreatorName() {
+    return normalizeCreatorName(state.creatorName);
+  }
+
+  function normalizeCreatorName(value) {
+    return String(value || "").trim().replace(/\s+/g, " ").slice(0, 40);
+  }
+
+  function getFeatureTooltip(feature, category) {
+    const title = escapeHtml(feature.title || category.label);
+    if (!feature.creator) {
+      return title;
+    }
+    return `${title}<br><span class="tooltip-meta">Mapped by ${escapeHtml(feature.creator)}</span>`;
   }
 
   function getCategoryIcon(category) {

@@ -62,6 +62,12 @@
         </div>
         <div class="topbar-actions">
           <div class="action-group">
+            <label class="identity-field" for="creatorInput">
+              <span>Signed as</span>
+              <input id="creatorInput" class="identity-input" type="text" maxlength="40" placeholder="Your name" autocomplete="nickname" />
+            </label>
+          </div>
+          <div class="action-group">
             <button id="undoBtn" class="button secondary" type="button" title="Undo last change (Ctrl+Z)" disabled>Undo</button>
           </div>
           <div class="action-group">
@@ -103,6 +109,8 @@
                   </select>
                 </div>
               </div>
+
+              <p id="creatorMeta" class="creator-meta"></p>
 
               <label class="field-label" for="notesInput">Notes</label>
               <textarea id="notesInput" class="text-input textarea" rows="5" disabled></textarea>
