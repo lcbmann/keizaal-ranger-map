@@ -1938,15 +1938,15 @@
 
   function getFeatureZIndexOffset(feature, selected) {
     if (selected) {
-      return 3000;
-    }
-    if (isDefaultFeature(feature)) {
-      return -1000;
+      return 300000;
     }
     if (isGuildFeature(feature)) {
-      return 1000;
+      return 100000;
     }
-    return 2000;
+    if (isDefaultFeature(feature)) {
+      return 0;
+    }
+    return 200000;
   }
 
   function isDefaultFeature(feature) {
