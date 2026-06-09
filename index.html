@@ -75,14 +75,6 @@
             <button id="guildPublishBtn" class="button secondary" type="button">Publish Guild</button>
           </div>
           <div class="action-group">
-            <label class="share-scope-field" for="shareScopeInput">
-              <span>Share</span>
-              <select id="shareScopeInput" class="share-scope-input">
-                <option value="all">All custom</option>
-                <option value="visible">Visible</option>
-                <option value="selected">Selected</option>
-              </select>
-            </label>
             <button id="exportBtn" class="button secondary" type="button">Copy Code</button>
             <button id="importBtn" class="button secondary" type="button">Receive Code</button>
           </div>
@@ -180,6 +172,25 @@
           <button id="receiveReplaceBtn" class="button secondary" type="button" disabled>Replace Mine</button>
         </div>
         <p class="dialog-help">Merge keeps your notes and adds incoming entries. Replace removes your custom notes first. Default cities and towns stay either way.</p>
+      </div>
+    </dialog>
+
+    <dialog id="shareDialog" class="field-note workflow-dialog">
+      <div class="field-note-inner">
+        <button id="shareCancelBtn" class="field-note-close" type="button" aria-label="Cancel share code">&times;</button>
+        <p class="field-note-kicker">Copy Atlas Code</p>
+        <h2>Choose Entries to Share</h2>
+        <p id="shareSummary">Select the marks, trails, and ranges to include. Printed cities and towns are never included.</p>
+        <div class="share-select-actions">
+          <button id="shareSelectAllBtn" class="button secondary" type="button">Select All</button>
+          <button id="shareSelectNoneBtn" class="button secondary" type="button">Select None</button>
+        </div>
+        <div id="shareEntryList" class="share-entry-list" aria-label="Entries to share"></div>
+        <p id="shareStatus" class="dialog-status" aria-live="polite"></p>
+        <div class="dialog-actions">
+          <button id="shareCopyBtn" class="button primary" type="button">Copy Code</button>
+          <button id="shareKeepBtn" class="button secondary" type="button">Cancel</button>
+        </div>
       </div>
     </dialog>
 

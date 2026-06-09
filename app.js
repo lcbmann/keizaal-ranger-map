@@ -149,11 +149,19 @@
     guildPublishConfirmBtn: document.getElementById("guildPublishConfirmBtn"),
     guildPublishCancelBtn: document.getElementById("guildPublishCancelBtn"),
     guildPublishKeepBtn: document.getElementById("guildPublishKeepBtn"),
+    shareDialog: document.getElementById("shareDialog"),
+    shareSummary: document.getElementById("shareSummary"),
+    shareEntryList: document.getElementById("shareEntryList"),
+    shareStatus: document.getElementById("shareStatus"),
+    shareCopyBtn: document.getElementById("shareCopyBtn"),
+    shareCancelBtn: document.getElementById("shareCancelBtn"),
+    shareKeepBtn: document.getElementById("shareKeepBtn"),
+    shareSelectAllBtn: document.getElementById("shareSelectAllBtn"),
+    shareSelectNoneBtn: document.getElementById("shareSelectNoneBtn"),
     exportBtn: document.getElementById("exportBtn"),
     importBtn: document.getElementById("importBtn"),
     clearBtn: document.getElementById("clearBtn"),
     creatorInput: document.getElementById("creatorInput"),
-    shareScopeInput: document.getElementById("shareScopeInput"),
     searchInput: document.getElementById("searchInput"),
     creatorFilterInput: document.getElementById("creatorFilterInput"),
     categoryFilters: document.getElementById("categoryFilters"),
@@ -207,7 +215,14 @@
     elements.guildPublishCancelBtn.addEventListener("click", () => closeGuildPublishDialog());
     elements.guildPublishKeepBtn.addEventListener("click", () => closeGuildPublishDialog());
     closeDialogOnBackdrop(elements.guildPublishDialog);
-    elements.exportBtn.addEventListener("click", copyShareCode);
+    elements.exportBtn.addEventListener("click", openShareDialog);
+    elements.shareCopyBtn.addEventListener("click", copySelectedShareCode);
+    elements.shareCancelBtn.addEventListener("click", () => closeShareDialog());
+    elements.shareKeepBtn.addEventListener("click", () => closeShareDialog());
+    elements.shareSelectAllBtn.addEventListener("click", () => setShareEntryChecks(true));
+    elements.shareSelectNoneBtn.addEventListener("click", () => setShareEntryChecks(false));
+    elements.shareEntryList.addEventListener("change", updateShareDialogState);
+    closeDialogOnBackdrop(elements.shareDialog);
     elements.importBtn.addEventListener("click", openReceiveDialog);
     elements.receiveCancelBtn.addEventListener("click", () => closeReceiveDialog());
     elements.receiveCodeInput.addEventListener("input", resetReceivePreview);
@@ -1007,51 +1022,129 @@
     setStatus("Deleted");
   }
 
-  async function copyShareCode() {
-    const shareFeatures = getShareFeatures();
+  function openShareDialog() {
+    const shareFeatures = getShareableFeatures();
+    elements.shareStatus.textContent = "";
+    elements.shareEntryList.innerHTML = "";
+
     if (!shareFeatures.length) {
-      setStatus("No entries match the current share scope");
+      setStatus("No non-default entries to share");
       return;
     }
+
+    shareFeatures
+      .slice()
+      .sort(compareFeaturesForList)
+      .forEach((feature) => {
+        const category = categoryById[feature.category] || categoryById.landmark;
+        const label = document.createElement("label");
+        label.className = "share-entry-row";
+        label.innerHTML = `
+          <input class="share-entry-checkbox" type="checkbox" value="${escapeHtml(feature.id)}" checked />
+          <span class="share-entry-main">
+            <span class="share-entry-title">${escapeHtml(feature.title || category.label)}</span>
+            <span class="share-entry-meta">
+              <i class="swatch" style="background:${category.color}" aria-hidden="true"></i>
+              ${escapeHtml(category.label)}
+              ${isGuildFeature(feature) ? '<span class="source-badge">Guild</span>' : ""}
+              ${feature.creator ? `<span>Mapped by ${escapeHtml(feature.creator)}</span>` : ""}
+            </span>
+          </span>
+        `;
+        elements.shareEntryList.appendChild(label);
+      });
+
+    elements.shareDialog.showModal();
+    updateShareDialogState();
+  }
+
+  function closeShareDialog() {
+    elements.shareDialog.close();
+    elements.shareStatus.textContent = "";
+  }
+
+  async function copySelectedShareCode() {
+    const shareFeatures = getSelectedShareFeatures();
+    if (!shareFeatures.length) {
+      elements.shareStatus.textContent = "Select at least one entry.";
+      return;
+    }
+
+    setShareBusy(true);
+    elements.shareStatus.textContent = "Preparing share code...";
     let code = "";
     let status = "";
 
-    if (isSupabaseConfigured()) {
-      try {
-        code = await uploadShareCode(shareFeatures);
-        status = `Copied short share code ${code} (${shareFeatures.length} custom entries)`;
-      } catch (error) {
-        console.error("Could not upload share code", error);
+    try {
+      if (isSupabaseConfigured()) {
+        try {
+          code = await uploadShareCode(shareFeatures);
+          status = `Copied short share code ${code} (${shareFeatures.length} ${shareFeatures.length === 1 ? "entry" : "entries"})`;
+        } catch (error) {
+          console.error("Could not upload share code", error);
+          const codes = encodeShareCodes(shareFeatures);
+          code = codes.join("\n");
+          const partText = codes.length === 1 ? "1 fallback code" : `${codes.length} fallback codes`;
+          status = `Supabase upload failed; copied ${partText}`;
+        }
+      } else {
         const codes = encodeShareCodes(shareFeatures);
         code = codes.join("\n");
         const partText = codes.length === 1 ? "1 fallback code" : `${codes.length} fallback codes`;
-        status = `Supabase upload failed; copied ${partText}`;
+        status = `Supabase anon key missing; copied ${partText}`;
       }
-    } else {
-      const codes = encodeShareCodes(shareFeatures);
-      code = codes.join("\n");
-      const partText = codes.length === 1 ? "1 fallback code" : `${codes.length} fallback codes`;
-      status = `Supabase anon key missing; copied ${partText}`;
-    }
 
-    try {
-      await navigator.clipboard.writeText(code);
-      setStatus(status);
+      try {
+        await navigator.clipboard.writeText(code);
+        setStatus(status);
+        closeShareDialog();
+      } catch (error) {
+        window.prompt("Copy this atlas code.", code);
+        setStatus(status.replace("Copied", "Atlas code ready to copy"));
+        closeShareDialog();
+      }
     } catch (error) {
-      window.prompt("Copy this atlas code.", code);
-      setStatus(status.replace("Copied", "Atlas code ready to copy"));
+      console.error(error);
+      elements.shareStatus.textContent = "Could not create a share code for those entries.";
+    } finally {
+      setShareBusy(false);
     }
   }
 
-  function getShareFeatures() {
-    const selected = getSelectedFeature();
-    if (elements.shareScopeInput.value === "selected") {
-      return selected && isPersonalFeature(selected) ? [selected] : [];
-    }
-    if (elements.shareScopeInput.value === "visible") {
-      return getVisibleFeatures().filter(isPersonalFeature);
-    }
-    return state.features.filter(isPersonalFeature);
+  function getShareableFeatures() {
+    return state.features.filter((feature) => !isDefaultFeature(feature));
+  }
+
+  function getSelectedShareFeatures() {
+    const selectedIds = new Set(
+      Array.from(elements.shareEntryList.querySelectorAll(".share-entry-checkbox:checked")).map((input) => input.value),
+    );
+    return getShareableFeatures().filter((feature) => selectedIds.has(feature.id));
+  }
+
+  function setShareEntryChecks(checked) {
+    elements.shareEntryList.querySelectorAll(".share-entry-checkbox").forEach((input) => {
+      input.checked = checked;
+    });
+    updateShareDialogState();
+  }
+
+  function updateShareDialogState() {
+    const selectedCount = elements.shareEntryList.querySelectorAll(".share-entry-checkbox:checked").length;
+    const totalCount = elements.shareEntryList.querySelectorAll(".share-entry-checkbox").length;
+    elements.shareSummary.textContent = `${selectedCount} of ${totalCount} ${totalCount === 1 ? "entry" : "entries"} selected. Printed cities and towns are not included.`;
+    elements.shareCopyBtn.disabled = selectedCount === 0;
+  }
+
+  function setShareBusy(busy) {
+    elements.shareEntryList.querySelectorAll("input").forEach((input) => {
+      input.disabled = busy;
+    });
+    elements.shareCopyBtn.disabled = busy || !elements.shareEntryList.querySelector(".share-entry-checkbox:checked");
+    elements.shareCancelBtn.disabled = busy;
+    elements.shareKeepBtn.disabled = busy;
+    elements.shareSelectAllBtn.disabled = busy;
+    elements.shareSelectNoneBtn.disabled = busy;
   }
 
   async function loadGuildAtlas() {
