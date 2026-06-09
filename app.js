@@ -589,12 +589,15 @@
     renderCreatorFilter();
     featureLayer.clearLayers();
 
-    getVisibleFeatures().forEach((feature) => {
-      const layer = createLayer(feature);
-      if (layer) {
-        featureLayer.addLayer(layer);
-      }
-    });
+    getVisibleFeatures()
+      .slice()
+      .sort(compareFeaturesForMap)
+      .forEach((feature) => {
+        const layer = createLayer(feature);
+        if (layer) {
+          featureLayer.addLayer(layer);
+        }
+      });
 
     renderFeatureList();
     renderEditor();
@@ -607,6 +610,7 @@
     if (feature.type === "marker") {
       const point = feature.points[0];
       const marker = L.marker([point.y, point.x], {
+        zIndexOffset: getFeatureZIndexOffset(feature, selected),
         icon: L.divIcon({
           className: "",
           html: `<div class="poi-marker marker-${escapeHtml(feature.category)}${isGuildFeature(feature) ? " is-guild" : ""}${selected ? " is-selected" : ""}" style="--marker-color:${category.color}">${getCategoryIcon(feature.category)}</div>`,
@@ -1909,6 +1913,40 @@
       return bTime - aTime;
     }
     return a.title.localeCompare(b.title);
+  }
+
+  function compareFeaturesForMap(a, b) {
+    const orderDifference = getFeatureMapOrder(a) - getFeatureMapOrder(b);
+    if (orderDifference) {
+      return orderDifference;
+    }
+    return a.title.localeCompare(b.title);
+  }
+
+  function getFeatureMapOrder(feature) {
+    if (isFeatureSelected(feature.id)) {
+      return 30;
+    }
+    if (isDefaultFeature(feature)) {
+      return 0;
+    }
+    if (isGuildFeature(feature)) {
+      return 10;
+    }
+    return 20;
+  }
+
+  function getFeatureZIndexOffset(feature, selected) {
+    if (selected) {
+      return 3000;
+    }
+    if (isDefaultFeature(feature)) {
+      return -1000;
+    }
+    if (isGuildFeature(feature)) {
+      return 1000;
+    }
+    return 2000;
   }
 
   function isDefaultFeature(feature) {
