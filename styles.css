@@ -330,6 +330,40 @@ textarea {
   font-style: italic;
 }
 
+.help-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.help-step {
+  padding: 10px;
+  border: 1px solid rgba(72, 45, 17, 0.25);
+  border-radius: 4px;
+  background: rgba(255, 246, 222, 0.42);
+}
+
+.help-step h3 {
+  margin: 0 0 7px;
+  color: #3b2816;
+  font-size: 0.86rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.help-step ol {
+  margin: 0;
+  padding-left: 18px;
+  color: #493520;
+  font-size: 0.86rem;
+  line-height: 1.35;
+}
+
+.help-step li + li {
+  margin-top: 4px;
+}
+
 .workflow-dialog {
   width: min(600px, calc(100vw - 32px));
 }
@@ -943,6 +977,10 @@ textarea {
 
   .segmented {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .help-grid {
+    grid-template-columns: 1fr;
   }
 
   .action-group + .action-group {
