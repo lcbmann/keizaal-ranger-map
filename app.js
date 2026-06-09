@@ -196,6 +196,7 @@
 
   let lastDragEndedAt = 0;
   let suppressNextClickUntil = 0;
+  let searchAutofillGuardUntil = Date.now() + 5000;
 
   init();
 
@@ -205,7 +206,7 @@
     renderAll();
     bindEvents();
     syncViewInputsFromState();
-    window.setTimeout(syncViewInputsFromState, 0);
+    [0, 100, 500, 1500, 3000].forEach((delay) => window.setTimeout(clearRestoredSearchInput, delay));
     setStatus("Ready");
   }
 
@@ -255,6 +256,12 @@
     });
 
     elements.searchInput.addEventListener("input", (event) => {
+      if (shouldRejectSearchAutofill(event.target.value)) {
+        event.target.value = "";
+        state.search = "";
+        renderAll();
+        return;
+      }
       state.search = event.target.value.trim().toLowerCase();
       renderAll();
     });
@@ -1557,6 +1564,25 @@
   function syncViewInputsFromState() {
     elements.searchInput.value = state.search;
     elements.creatorFilterInput.value = state.creatorFilter;
+  }
+
+  function clearRestoredSearchInput() {
+    if (state.search || document.activeElement === elements.searchInput) {
+      return;
+    }
+    if (elements.searchInput.value) {
+      elements.searchInput.value = "";
+      renderAll();
+    }
+  }
+
+  function shouldRejectSearchAutofill(value) {
+    if (Date.now() > searchAutofillGuardUntil) {
+      return false;
+    }
+    const searchValue = normalizeCreatorName(value).toLowerCase();
+    const signedAs = normalizeCreatorName(state.creatorName).toLowerCase();
+    return Boolean(searchValue && signedAs && searchValue === signedAs);
   }
 
   function hasActiveViewFilters() {
