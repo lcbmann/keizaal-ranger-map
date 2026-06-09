@@ -79,6 +79,9 @@
           <div class="action-group">
             <button id="clearBtn" class="button danger" type="button">Scrape Clean</button>
           </div>
+          <div class="action-group">
+            <button id="helpBtn" class="help-button" type="button" title="How to use the atlas" aria-label="How to use the atlas">?</button>
+          </div>
         </div>
       </header>
 
@@ -161,7 +164,26 @@
           Keep entries clear, current, and useful. Copy a code to pass your notes to others, or receive
           one to fold another traveler's findings into your own map.
         </p>
-        <p class="field-note-signature">Good maps save lives.<br />Lorn Valecroft</p>
+        <p class="field-note-signature">Good maps save lives.<br />Ranger-Captain Lorn Valecroft</p>
+      </div>
+    </dialog>
+
+    <dialog id="helpDialog" class="field-note workflow-dialog">
+      <div class="field-note-inner">
+        <button id="helpCloseBtn" class="field-note-close" type="button" aria-label="Close atlas instructions">&times;</button>
+        <p class="field-note-kicker">Atlas Instructions</p>
+        <h2>Using the Field Atlas</h2>
+        <p>
+          Use Select to pan and inspect entries. Use Mark to place a point, Trail to sketch a route,
+          and Range to draw a boundary. Fill in the selected entry, then use the checkmark on the map to keep it.
+        </p>
+        <p>
+          Search and filters narrow the atlas list. Press Escape to clear active filters. Copy Code lets you choose
+          which entries to share; Receive Code imports another atlas code or loads the Guild Atlas.
+        </p>
+        <p>
+          Default cities and towns are reference points. Scrape Clean removes your own notes but keeps those references.
+        </p>
       </div>
     </dialog>
 

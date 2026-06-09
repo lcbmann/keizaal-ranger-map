@@ -131,6 +131,9 @@
     aboutBtn: document.getElementById("aboutBtn"),
     aboutDialog: document.getElementById("aboutDialog"),
     aboutCloseBtn: document.getElementById("aboutCloseBtn"),
+    helpBtn: document.getElementById("helpBtn"),
+    helpDialog: document.getElementById("helpDialog"),
+    helpCloseBtn: document.getElementById("helpCloseBtn"),
     receiveDialog: document.getElementById("receiveDialog"),
     receiveCodeInput: document.getElementById("receiveCodeInput"),
     receivePreview: document.getElementById("receivePreview"),
@@ -218,6 +221,9 @@
     elements.aboutBtn.addEventListener("click", () => elements.aboutDialog.showModal());
     elements.aboutCloseBtn.addEventListener("click", () => elements.aboutDialog.close());
     closeDialogOnBackdrop(elements.aboutDialog);
+    elements.helpBtn.addEventListener("click", () => elements.helpDialog.showModal());
+    elements.helpCloseBtn.addEventListener("click", () => elements.helpDialog.close());
+    closeDialogOnBackdrop(elements.helpDialog);
 
     elements.undoBtn.addEventListener("click", undoLastAction);
     elements.guildAdminBtn.addEventListener("click", openGuildPublishDialog);

@@ -114,7 +114,8 @@ textarea {
   letter-spacing: 0;
 }
 
-.about-button {
+.about-button,
+.help-button {
   width: 29px;
   height: 29px;
   flex: 0 0 auto;
@@ -129,7 +130,15 @@ textarea {
   cursor: pointer;
 }
 
-.about-button:hover {
+.help-button {
+  color: #f8eed2;
+  background: linear-gradient(#2d6545, #1e472f);
+  border-color: #183820;
+  font-weight: 700;
+}
+
+.about-button:hover,
+.help-button:hover {
   color: #1f4d31;
   background: rgba(255, 246, 222, 0.82);
 }
