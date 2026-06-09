@@ -791,6 +791,7 @@
       feature.updatedAt = new Date().toISOString();
       pushUndo("mark save");
       state.features.push(feature);
+      state.filters[feature.category] = true;
       saveState();
       cancelDrawing(false, false);
       renderAll();
@@ -816,6 +817,7 @@
 
     pushUndo(`${isRange ? "range" : "trail"} save`);
     state.features.push(feature);
+    state.filters[feature.category] = true;
     saveState();
     cancelDrawing(false, false);
     renderAll();
@@ -1500,6 +1502,7 @@
         state.features = replaceGuildFeatures(state.features, nextFeatures);
         state.selectedId = null;
         state.selectedIds = [];
+        resetViewFilters();
         saveState();
         renderAll();
         closeReceiveDialog();
@@ -1512,6 +1515,7 @@
         : mergePersonalFeatures(state.features, personalIncoming);
       state.selectedId = null;
       state.selectedIds = [];
+      resetViewFilters();
       saveState();
       renderAll();
       closeReceiveDialog();
@@ -1531,6 +1535,16 @@
     elements.receiveMergeBtn.disabled = busy || (!state.pendingReceive && keepImportDisabled);
     elements.receiveReplaceBtn.disabled = busy || (!state.pendingReceive && keepImportDisabled);
     elements.receiveCancelBtn.disabled = busy;
+  }
+
+  function resetViewFilters() {
+    state.search = "";
+    elements.searchInput.value = "";
+    state.creatorFilter = "";
+    categories.forEach((category) => {
+      state.filters[category.id] = true;
+    });
+    renderFilters();
   }
 
   function openClearDialog() {
@@ -1830,16 +1844,17 @@
 
   function getVisibleFeatures() {
     return state.features.filter((feature) => {
-      const categoryVisible = state.filters[feature.category] !== false;
+      const forcedVisible = isFeatureSelected(feature.id);
+      const categoryVisible = forcedVisible || state.filters[feature.category] !== false;
       if (!categoryVisible) {
         return false;
       }
 
-      if (state.creatorFilter && feature.creator !== state.creatorFilter) {
+      if (state.creatorFilter && !forcedVisible && !isDefaultFeature(feature) && feature.creator !== state.creatorFilter) {
         return false;
       }
 
-      if (!state.search) {
+      if (forcedVisible || !state.search) {
         return true;
       }
 
