@@ -29,6 +29,7 @@
     { id: "range", label: "Range", color: "#2f6548" },
     { id: "route", label: "Trail", color: "#68472e" },
     { id: "post", label: "Guild Post", color: "#6d5a32" },
+    { id: "trailmark", label: "Trailmark", color: "#4f6535" },
     { id: "landmark", label: "Landmark", color: "#5d5950" },
   ];
 
@@ -52,6 +53,9 @@
     plant: "ingredient",
     resource: "ore",
     settlement: "city",
+    trail_mark: "trailmark",
+    trailcache: "trailmark",
+    trailmark: "trailmark",
   };
 
   const defaultFeatures = [
@@ -2079,6 +2083,7 @@
       range: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7 12 4l7 4v9l-7 3-7-3z"/><path d="M9 10h6v4H9z"/></svg>',
       route: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 18c5-9 9 1 14-8"/><circle cx="5" cy="18" r="1.5"/><circle cx="19" cy="10" r="1.5"/></svg>',
       threat: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4 21 20H3z"/><path d="M12 9v5"/><path d="M12 17h.01"/></svg>',
+      trailmark: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h10l-2 4 2 4H7z"/><path d="M9 13v7"/><path d="M6 20h6"/><path d="M14 7h.01M11 10h3"/></svg>',
       town: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V10l7-5 7 5v10z"/><path d="M10 20v-6h4v6"/><path d="M8 12h2M14 12h2"/></svg>',
     };
     return icons[category] || icons.landmark;
