@@ -204,6 +204,8 @@
     renderFilters();
     renderAll();
     bindEvents();
+    syncViewInputsFromState();
+    window.setTimeout(syncViewInputsFromState, 0);
     setStatus("Ready");
   }
 
@@ -308,6 +310,10 @@
       if (event.key === "Escape") {
         if (state.drawPoints.length) {
           cancelDrawing();
+        } else if (hasActiveViewFilters()) {
+          resetViewFilters();
+          renderAll();
+          setStatus("View filters cleared");
         } else {
           selectFeature(null);
         }
@@ -348,6 +354,7 @@
       }
       state.creatorName = normalizeCreatorName(saved.creatorName || "");
       elements.creatorInput.value = state.creatorName;
+      syncViewInputsFromState();
       if (shouldSave) {
         saveState();
       }
@@ -1539,12 +1546,25 @@
 
   function resetViewFilters() {
     state.search = "";
-    elements.searchInput.value = "";
     state.creatorFilter = "";
     categories.forEach((category) => {
       state.filters[category.id] = true;
     });
+    syncViewInputsFromState();
     renderFilters();
+  }
+
+  function syncViewInputsFromState() {
+    elements.searchInput.value = state.search;
+    elements.creatorFilterInput.value = state.creatorFilter;
+  }
+
+  function hasActiveViewFilters() {
+    return Boolean(
+      state.search ||
+        state.creatorFilter ||
+        categories.some((category) => state.filters[category.id] === false),
+    );
   }
 
   function openClearDialog() {
@@ -1854,7 +1874,7 @@
         return false;
       }
 
-      if (forcedVisible || !state.search) {
+      if (forcedVisible || isDefaultFeature(feature) || !state.search) {
         return true;
       }
 
