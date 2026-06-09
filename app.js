@@ -131,6 +131,7 @@
     receiveCodeInput: document.getElementById("receiveCodeInput"),
     receivePreview: document.getElementById("receivePreview"),
     receiveStatus: document.getElementById("receiveStatus"),
+    receiveGuildBtn: document.getElementById("receiveGuildBtn"),
     receiveReviewBtn: document.getElementById("receiveReviewBtn"),
     receiveMergeBtn: document.getElementById("receiveMergeBtn"),
     receiveReplaceBtn: document.getElementById("receiveReplaceBtn"),
@@ -231,6 +232,7 @@
     elements.importBtn.addEventListener("click", openReceiveDialog);
     elements.receiveCancelBtn.addEventListener("click", () => closeReceiveDialog());
     elements.receiveCodeInput.addEventListener("input", resetReceivePreview);
+    elements.receiveGuildBtn.addEventListener("click", reviewGuildAtlasCode);
     elements.receiveReviewBtn.addEventListener("click", reviewReceiveCode);
     elements.receiveMergeBtn.addEventListener("click", () => receiveShareCode(false));
     elements.receiveReplaceBtn.addEventListener("click", () => receiveShareCode(true));
@@ -1420,6 +1422,12 @@
     elements.receiveStatus.textContent = "";
   }
 
+  function reviewGuildAtlasCode() {
+    elements.receiveCodeInput.value = GUILD_ATLAS_CODE;
+    resetReceivePreview();
+    reviewReceiveCode();
+  }
+
   async function reviewReceiveCode() {
     const code = elements.receiveCodeInput.value.trim();
     if (!code) {
@@ -1510,6 +1518,7 @@
 
   function setReceiveBusy(busy, keepImportDisabled = false) {
     elements.receiveCodeInput.disabled = busy;
+    elements.receiveGuildBtn.disabled = busy;
     elements.receiveReviewBtn.disabled = busy;
     elements.receiveMergeBtn.disabled = busy || (!state.pendingReceive && keepImportDisabled);
     elements.receiveReplaceBtn.disabled = busy || (!state.pendingReceive && keepImportDisabled);

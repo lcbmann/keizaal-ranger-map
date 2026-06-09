@@ -340,6 +340,13 @@ textarea {
   font-style: italic;
 }
 
+.receive-code-options {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 12px 0 2px;
+}
+
 .receive-preview {
   display: grid;
   gap: 6px;
