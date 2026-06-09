@@ -76,9 +76,11 @@
     features: [],
     filters: Object.fromEntries(categories.map((category) => [category.id, true])),
     search: "",
+    creatorFilter: "",
     selectedId: null,
     mode: "select",
     creatorName: "",
+    pendingReceive: null,
     draftFeature: null,
     drawPoints: [],
     draftLayer: null,
@@ -125,7 +127,9 @@
     aboutCloseBtn: document.getElementById("aboutCloseBtn"),
     receiveDialog: document.getElementById("receiveDialog"),
     receiveCodeInput: document.getElementById("receiveCodeInput"),
+    receivePreview: document.getElementById("receivePreview"),
     receiveStatus: document.getElementById("receiveStatus"),
+    receiveReviewBtn: document.getElementById("receiveReviewBtn"),
     receiveMergeBtn: document.getElementById("receiveMergeBtn"),
     receiveReplaceBtn: document.getElementById("receiveReplaceBtn"),
     receiveCancelBtn: document.getElementById("receiveCancelBtn"),
@@ -139,7 +143,9 @@
     importBtn: document.getElementById("importBtn"),
     clearBtn: document.getElementById("clearBtn"),
     creatorInput: document.getElementById("creatorInput"),
+    shareScopeInput: document.getElementById("shareScopeInput"),
     searchInput: document.getElementById("searchInput"),
+    creatorFilterInput: document.getElementById("creatorFilterInput"),
     categoryFilters: document.getElementById("categoryFilters"),
     featureList: document.getElementById("featureList"),
     statusBar: document.getElementById("statusBar"),
@@ -187,7 +193,9 @@
     elements.undoBtn.addEventListener("click", undoLastAction);
     elements.exportBtn.addEventListener("click", copyShareCode);
     elements.importBtn.addEventListener("click", openReceiveDialog);
-    elements.receiveCancelBtn.addEventListener("click", () => elements.receiveDialog.close());
+    elements.receiveCancelBtn.addEventListener("click", () => closeReceiveDialog());
+    elements.receiveCodeInput.addEventListener("input", resetReceivePreview);
+    elements.receiveReviewBtn.addEventListener("click", reviewReceiveCode);
     elements.receiveMergeBtn.addEventListener("click", () => receiveShareCode(false));
     elements.receiveReplaceBtn.addEventListener("click", () => receiveShareCode(true));
     closeDialogOnBackdrop(elements.receiveDialog);
@@ -204,6 +212,11 @@
 
     elements.searchInput.addEventListener("input", (event) => {
       state.search = event.target.value.trim().toLowerCase();
+      renderAll();
+    });
+
+    elements.creatorFilterInput.addEventListener("change", (event) => {
+      state.creatorFilter = event.target.value;
       renderAll();
     });
 
@@ -522,6 +535,7 @@
   }
 
   function renderAll() {
+    renderCreatorFilter();
     featureLayer.clearLayers();
 
     getVisibleFeatures().forEach((feature) => {
@@ -819,6 +833,28 @@
     });
   }
 
+  function renderCreatorFilter() {
+    const creators = Array.from(
+      new Set(
+        state.features
+          .filter((feature) => !isDefaultFeature(feature) && feature.creator)
+          .map((feature) => feature.creator),
+      ),
+    ).sort((a, b) => a.localeCompare(b));
+
+    const previous = state.creatorFilter;
+    elements.creatorFilterInput.innerHTML = '<option value="">Anyone</option>';
+    creators.forEach((creator) => {
+      const option = document.createElement("option");
+      option.value = creator;
+      option.textContent = creator;
+      elements.creatorFilterInput.appendChild(option);
+    });
+
+    state.creatorFilter = creators.includes(previous) ? previous : "";
+    elements.creatorFilterInput.value = state.creatorFilter;
+  }
+
   function renderFeatureList() {
     const features = getVisibleFeatures();
     elements.featureList.innerHTML = "";
@@ -844,8 +880,10 @@
           <span class="feature-meta">
             <i class="swatch" style="background:${category.color}" aria-hidden="true"></i>
             ${escapeHtml(category.label)}
+            <span>${escapeHtml(getFeatureFreshnessLabel(feature))}</span>
           </span>
           ${feature.creator ? `<span class="feature-creator">Mapped by ${escapeHtml(feature.creator)}</span>` : ""}
+          ${feature.updatedBy ? `<span class="feature-creator">Updated by ${escapeHtml(feature.updatedBy)}</span>` : ""}
           ${feature.notes ? `<span class="feature-note">${escapeHtml(truncate(feature.notes, 90))}</span>` : ""}
         `;
         button.addEventListener("click", () => {
@@ -866,8 +904,8 @@
     elements.titleInput.value = feature ? feature.title : "";
     elements.categoryInput.value = feature ? feature.category : "landmark";
     elements.confidenceInput.value = feature ? feature.confidence : "scouted";
-    elements.creatorMeta.textContent = feature && feature.creator ? `Mapped by ${feature.creator}` : "";
-    elements.creatorMeta.hidden = !feature || !feature.creator;
+    elements.creatorMeta.innerHTML = feature ? getAttributionHtml(feature) : "";
+    elements.creatorMeta.hidden = !feature || !elements.creatorMeta.innerHTML;
     elements.notesInput.value = feature ? feature.notes : "";
 
     const isDraft = Boolean(feature && state.draftFeature && feature.id === state.draftFeature.id);
@@ -909,6 +947,7 @@
 
     pushUndo(`${feature.title} edit`);
     applyEditorValues(feature);
+    stampFeatureUpdate(feature);
     feature.updatedAt = new Date().toISOString();
 
     saveState();
@@ -950,7 +989,11 @@
   }
 
   async function copyShareCode() {
-    const shareFeatures = state.features.filter((feature) => !isDefaultFeature(feature));
+    const shareFeatures = getShareFeatures();
+    if (!shareFeatures.length) {
+      setStatus("No entries match the current share scope");
+      return;
+    }
     let code = "";
     let status = "";
 
@@ -981,14 +1024,80 @@
     }
   }
 
+  function getShareFeatures() {
+    const selected = getSelectedFeature();
+    if (elements.shareScopeInput.value === "selected") {
+      return selected && !isDefaultFeature(selected) ? [selected] : [];
+    }
+    if (elements.shareScopeInput.value === "visible") {
+      return getVisibleFeatures().filter((feature) => !isDefaultFeature(feature));
+    }
+    return state.features.filter((feature) => !isDefaultFeature(feature));
+  }
+
+  function summarizeIncomingFeatures(features) {
+    const existingIds = new Set(state.features.map((feature) => feature.id));
+    const customCount = state.features.filter((feature) => !isDefaultFeature(feature)).length;
+    const uniqueCreators = Array.from(new Set(features.map((feature) => feature.creator).filter(Boolean))).sort((a, b) => a.localeCompare(b));
+    const typeCounts = features.reduce(
+      (counts, feature) => {
+        counts[feature.type] = (counts[feature.type] || 0) + 1;
+        return counts;
+      },
+      { marker: 0, route: 0, range: 0 },
+    );
+    const duplicateCount = features.filter((feature) => existingIds.has(feature.id)).length;
+    return {
+      customCount,
+      duplicateCount,
+      features,
+      newCount: features.length - duplicateCount,
+      typeCounts,
+      uniqueCreators,
+    };
+  }
+
+  function renderReceivePreview(summary) {
+    const typeText = [
+      `${summary.typeCounts.marker || 0} marks`,
+      `${summary.typeCounts.route || 0} trails`,
+      `${summary.typeCounts.range || 0} ranges`,
+    ].join(", ");
+    const creatorText = summary.uniqueCreators.length
+      ? summary.uniqueCreators.slice(0, 4).join(", ") + (summary.uniqueCreators.length > 4 ? `, and ${summary.uniqueCreators.length - 4} more` : "")
+      : "Unsigned";
+    return `
+      <strong>${summary.features.length} received entries</strong>
+      <span>${escapeHtml(typeText)}</span>
+      <span>${escapeHtml(summary.newCount)} new, ${escapeHtml(summary.duplicateCount)} already on your atlas</span>
+      <span>Mapped by: ${escapeHtml(creatorText)}</span>
+      <span>Replace would remove ${escapeHtml(summary.customCount)} current custom ${summary.customCount === 1 ? "entry" : "entries"} first.</span>
+    `;
+  }
+
   function openReceiveDialog() {
     elements.receiveCodeInput.value = "";
     elements.receiveStatus.textContent = "";
+    resetReceivePreview();
     elements.receiveDialog.showModal();
     window.setTimeout(() => elements.receiveCodeInput.focus(), 0);
   }
 
-  async function receiveShareCode(replace) {
+  function closeReceiveDialog() {
+    resetReceivePreview();
+    elements.receiveDialog.close();
+  }
+
+  function resetReceivePreview() {
+    state.pendingReceive = null;
+    elements.receivePreview.hidden = true;
+    elements.receivePreview.innerHTML = "";
+    elements.receiveMergeBtn.disabled = true;
+    elements.receiveReplaceBtn.disabled = true;
+    elements.receiveStatus.textContent = "";
+  }
+
+  async function reviewReceiveCode() {
     const code = elements.receiveCodeInput.value.trim();
     if (!code) {
       elements.receiveStatus.textContent = "Paste a share code first.";
@@ -996,22 +1105,55 @@
     }
 
     setReceiveBusy(true);
-    elements.receiveStatus.textContent = replace ? "Checking code before replacing your custom entries..." : "Checking code before merging entries...";
-
+    elements.receiveStatus.textContent = "Reading shared atlas...";
     try {
-      const imported = await resolveShareInput(code.trim());
+      const imported = await resolveShareInput(code);
       if (!Array.isArray(imported.features)) {
         throw new Error("Missing features array");
       }
+      const nextFeatures = normalizeFeatures(imported.features.filter(isValidFeature), imported.map).filter(
+        (feature) => !isDefaultFeature(feature),
+      );
+      if (!nextFeatures.length) {
+        resetReceivePreview();
+        elements.receiveStatus.textContent = "That code has no custom entries to import.";
+        return;
+      }
+      const summary = summarizeIncomingFeatures(nextFeatures);
+      state.pendingReceive = { features: nextFeatures, summary };
+      elements.receivePreview.hidden = false;
+      elements.receivePreview.innerHTML = renderReceivePreview(summary);
+      elements.receiveMergeBtn.disabled = false;
+      elements.receiveReplaceBtn.disabled = false;
+      elements.receiveStatus.textContent = "Review the entries, then merge or replace.";
+    } catch (error) {
+      console.error(error);
+      resetReceivePreview();
+      elements.receiveStatus.textContent = "That code could not be read. Check that every part was pasted correctly.";
+    } finally {
+      setReceiveBusy(false, true);
+    }
+  }
 
-      const nextFeatures = normalizeFeatures(imported.features.filter(isValidFeature), imported.map);
+  async function receiveShareCode(replace) {
+    if (!state.pendingReceive) {
+      elements.receiveStatus.textContent = "Review the code before importing it.";
+      return;
+    }
+
+    setReceiveBusy(true);
+    elements.receiveStatus.textContent = replace ? "Replacing your custom entries..." : "Merging new entries...";
+
+    try {
+      const nextFeatures = state.pendingReceive.features;
+      const summary = state.pendingReceive.summary;
       pushUndo(replace ? "receive code replace" : "receive code merge");
       state.features = applyDefaultFeatures(replace ? nextFeatures : mergeFeatures(state.features, nextFeatures));
       state.selectedId = null;
       saveState();
       renderAll();
-      elements.receiveDialog.close();
-      setStatus(replace ? `Replaced custom entries with ${nextFeatures.length} received entries` : `Merged ${nextFeatures.length} received entries`);
+      closeReceiveDialog();
+      setStatus(replace ? `Replaced custom entries with ${nextFeatures.length} received entries` : `Merged ${summary.newCount} new entries${summary.duplicateCount ? `; ${summary.duplicateCount} already present` : ""}`);
     } catch (error) {
       console.error(error);
       elements.receiveStatus.textContent = "That code could not be read. Check that every part was pasted correctly.";
@@ -1020,10 +1162,11 @@
     }
   }
 
-  function setReceiveBusy(busy) {
+  function setReceiveBusy(busy, keepImportDisabled = false) {
     elements.receiveCodeInput.disabled = busy;
-    elements.receiveMergeBtn.disabled = busy;
-    elements.receiveReplaceBtn.disabled = busy;
+    elements.receiveReviewBtn.disabled = busy;
+    elements.receiveMergeBtn.disabled = busy || (!state.pendingReceive && keepImportDisabled);
+    elements.receiveReplaceBtn.disabled = busy || (!state.pendingReceive && keepImportDisabled);
     elements.receiveCancelBtn.disabled = busy;
   }
 
@@ -1248,6 +1391,7 @@
       encodeDate(feature.createdAt),
       encodeDate(feature.updatedAt),
       feature.creator || "",
+      feature.updatedBy || "",
     ];
   }
 
@@ -1282,6 +1426,7 @@
       createdAt: decodeDate(value[7]),
       updatedAt: decodeDate(value[8] || value[7]),
       creator: normalizeCreatorName(value[9] || ""),
+      updatedBy: normalizeCreatorName(value[10] || ""),
     };
   }
 
@@ -1326,6 +1471,10 @@
         return false;
       }
 
+      if (state.creatorFilter && feature.creator !== state.creatorFilter) {
+        return false;
+      }
+
       if (!state.search) {
         return true;
       }
@@ -1359,6 +1508,13 @@
     feature.category = elements.categoryInput.value;
     feature.confidence = elements.confidenceInput.value;
     feature.notes = elements.notesInput.value.trim();
+  }
+
+  function stampFeatureUpdate(feature) {
+    const updater = getCurrentCreatorName();
+    if (updater && updater !== feature.creator) {
+      feature.updatedBy = updater;
+    }
   }
 
   function compareFeaturesForList(a, b) {
@@ -1425,6 +1581,7 @@
         ...rest,
         category,
         creator: normalizeCreatorName(rest.creator || ""),
+        updatedBy: normalizeCreatorName(rest.updatedBy || ""),
         points: rest.points.map((point) =>
         clampPoint({
           lng: Math.round(point.x * scaleX),
@@ -1467,10 +1624,50 @@
 
   function getFeatureTooltip(feature, category) {
     const title = escapeHtml(feature.title || category.label);
-    if (!feature.creator) {
-      return title;
+    return [title, getAttributionHtml(feature), `<span class="tooltip-meta">${escapeHtml(getFeatureFreshnessLabel(feature))}</span>`]
+      .filter(Boolean)
+      .join("<br>");
+  }
+
+  function getAttributionHtml(feature) {
+    const lines = [];
+    if (feature.creator) {
+      lines.push(`Mapped by ${escapeHtml(feature.creator)}`);
     }
-    return `${title}<br><span class="tooltip-meta">Mapped by ${escapeHtml(feature.creator)}</span>`;
+    if (feature.updatedBy) {
+      lines.push(`Updated by ${escapeHtml(feature.updatedBy)}`);
+    }
+    return lines.map((line) => `<span>${line}</span>`).join("<br>");
+  }
+
+  function getFeatureFreshnessLabel(feature) {
+    if (feature.confidence === "stale") {
+      return "Marked stale";
+    }
+    return `Updated ${formatRelativeDate(feature.updatedAt || feature.createdAt)}`;
+  }
+
+  function formatRelativeDate(value) {
+    const timestamp = Date.parse(value || "");
+    if (!Number.isFinite(timestamp)) {
+      return "unknown";
+    }
+    const days = Math.floor((Date.now() - timestamp) / 86400000);
+    if (days <= 0) {
+      return "today";
+    }
+    if (days === 1) {
+      return "yesterday";
+    }
+    if (days < 30) {
+      return `${days} days ago`;
+    }
+    if (days < 365) {
+      const months = Math.floor(days / 30);
+      return `${months} month${months === 1 ? "" : "s"} ago`;
+    }
+    const years = Math.floor(days / 365);
+    return `${years} year${years === 1 ? "" : "s"} ago`;
   }
 
   function getCategoryIcon(category) {

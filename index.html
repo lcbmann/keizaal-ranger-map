@@ -71,6 +71,14 @@
             <button id="undoBtn" class="button secondary" type="button" title="Undo last change (Ctrl+Z)" disabled>Undo</button>
           </div>
           <div class="action-group">
+            <label class="share-scope-field" for="shareScopeInput">
+              <span>Share</span>
+              <select id="shareScopeInput" class="share-scope-input">
+                <option value="all">All custom</option>
+                <option value="visible">Visible</option>
+                <option value="selected">Selected</option>
+              </select>
+            </label>
             <button id="exportBtn" class="button secondary" type="button">Copy Code</button>
             <button id="importBtn" class="button secondary" type="button">Receive Code</button>
           </div>
@@ -126,6 +134,8 @@
             <h2>Atlas</h2>
             <label class="field-label" for="searchInput">Search</label>
             <input id="searchInput" class="text-input" type="search" placeholder="Name or note" />
+            <label class="field-label" for="creatorFilterInput">Mapped By</label>
+            <select id="creatorFilterInput" class="text-input"></select>
             <div id="categoryFilters" class="filter-list" aria-label="Category filters"></div>
             <div id="featureList" class="feature-list"></div>
           </section>
@@ -158,10 +168,12 @@
         <p>Paste a short share code, fallback code, or raw atlas export. Choose how it should affect your current atlas.</p>
         <label class="field-label" for="receiveCodeInput">Share Code</label>
         <textarea id="receiveCodeInput" class="text-input textarea code-input" rows="5" placeholder="Paste code here"></textarea>
+        <div id="receivePreview" class="receive-preview" hidden></div>
         <p id="receiveStatus" class="dialog-status" aria-live="polite"></p>
         <div class="dialog-actions">
-          <button id="receiveMergeBtn" class="button primary" type="button">Merge Entries</button>
-          <button id="receiveReplaceBtn" class="button secondary" type="button">Replace Mine</button>
+          <button id="receiveReviewBtn" class="button primary" type="button">Review Code</button>
+          <button id="receiveMergeBtn" class="button primary" type="button" disabled>Merge Entries</button>
+          <button id="receiveReplaceBtn" class="button secondary" type="button" disabled>Replace Mine</button>
         </div>
         <p class="dialog-help">Merge keeps your notes and adds incoming entries. Replace removes your custom notes first. Default cities and towns stay either way.</p>
       </div>
