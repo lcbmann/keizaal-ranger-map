@@ -79,6 +79,7 @@
     search: "",
     creatorFilter: "",
     selectedId: null,
+    selectedIds: [],
     mode: "select",
     creatorName: "",
     pendingReceive: null,
@@ -140,15 +141,17 @@
     clearCancelBtn: document.getElementById("clearCancelBtn"),
     clearKeepBtn: document.getElementById("clearKeepBtn"),
     undoBtn: document.getElementById("undoBtn"),
-    guildLoadBtn: document.getElementById("guildLoadBtn"),
-    guildPublishBtn: document.getElementById("guildPublishBtn"),
+    guildAdminBtn: document.getElementById("guildAdminBtn"),
     guildPublishDialog: document.getElementById("guildPublishDialog"),
     guildPublishSummary: document.getElementById("guildPublishSummary"),
+    guildEntryList: document.getElementById("guildEntryList"),
     guildPassphraseInput: document.getElementById("guildPassphraseInput"),
     guildPublishStatus: document.getElementById("guildPublishStatus"),
     guildPublishConfirmBtn: document.getElementById("guildPublishConfirmBtn"),
     guildPublishCancelBtn: document.getElementById("guildPublishCancelBtn"),
     guildPublishKeepBtn: document.getElementById("guildPublishKeepBtn"),
+    guildSelectAllBtn: document.getElementById("guildSelectAllBtn"),
+    guildSelectNoneBtn: document.getElementById("guildSelectNoneBtn"),
     shareDialog: document.getElementById("shareDialog"),
     shareSummary: document.getElementById("shareSummary"),
     shareEntryList: document.getElementById("shareEntryList"),
@@ -209,11 +212,13 @@
     closeDialogOnBackdrop(elements.aboutDialog);
 
     elements.undoBtn.addEventListener("click", undoLastAction);
-    elements.guildLoadBtn.addEventListener("click", loadGuildAtlas);
-    elements.guildPublishBtn.addEventListener("click", openGuildPublishDialog);
+    elements.guildAdminBtn.addEventListener("click", openGuildPublishDialog);
     elements.guildPublishConfirmBtn.addEventListener("click", publishGuildAtlas);
     elements.guildPublishCancelBtn.addEventListener("click", () => closeGuildPublishDialog());
     elements.guildPublishKeepBtn.addEventListener("click", () => closeGuildPublishDialog());
+    elements.guildSelectAllBtn.addEventListener("click", () => setGuildEntryChecks(true));
+    elements.guildSelectNoneBtn.addEventListener("click", () => setGuildEntryChecks(false));
+    elements.guildEntryList.addEventListener("change", updateGuildPublishDialogState);
     closeDialogOnBackdrop(elements.guildPublishDialog);
     elements.exportBtn.addEventListener("click", openShareDialog);
     elements.shareCopyBtn.addEventListener("click", copySelectedShareCode);
@@ -370,6 +375,7 @@
       label,
       mode: state.mode,
       selectedId: state.selectedId,
+      selectedIds: state.selectedIds.slice(),
     });
     if (state.undoStack.length > 50) {
       state.undoStack.shift();
@@ -387,6 +393,11 @@
 
     state.features = snapshot.features.map(cloneFeature);
     state.selectedId = snapshot.selectedId;
+    state.selectedIds = Array.isArray(snapshot.selectedIds)
+      ? snapshot.selectedIds.slice()
+      : snapshot.selectedId
+        ? [snapshot.selectedId]
+        : [];
     state.draftFeature = snapshot.draftFeature ? cloneFeature(snapshot.draftFeature) : null;
     state.drawPoints = snapshot.drawPoints.map((point) => ({ ...point }));
     state.mode = snapshot.mode;
@@ -450,6 +461,7 @@
       });
       state.drawPoints = state.draftFeature.points.map((draftPoint) => ({ ...draftPoint }));
       state.selectedId = state.draftFeature.id;
+      state.selectedIds = [state.draftFeature.id];
       updateDrawButtons();
       renderAll();
       renderDraft();
@@ -584,7 +596,7 @@
 
   function createLayer(feature) {
     const category = categoryById[feature.category] || categoryById.landmark;
-    const selected = feature.id === state.selectedId;
+    const selected = isFeatureSelected(feature.id);
 
     if (feature.type === "marker") {
       const point = feature.points[0];
@@ -596,7 +608,7 @@
           iconAnchor: [16, 32],
         }),
       });
-      marker.on("click", () => selectFeature(feature.id));
+      marker.on("click", (event) => selectFeature(feature.id, isAdditiveSelectionEvent(event.originalEvent)));
       marker.bindTooltip(getFeatureTooltip(feature, category), { direction: "top", offset: [0, -24] });
       return marker;
     }
@@ -615,7 +627,7 @@
       lineCap: "round",
       lineJoin: "round",
     });
-    layer.on("click", () => selectFeature(feature.id));
+    layer.on("click", (event) => selectFeature(feature.id, isAdditiveSelectionEvent(event.originalEvent)));
     layer.bindTooltip(getFeatureTooltip(feature, category));
     return layer;
   }
@@ -638,7 +650,7 @@
     });
     const group = L.layerGroup([underlay, ink]);
     [underlay, ink].forEach((layer) => {
-      layer.on("click", () => selectFeature(feature.id));
+      layer.on("click", (event) => selectFeature(feature.id, isAdditiveSelectionEvent(event.originalEvent)));
       layer.bindTooltip(getFeatureTooltip(feature, category));
     });
     return group;
@@ -810,6 +822,9 @@
     if (draftId && state.selectedId === draftId) {
       state.selectedId = null;
     }
+    if (draftId) {
+      state.selectedIds = state.selectedIds.filter((id) => id !== draftId);
+    }
     state.drawPoints = [];
     state.draftFeature = null;
     state.draftLayer = null;
@@ -906,7 +921,7 @@
       .forEach((feature) => {
         const category = categoryById[feature.category] || categoryById.landmark;
         const button = document.createElement("button");
-        button.className = `feature-card${feature.id === state.selectedId ? " is-selected" : ""}`;
+        button.className = `feature-card${isFeatureSelected(feature.id) ? " is-selected" : ""}`;
         button.type = "button";
         button.innerHTML = `
           <strong>${escapeHtml(feature.title || category.label)}</strong>
@@ -920,20 +935,28 @@
           ${feature.updatedBy ? `<span class="feature-creator">Updated by ${escapeHtml(feature.updatedBy)}</span>` : ""}
           ${feature.notes ? `<span class="feature-note">${escapeHtml(truncate(feature.notes, 90))}</span>` : ""}
         `;
-        button.addEventListener("click", () => {
-          selectFeature(feature.id);
-          zoomToFeature(feature);
+        button.addEventListener("click", (event) => {
+          const additive = isAdditiveSelectionEvent(event);
+          selectFeature(feature.id, additive);
+          if (!additive) {
+            zoomToFeature(feature);
+          }
         });
         elements.featureList.appendChild(button);
       });
   }
 
   function renderEditor() {
-    const feature = getSelectedFeature();
+    const selectedFeatures = getSelectedFeatures();
+    const feature = selectedFeatures.length === 1 ? getSelectedFeature() : null;
     const disabled = !feature;
 
     elements.editorForm.hidden = disabled;
     elements.emptySelection.hidden = !disabled;
+    elements.emptySelection.textContent =
+      selectedFeatures.length > 1
+        ? `${selectedFeatures.length} entries selected. Ctrl-click, Cmd-click, or Shift-click entries to adjust the selection.`
+        : "Choose a mark, trail, or range from the map or ledger.";
     elements.featureId.value = feature ? feature.id : "";
     elements.titleInput.value = feature ? feature.title : "";
     elements.categoryInput.value = feature ? feature.category : "landmark";
@@ -958,9 +981,35 @@
     });
   }
 
-  function selectFeature(id) {
-    state.selectedId = id;
+  function selectFeature(id, additive = false) {
+    if (!id) {
+      state.selectedIds = [];
+      state.selectedId = null;
+      renderAll();
+      setStatus("Selection cleared");
+      return;
+    }
+
+    if (additive) {
+      const selected = new Set(state.selectedIds);
+      if (selected.has(id)) {
+        selected.delete(id);
+      } else {
+        selected.add(id);
+      }
+      state.selectedIds = Array.from(selected);
+      state.selectedId = selected.has(id) ? id : state.selectedIds[state.selectedIds.length - 1] || null;
+    } else {
+      state.selectedIds = [id];
+      state.selectedId = id;
+    }
+
     renderAll();
+    const selectedFeatures = getSelectedFeatures();
+    if (selectedFeatures.length > 1) {
+      setStatus(`${selectedFeatures.length} entries selected`);
+      return;
+    }
     const feature = getSelectedFeature();
     setStatus(feature ? `Selected: ${feature.title}` : "Selection cleared");
   }
@@ -1017,6 +1066,7 @@
     pushUndo(`${feature.title} delete`);
     state.features = state.features.filter((item) => item.id !== feature.id);
     state.selectedId = null;
+    state.selectedIds = [];
     saveState();
     renderAll();
     setStatus("Deleted");
@@ -1147,42 +1197,34 @@
     elements.shareSelectNoneBtn.disabled = busy;
   }
 
-  async function loadGuildAtlas() {
-    if (!isSupabaseConfigured()) {
-      setStatus("Supabase anon key missing; cannot load Guild Atlas");
-      return;
-    }
-
-    setGuildButtonsBusy(true);
-    setStatus(`Loading Guild Atlas ${GUILD_ATLAS_CODE}...`);
-    try {
-      const guildAtlas = await fetchGuildAtlas(GUILD_ATLAS_CODE);
-      const guildFeatures = getGuildFeaturesFromResponse(guildAtlas);
-      pushUndo("guild atlas refresh");
-      state.features = replaceGuildFeatures(state.features, guildFeatures);
-      state.selectedId = null;
-      saveState();
-      renderAll();
-      const updatedAt = guildAtlas.updated_at || guildAtlas.updatedAt;
-      const updatedText = updatedAt ? `, updated ${formatRelativeDate(updatedAt)}` : "";
-      setStatus(`Loaded ${guildFeatures.length} official Guild Atlas entries${updatedText}`);
-    } catch (error) {
-      console.error(error);
-      setStatus(error.message === "Guild Atlas not found" ? "No official Guild Atlas has been published yet" : "Could not load Guild Atlas");
-    } finally {
-      setGuildButtonsBusy(false);
-    }
-  }
-
   function openGuildPublishDialog() {
     const publishFeatures = getGuildPublishFeatures();
     elements.guildPassphraseInput.value = "";
     elements.guildPublishStatus.textContent = "";
-    elements.guildPublishConfirmBtn.disabled = !publishFeatures.length;
-    elements.guildPublishSummary.textContent = publishFeatures.length
-      ? `This will replace Guild Atlas ${GUILD_ATLAS_CODE} with ${publishFeatures.length} non-default ${publishFeatures.length === 1 ? "entry" : "entries"} from this atlas.`
-      : "There are no non-default entries to publish.";
+    elements.guildEntryList.innerHTML = "";
+    publishFeatures
+      .slice()
+      .sort(compareFeaturesForList)
+      .forEach((feature) => {
+        const category = categoryById[feature.category] || categoryById.landmark;
+        const label = document.createElement("label");
+        label.className = "share-entry-row";
+        label.innerHTML = `
+          <input class="guild-entry-checkbox" type="checkbox" value="${escapeHtml(feature.id)}" checked />
+          <span class="share-entry-main">
+            <span class="share-entry-title">${escapeHtml(feature.title || category.label)}</span>
+            <span class="share-entry-meta">
+              <i class="swatch" style="background:${category.color}" aria-hidden="true"></i>
+              ${escapeHtml(category.label)}
+              ${isGuildFeature(feature) ? '<span class="source-badge">Guild</span>' : ""}
+              ${feature.creator ? `<span>Mapped by ${escapeHtml(feature.creator)}</span>` : ""}
+            </span>
+          </span>
+        `;
+        elements.guildEntryList.appendChild(label);
+      });
     elements.guildPublishDialog.showModal();
+    updateGuildPublishDialogState();
     window.setTimeout(() => elements.guildPassphraseInput.focus(), 0);
   }
 
@@ -1194,7 +1236,7 @@
 
   async function publishGuildAtlas() {
     const passphrase = elements.guildPassphraseInput.value.trim();
-    const publishFeatures = getGuildPublishFeatures();
+    const publishFeatures = getSelectedGuildPublishFeatures();
     if (!passphrase) {
       elements.guildPublishStatus.textContent = "Enter the senior ranger passphrase.";
       return;
@@ -1222,6 +1264,7 @@
       pushUndo("guild atlas publish");
       state.features = replaceGuildFeatures(state.features, guildFeatures);
       state.selectedId = null;
+      state.selectedIds = [];
       saveState();
       renderAll();
       closeGuildPublishDialog();
@@ -1234,17 +1277,16 @@
     }
   }
 
-  function setGuildButtonsBusy(busy) {
-    elements.guildLoadBtn.disabled = busy;
-    elements.guildPublishBtn.disabled = busy;
-  }
-
   function setGuildPublishBusy(busy) {
+    elements.guildEntryList.querySelectorAll("input").forEach((input) => {
+      input.disabled = busy;
+    });
     elements.guildPassphraseInput.disabled = busy;
-    elements.guildPublishConfirmBtn.disabled = busy;
+    elements.guildPublishConfirmBtn.disabled = busy || !elements.guildEntryList.querySelector(".guild-entry-checkbox:checked");
     elements.guildPublishCancelBtn.disabled = busy;
     elements.guildPublishKeepBtn.disabled = busy;
-    setGuildButtonsBusy(busy);
+    elements.guildSelectAllBtn.disabled = busy;
+    elements.guildSelectNoneBtn.disabled = busy;
   }
 
   async function fetchGuildAtlas(code) {
@@ -1265,6 +1307,29 @@
 
   function getGuildPublishFeatures() {
     return state.features.filter((feature) => !isDefaultFeature(feature)).map(cloneFeature);
+  }
+
+  function getSelectedGuildPublishFeatures() {
+    const selectedIds = new Set(
+      Array.from(elements.guildEntryList.querySelectorAll(".guild-entry-checkbox:checked")).map((input) => input.value),
+    );
+    return getGuildPublishFeatures().filter((feature) => selectedIds.has(feature.id));
+  }
+
+  function setGuildEntryChecks(checked) {
+    elements.guildEntryList.querySelectorAll(".guild-entry-checkbox").forEach((input) => {
+      input.checked = checked;
+    });
+    updateGuildPublishDialogState();
+  }
+
+  function updateGuildPublishDialogState() {
+    const selectedCount = elements.guildEntryList.querySelectorAll(".guild-entry-checkbox:checked").length;
+    const totalCount = elements.guildEntryList.querySelectorAll(".guild-entry-checkbox").length;
+    elements.guildPublishSummary.textContent = totalCount
+      ? `${selectedCount} of ${totalCount} ${totalCount === 1 ? "entry" : "entries"} selected for official Guild Atlas ${GUILD_ATLAS_CODE}.`
+      : "There are no non-default entries to publish.";
+    elements.guildPublishConfirmBtn.disabled = selectedCount === 0;
   }
 
   function markFeaturesAsGuild(features) {
@@ -1319,11 +1384,15 @@
       ? summary.uniqueCreators.slice(0, 4).join(", ") + (summary.uniqueCreators.length > 4 ? `, and ${summary.uniqueCreators.length - 4} more` : "")
       : "Unsigned";
     return `
-      <strong>${summary.features.length} received entries</strong>
+      <strong>${summary.features.length} ${summary.isGuildCode ? "official Guild" : "received"} entries</strong>
       <span>${escapeHtml(typeText)}</span>
       <span>${escapeHtml(summary.newCount)} new, ${escapeHtml(summary.duplicateCount)} already on your atlas</span>
       <span>Mapped by: ${escapeHtml(creatorText)}</span>
-      <span>Replace would remove ${escapeHtml(summary.customCount)} current custom ${summary.customCount === 1 ? "entry" : "entries"} first.</span>
+      ${
+        summary.isGuildCode
+          ? "<span>Loading will refresh official Guild entries and leave personal notes alone.</span>"
+          : `<span>Replace would remove ${escapeHtml(summary.customCount)} current custom ${summary.customCount === 1 ? "entry" : "entries"} first.</span>`
+      }
     `;
   }
 
@@ -1344,6 +1413,8 @@
     state.pendingReceive = null;
     elements.receivePreview.hidden = true;
     elements.receivePreview.innerHTML = "";
+    elements.receiveMergeBtn.textContent = "Merge Entries";
+    elements.receiveReplaceBtn.hidden = false;
     elements.receiveMergeBtn.disabled = true;
     elements.receiveReplaceBtn.disabled = true;
     elements.receiveStatus.textContent = "";
@@ -1359,25 +1430,34 @@
     setReceiveBusy(true);
     elements.receiveStatus.textContent = "Reading shared atlas...";
     try {
-      const imported = await resolveShareInput(code);
-      if (!Array.isArray(imported.features)) {
+      const normalizedCode = normalizeRemoteShareCode(code);
+      const isGuildCode = normalizedCode === GUILD_ATLAS_CODE;
+      const imported = isGuildCode ? await fetchGuildAtlas(GUILD_ATLAS_CODE) : await resolveShareInput(code);
+      if (!isGuildCode && !Array.isArray(imported.features)) {
         throw new Error("Missing features array");
       }
-      const nextFeatures = normalizeFeatures(imported.features.filter(isValidFeature), imported.map).filter(
-        (feature) => !isDefaultFeature(feature),
-      );
+      const nextFeatures = isGuildCode
+        ? getGuildFeaturesFromResponse(imported)
+        : normalizeFeatures(imported.features.filter(isValidFeature), imported.map).filter((feature) => !isDefaultFeature(feature));
       if (!nextFeatures.length) {
         resetReceivePreview();
-        elements.receiveStatus.textContent = "That code has no custom entries to import.";
+        elements.receiveStatus.textContent = isGuildCode
+          ? "The Guild Atlas has no entries yet."
+          : "That code has no custom entries to import.";
         return;
       }
       const summary = summarizeIncomingFeatures(nextFeatures);
-      state.pendingReceive = { features: nextFeatures, summary };
+      summary.isGuildCode = isGuildCode;
+      state.pendingReceive = { features: nextFeatures, isGuildCode, summary };
       elements.receivePreview.hidden = false;
       elements.receivePreview.innerHTML = renderReceivePreview(summary);
+      elements.receiveMergeBtn.textContent = isGuildCode ? "Load Guild Atlas" : "Merge Entries";
+      elements.receiveReplaceBtn.hidden = isGuildCode;
       elements.receiveMergeBtn.disabled = false;
-      elements.receiveReplaceBtn.disabled = false;
-      elements.receiveStatus.textContent = "Review the entries, then merge or replace.";
+      elements.receiveReplaceBtn.disabled = isGuildCode;
+      elements.receiveStatus.textContent = isGuildCode
+        ? "Review the official entries, then load the Guild Atlas."
+        : "Review the entries, then merge or replace.";
     } catch (error) {
       console.error(error);
       resetReceivePreview();
@@ -1400,11 +1480,22 @@
       const nextFeatures = state.pendingReceive.features;
       const summary = state.pendingReceive.summary;
       pushUndo(replace ? "receive code replace" : "receive code merge");
+      if (state.pendingReceive.isGuildCode) {
+        state.features = replaceGuildFeatures(state.features, nextFeatures);
+        state.selectedId = null;
+        state.selectedIds = [];
+        saveState();
+        renderAll();
+        closeReceiveDialog();
+        setStatus(`Loaded ${nextFeatures.length} official Guild Atlas entries`);
+        return;
+      }
       const personalIncoming = markFeaturesAsPersonal(nextFeatures);
       state.features = replace
         ? replacePersonalFeatures(state.features, personalIncoming)
         : mergePersonalFeatures(state.features, personalIncoming);
       state.selectedId = null;
+      state.selectedIds = [];
       saveState();
       renderAll();
       closeReceiveDialog();
@@ -1444,6 +1535,7 @@
     pushUndo("clear");
     state.features = defaultFeatures.map(cloneFeature);
     state.selectedId = null;
+    state.selectedIds = [];
     saveState();
     renderAll();
     elements.clearDialog.close();
@@ -1504,7 +1596,7 @@
 
   function normalizeRemoteShareCode(value) {
     const normalized = value.toUpperCase().replace(/[^A-Z0-9]/g, "");
-    return /^[A-Z0-9]{6,12}$/.test(normalized) ? normalized : "";
+    return /^[A-Z0-9]{4,24}$/.test(normalized) ? normalized : "";
   }
 
   function encodeShareCodes(features) {
@@ -1746,6 +1838,23 @@
       return state.draftFeature;
     }
     return state.features.find((feature) => feature.id === state.selectedId) || null;
+  }
+
+  function getSelectedFeatures() {
+    const ids = new Set(state.selectedIds);
+    const selected = state.features.filter((feature) => ids.has(feature.id));
+    if (state.draftFeature && ids.has(state.draftFeature.id)) {
+      selected.push(state.draftFeature);
+    }
+    return selected;
+  }
+
+  function isFeatureSelected(id) {
+    return state.selectedIds.includes(id);
+  }
+
+  function isAdditiveSelectionEvent(event) {
+    return Boolean(event && (event.ctrlKey || event.metaKey || event.shiftKey));
   }
 
   function getDraftFeature(applyEditor = false) {

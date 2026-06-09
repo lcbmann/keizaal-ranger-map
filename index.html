@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Ranger Guild Field Atlas</title>
+    <title>The Ranger Corps - Field Atlas</title>
     <link rel="icon" type="image/png" href="ranger-corps-logo.png" />
     <link
       rel="stylesheet"
@@ -17,10 +17,12 @@
     <div class="app-shell">
       <header class="topbar">
         <div class="brand">
-          <img class="brand-mark" src="ranger-corps-logo.png" alt="" />
+          <button id="guildAdminBtn" class="logo-secret-button" type="button" aria-label="Guild atlas admin">
+            <img class="brand-mark" src="ranger-corps-logo.png" alt="" />
+          </button>
           <div class="brand-copy">
             <div class="brand-title-row">
-              <h1>Ranger Guild Field Atlas</h1>
+              <h1>The Ranger Corps - Field Atlas</h1>
               <button id="aboutBtn" class="about-button" type="button" title="About the atlas" aria-label="About the atlas">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <circle cx="12" cy="12" r="9" />
@@ -69,10 +71,6 @@
           </div>
           <div class="action-group">
             <button id="undoBtn" class="button secondary" type="button" title="Undo last change (Ctrl+Z)" disabled>Undo</button>
-          </div>
-          <div class="action-group">
-            <button id="guildLoadBtn" class="button secondary" type="button">Load Guild</button>
-            <button id="guildPublishBtn" class="button secondary" type="button">Publish Guild</button>
           </div>
           <div class="action-group">
             <button id="exportBtn" class="button secondary" type="button">Copy Code</button>
@@ -142,7 +140,7 @@
     <dialog id="aboutDialog" class="field-note">
       <div class="field-note-inner">
         <button id="aboutCloseBtn" class="field-note-close" type="button" aria-label="Close atlas note">&times;</button>
-        <p class="field-note-kicker">Ranger Guild Field Atlas</p>
+        <p class="field-note-kicker">The Ranger Corps - Field Atlas</p>
         <h2>Share What You Find</h2>
         <p>
           This atlas is a field copy for sharing useful knowledge across Skyrim. Mark roads, shelters,
@@ -200,8 +198,13 @@
         <p class="field-note-kicker">Guild Atlas</p>
         <h2>Publish Official Copy?</h2>
         <p id="guildPublishSummary">
-          This will replace the official Guild Atlas with the non-default entries currently on this atlas.
+          This will replace the official Guild Atlas with the selected entries.
         </p>
+        <div class="share-select-actions">
+          <button id="guildSelectAllBtn" class="button secondary" type="button">Select All</button>
+          <button id="guildSelectNoneBtn" class="button secondary" type="button">Select None</button>
+        </div>
+        <div id="guildEntryList" class="share-entry-list" aria-label="Entries to publish"></div>
         <label class="field-label" for="guildPassphraseInput">Senior Ranger Passphrase</label>
         <input id="guildPassphraseInput" class="text-input" type="password" autocomplete="current-password" />
         <p id="guildPublishStatus" class="dialog-status" aria-live="polite"></p>
