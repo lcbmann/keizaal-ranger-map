@@ -71,6 +71,10 @@
             <button id="undoBtn" class="button secondary" type="button" title="Undo last change (Ctrl+Z)" disabled>Undo</button>
           </div>
           <div class="action-group">
+            <button id="guildLoadBtn" class="button secondary" type="button">Load Guild</button>
+            <button id="guildPublishBtn" class="button secondary" type="button">Publish Guild</button>
+          </div>
+          <div class="action-group">
             <label class="share-scope-field" for="shareScopeInput">
               <span>Share</span>
               <select id="shareScopeInput" class="share-scope-input">
@@ -176,6 +180,25 @@
           <button id="receiveReplaceBtn" class="button secondary" type="button" disabled>Replace Mine</button>
         </div>
         <p class="dialog-help">Merge keeps your notes and adds incoming entries. Replace removes your custom notes first. Default cities and towns stay either way.</p>
+      </div>
+    </dialog>
+
+    <dialog id="guildPublishDialog" class="field-note workflow-dialog">
+      <div class="field-note-inner">
+        <button id="guildPublishCancelBtn" class="field-note-close" type="button" aria-label="Cancel guild publish">&times;</button>
+        <p class="field-note-kicker">Guild Atlas</p>
+        <h2>Publish Official Copy?</h2>
+        <p id="guildPublishSummary">
+          This will replace the official Guild Atlas with the non-default entries currently on this atlas.
+        </p>
+        <label class="field-label" for="guildPassphraseInput">Senior Ranger Passphrase</label>
+        <input id="guildPassphraseInput" class="text-input" type="password" autocomplete="current-password" />
+        <p id="guildPublishStatus" class="dialog-status" aria-live="polite"></p>
+        <div class="dialog-actions">
+          <button id="guildPublishConfirmBtn" class="button primary" type="button">Publish Guild Atlas</button>
+          <button id="guildPublishKeepBtn" class="button secondary" type="button">Keep Local Copy</button>
+        </div>
+        <p class="dialog-help">Anyone who loads the Guild Atlas code will receive this official copy. Personal notes on their own map are left alone.</p>
       </div>
     </dialog>
 

@@ -14,6 +14,7 @@
   const LEGACY_CORPS_SHARE_CODE_PREFIX = "RCFA1.";
   const SHARE_CODE_MAX_LENGTH = 2000;
   const SHARE_CODE_CHUNK_SIZE = 1800;
+  const GUILD_ATLAS_CODE = "GUILD";
 
   const categories = [
     { id: "city", label: "City", color: "#2f5878", icon: "city" },
@@ -139,6 +140,15 @@
     clearCancelBtn: document.getElementById("clearCancelBtn"),
     clearKeepBtn: document.getElementById("clearKeepBtn"),
     undoBtn: document.getElementById("undoBtn"),
+    guildLoadBtn: document.getElementById("guildLoadBtn"),
+    guildPublishBtn: document.getElementById("guildPublishBtn"),
+    guildPublishDialog: document.getElementById("guildPublishDialog"),
+    guildPublishSummary: document.getElementById("guildPublishSummary"),
+    guildPassphraseInput: document.getElementById("guildPassphraseInput"),
+    guildPublishStatus: document.getElementById("guildPublishStatus"),
+    guildPublishConfirmBtn: document.getElementById("guildPublishConfirmBtn"),
+    guildPublishCancelBtn: document.getElementById("guildPublishCancelBtn"),
+    guildPublishKeepBtn: document.getElementById("guildPublishKeepBtn"),
     exportBtn: document.getElementById("exportBtn"),
     importBtn: document.getElementById("importBtn"),
     clearBtn: document.getElementById("clearBtn"),
@@ -191,6 +201,12 @@
     closeDialogOnBackdrop(elements.aboutDialog);
 
     elements.undoBtn.addEventListener("click", undoLastAction);
+    elements.guildLoadBtn.addEventListener("click", loadGuildAtlas);
+    elements.guildPublishBtn.addEventListener("click", openGuildPublishDialog);
+    elements.guildPublishConfirmBtn.addEventListener("click", publishGuildAtlas);
+    elements.guildPublishCancelBtn.addEventListener("click", () => closeGuildPublishDialog());
+    elements.guildPublishKeepBtn.addEventListener("click", () => closeGuildPublishDialog());
+    closeDialogOnBackdrop(elements.guildPublishDialog);
     elements.exportBtn.addEventListener("click", copyShareCode);
     elements.importBtn.addEventListener("click", openReceiveDialog);
     elements.receiveCancelBtn.addEventListener("click", () => closeReceiveDialog());
@@ -507,6 +523,7 @@
       creator,
       notes: "",
       points: input.points,
+      source: "personal",
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -522,6 +539,7 @@
       confidence: "confirmed",
       notes: city ? "Hold capital marked on the printed atlas." : "Town marked on the printed atlas.",
       points: [{ x, y }],
+      source: "default",
       createdAt: "2026-05-29T00:00:00.000Z",
       updatedAt: "2026-05-29T00:00:00.000Z",
     };
@@ -558,7 +576,7 @@
       const marker = L.marker([point.y, point.x], {
         icon: L.divIcon({
           className: "",
-          html: `<div class="poi-marker marker-${escapeHtml(feature.category)}${selected ? " is-selected" : ""}" style="--marker-color:${category.color}">${getCategoryIcon(feature.category)}</div>`,
+          html: `<div class="poi-marker marker-${escapeHtml(feature.category)}${isGuildFeature(feature) ? " is-guild" : ""}${selected ? " is-selected" : ""}" style="--marker-color:${category.color}">${getCategoryIcon(feature.category)}</div>`,
           iconSize: [32, 32],
           iconAnchor: [16, 32],
         }),
@@ -880,6 +898,7 @@
           <span class="feature-meta">
             <i class="swatch" style="background:${category.color}" aria-hidden="true"></i>
             ${escapeHtml(category.label)}
+            ${isGuildFeature(feature) ? '<span class="source-badge">Guild</span>' : ""}
             <span>${escapeHtml(getFeatureFreshnessLabel(feature))}</span>
           </span>
           ${feature.creator ? `<span class="feature-creator">Mapped by ${escapeHtml(feature.creator)}</span>` : ""}
@@ -1027,12 +1046,152 @@
   function getShareFeatures() {
     const selected = getSelectedFeature();
     if (elements.shareScopeInput.value === "selected") {
-      return selected && !isDefaultFeature(selected) ? [selected] : [];
+      return selected && isPersonalFeature(selected) ? [selected] : [];
     }
     if (elements.shareScopeInput.value === "visible") {
-      return getVisibleFeatures().filter((feature) => !isDefaultFeature(feature));
+      return getVisibleFeatures().filter(isPersonalFeature);
     }
-    return state.features.filter((feature) => !isDefaultFeature(feature));
+    return state.features.filter(isPersonalFeature);
+  }
+
+  async function loadGuildAtlas() {
+    if (!isSupabaseConfigured()) {
+      setStatus("Supabase anon key missing; cannot load Guild Atlas");
+      return;
+    }
+
+    setGuildButtonsBusy(true);
+    setStatus(`Loading Guild Atlas ${GUILD_ATLAS_CODE}...`);
+    try {
+      const guildAtlas = await fetchGuildAtlas(GUILD_ATLAS_CODE);
+      const guildFeatures = getGuildFeaturesFromResponse(guildAtlas);
+      pushUndo("guild atlas refresh");
+      state.features = replaceGuildFeatures(state.features, guildFeatures);
+      state.selectedId = null;
+      saveState();
+      renderAll();
+      const updatedAt = guildAtlas.updated_at || guildAtlas.updatedAt;
+      const updatedText = updatedAt ? `, updated ${formatRelativeDate(updatedAt)}` : "";
+      setStatus(`Loaded ${guildFeatures.length} official Guild Atlas entries${updatedText}`);
+    } catch (error) {
+      console.error(error);
+      setStatus(error.message === "Guild Atlas not found" ? "No official Guild Atlas has been published yet" : "Could not load Guild Atlas");
+    } finally {
+      setGuildButtonsBusy(false);
+    }
+  }
+
+  function openGuildPublishDialog() {
+    const publishFeatures = getGuildPublishFeatures();
+    elements.guildPassphraseInput.value = "";
+    elements.guildPublishStatus.textContent = "";
+    elements.guildPublishConfirmBtn.disabled = !publishFeatures.length;
+    elements.guildPublishSummary.textContent = publishFeatures.length
+      ? `This will replace Guild Atlas ${GUILD_ATLAS_CODE} with ${publishFeatures.length} non-default ${publishFeatures.length === 1 ? "entry" : "entries"} from this atlas.`
+      : "There are no non-default entries to publish.";
+    elements.guildPublishDialog.showModal();
+    window.setTimeout(() => elements.guildPassphraseInput.focus(), 0);
+  }
+
+  function closeGuildPublishDialog() {
+    elements.guildPublishDialog.close();
+    elements.guildPassphraseInput.value = "";
+    elements.guildPublishStatus.textContent = "";
+  }
+
+  async function publishGuildAtlas() {
+    const passphrase = elements.guildPassphraseInput.value.trim();
+    const publishFeatures = getGuildPublishFeatures();
+    if (!passphrase) {
+      elements.guildPublishStatus.textContent = "Enter the senior ranger passphrase.";
+      return;
+    }
+    if (!publishFeatures.length) {
+      elements.guildPublishStatus.textContent = "There are no entries to publish.";
+      return;
+    }
+    if (!isSupabaseConfigured()) {
+      elements.guildPublishStatus.textContent = "Supabase anon key missing; cannot publish.";
+      return;
+    }
+
+    setGuildPublishBusy(true);
+    elements.guildPublishStatus.textContent = "Publishing official Guild Atlas...";
+    try {
+      const payload = createCompactSharePayload(publishFeatures);
+      const result = await callSupabaseRpc("publish_guild_atlas", {
+        atlas_code: GUILD_ATLAS_CODE,
+        share_payload: payload,
+        admin_passphrase: passphrase,
+        publisher: getCurrentCreatorName(),
+      });
+      const guildFeatures = markFeaturesAsGuild(publishFeatures);
+      pushUndo("guild atlas publish");
+      state.features = replaceGuildFeatures(state.features, guildFeatures);
+      state.selectedId = null;
+      saveState();
+      renderAll();
+      closeGuildPublishDialog();
+      setStatus(`Published ${result.entry_count || guildFeatures.length} official Guild Atlas entries`);
+    } catch (error) {
+      console.error(error);
+      elements.guildPublishStatus.textContent = "Publish failed. Check the passphrase and Supabase setup.";
+    } finally {
+      setGuildPublishBusy(false);
+    }
+  }
+
+  function setGuildButtonsBusy(busy) {
+    elements.guildLoadBtn.disabled = busy;
+    elements.guildPublishBtn.disabled = busy;
+  }
+
+  function setGuildPublishBusy(busy) {
+    elements.guildPassphraseInput.disabled = busy;
+    elements.guildPublishConfirmBtn.disabled = busy;
+    elements.guildPublishCancelBtn.disabled = busy;
+    elements.guildPublishKeepBtn.disabled = busy;
+    setGuildButtonsBusy(busy);
+  }
+
+  async function fetchGuildAtlas(code) {
+    const atlas = await callSupabaseRpc("get_guild_atlas", { atlas_code: code });
+    if (!atlas || !atlas.payload) {
+      throw new Error("Guild Atlas not found");
+    }
+    return atlas;
+  }
+
+  function getGuildFeaturesFromResponse(guildAtlas) {
+    const imported = decodeStoredSharePayload(guildAtlas.payload);
+    if (!Array.isArray(imported.features)) {
+      throw new Error("Guild Atlas payload is missing features");
+    }
+    return markFeaturesAsGuild(normalizeFeatures(imported.features.filter(isValidFeature), imported.map).filter((feature) => !isDefaultFeature(feature)));
+  }
+
+  function getGuildPublishFeatures() {
+    return state.features.filter((feature) => !isDefaultFeature(feature)).map(cloneFeature);
+  }
+
+  function markFeaturesAsGuild(features) {
+    return features.map((feature) => ({
+      ...cloneFeature(feature),
+      source: "guild",
+    }));
+  }
+
+  function markFeaturesAsPersonal(features) {
+    return features.map((feature) => ({
+      ...cloneFeature(feature),
+      source: "personal",
+    }));
+  }
+
+  function replaceGuildFeatures(current, guildFeatures) {
+    const guildIds = new Set(guildFeatures.map((feature) => feature.id));
+    const preserved = current.filter((feature) => !isGuildFeature(feature) && !guildIds.has(feature.id));
+    return applyDefaultFeatures(preserved.concat(guildFeatures));
   }
 
   function summarizeIncomingFeatures(features) {
@@ -1148,12 +1307,15 @@
       const nextFeatures = state.pendingReceive.features;
       const summary = state.pendingReceive.summary;
       pushUndo(replace ? "receive code replace" : "receive code merge");
-      state.features = applyDefaultFeatures(replace ? nextFeatures : mergeFeatures(state.features, nextFeatures));
+      const personalIncoming = markFeaturesAsPersonal(nextFeatures);
+      state.features = replace
+        ? replacePersonalFeatures(state.features, personalIncoming)
+        : mergePersonalFeatures(state.features, personalIncoming);
       state.selectedId = null;
       saveState();
       renderAll();
       closeReceiveDialog();
-      setStatus(replace ? `Replaced custom entries with ${nextFeatures.length} received entries` : `Merged ${summary.newCount} new entries${summary.duplicateCount ? `; ${summary.duplicateCount} already present` : ""}`);
+      setStatus(replace ? `Replaced personal entries with ${nextFeatures.length} received entries` : `Merged ${summary.newCount} new personal entries${summary.duplicateCount ? `; ${summary.duplicateCount} already present` : ""}`);
     } catch (error) {
       console.error(error);
       elements.receiveStatus.textContent = "That code could not be read. Check that every part was pasted correctly.";
@@ -1535,7 +1697,15 @@
   }
 
   function isDefaultFeature(feature) {
-    return feature.id.startsWith("default-");
+    return feature.source === "default" || feature.id.startsWith("default-");
+  }
+
+  function isGuildFeature(feature) {
+    return feature.source === "guild";
+  }
+
+  function isPersonalFeature(feature) {
+    return !isDefaultFeature(feature) && !isGuildFeature(feature);
   }
 
   function zoomToFeature(feature) {
@@ -1549,12 +1719,21 @@
     map.fitBounds(L.latLngBounds(latLngs).pad(0.2));
   }
 
-  function mergeFeatures(current, incoming) {
+  function mergePersonalFeatures(current, incoming) {
     const byId = new Map(current.map((feature) => [feature.id, feature]));
     incoming.forEach((feature) => {
+      const existing = byId.get(feature.id);
+      if (existing && !isPersonalFeature(existing)) {
+        return;
+      }
       byId.set(feature.id, feature);
     });
-    return Array.from(byId.values());
+    return applyDefaultFeatures(Array.from(byId.values()));
+  }
+
+  function replacePersonalFeatures(current, incoming) {
+    const preserved = current.filter((feature) => !isPersonalFeature(feature));
+    return applyDefaultFeatures(preserved.concat(incoming));
   }
 
   function applyDefaultFeatures(features) {
@@ -1577,11 +1756,13 @@
     return features.map((feature) => {
       const { ranger, timer, ...rest } = feature;
       const category = categoryById[rest.category] ? rest.category : categoryAliases[rest.category] || "landmark";
+      const source = rest.source === "guild" ? "guild" : rest.id && rest.id.startsWith("default-") ? "default" : "personal";
       return {
         ...rest,
         category,
         creator: normalizeCreatorName(rest.creator || ""),
         updatedBy: normalizeCreatorName(rest.updatedBy || ""),
+        source,
         points: rest.points.map((point) =>
         clampPoint({
           lng: Math.round(point.x * scaleX),
@@ -1631,6 +1812,9 @@
 
   function getAttributionHtml(feature) {
     const lines = [];
+    if (isGuildFeature(feature)) {
+      lines.push("Official Guild Atlas");
+    }
     if (feature.creator) {
       lines.push(`Mapped by ${escapeHtml(feature.creator)}`);
     }
