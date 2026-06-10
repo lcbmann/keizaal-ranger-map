@@ -66,7 +66,7 @@
           <div class="action-group">
             <label class="identity-field" for="creatorInput">
               <span>Signed as</span>
-              <input id="creatorInput" class="identity-input" type="text" maxlength="40" placeholder="Your name" autocomplete="nickname" />
+              <input id="creatorInput" class="identity-input" type="text" name="username" maxlength="40" placeholder="Your name" autocomplete="username" />
             </label>
           </div>
           <div class="action-group">
@@ -138,13 +138,15 @@
             <input
               id="searchInput"
               class="text-input"
-              type="text"
-              name="atlas_lookup"
+              type="search"
+              name="atlas_search"
               placeholder="Name or note"
-              autocomplete="new-password"
+              autocomplete="off"
               autocapitalize="off"
               spellcheck="false"
+              readonly
               data-lpignore="true"
+              data-1p-ignore="true"
               data-form-type="other"
             />
             <label class="field-label" for="creatorFilterInput">Mapped By</label>

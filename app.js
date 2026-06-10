@@ -210,6 +210,7 @@
   init();
 
   function init() {
+    prepareSearchInputAgainstAutofill();
     loadState();
     renderFilters();
     renderAll();
@@ -217,6 +218,23 @@
     syncViewInputsFromState();
     [0, 100, 500, 1500, 3000].forEach((delay) => window.setTimeout(clearRestoredSearchInput, delay));
     setStatus("Ready");
+  }
+
+  function prepareSearchInputAgainstAutofill() {
+    const input = elements.searchInput;
+    const randomSuffix = Math.random().toString(36).slice(2, 10);
+    input.name = `atlas_search_${randomSuffix}`;
+    input.autocomplete = "off";
+    input.readOnly = true;
+
+    const unlockSearch = () => {
+      input.readOnly = false;
+      input.autocomplete = "off";
+    };
+
+    input.addEventListener("pointerdown", unlockSearch, { once: true });
+    input.addEventListener("keydown", unlockSearch, { once: true });
+    input.addEventListener("focus", unlockSearch, { once: true });
   }
 
   function bindEvents() {
@@ -1596,6 +1614,13 @@
   function shouldRejectSearchAutofill(value) {
     if (Date.now() > searchAutofillGuardUntil) {
       return false;
+    }
+    try {
+      if (elements.searchInput.matches && elements.searchInput.matches(":-webkit-autofill")) {
+        return true;
+      }
+    } catch (_error) {
+      // Ignore unsupported autofill pseudo-selectors.
     }
     const searchValue = normalizeCreatorName(value).toLowerCase();
     const signedAs = normalizeCreatorName(state.creatorName).toLowerCase();
