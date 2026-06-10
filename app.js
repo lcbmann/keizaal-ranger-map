@@ -1518,12 +1518,12 @@
       state.pendingReceive = { features: nextFeatures, isGuildCode, summary };
       elements.receivePreview.hidden = false;
       elements.receivePreview.innerHTML = renderReceivePreview(summary);
-      elements.receiveMergeBtn.textContent = isGuildCode ? "Load Guild Atlas" : "Merge Entries";
+      elements.receiveMergeBtn.textContent = isGuildCode ? "Receive GUILD Atlas" : "Merge Entries";
       elements.receiveReplaceBtn.hidden = isGuildCode;
       elements.receiveMergeBtn.disabled = false;
       elements.receiveReplaceBtn.disabled = isGuildCode;
       elements.receiveStatus.textContent = isGuildCode
-        ? "Review the official entries, then load the Guild Atlas."
+        ? "Review the official entries, then receive them into your atlas."
         : "Review the entries, then merge or replace.";
     } catch (error) {
       console.error(error);
