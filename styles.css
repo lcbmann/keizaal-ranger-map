@@ -48,7 +48,7 @@ textarea {
 .topbar {
   min-height: 74px;
   display: grid;
-  grid-template-columns: minmax(260px, 1fr) auto auto;
+  grid-template-columns: minmax(260px, 1fr) auto;
   align-items: center;
   gap: 16px;
   padding: 10px 18px;
@@ -170,6 +170,7 @@ textarea {
 
 .topbar-actions {
   gap: 10px;
+  justify-content: flex-end;
 }
 
 .action-group {
@@ -184,7 +185,7 @@ textarea {
 }
 
 .identity-field {
-  min-width: 160px;
+  min-width: 0;
   display: grid;
   gap: 3px;
 }
@@ -198,7 +199,7 @@ textarea {
 }
 
 .identity-input {
-  width: 168px;
+  width: 100%;
   min-height: 32px;
   border: 1px solid rgba(72, 45, 17, 0.36);
   border-radius: 3px;
@@ -215,9 +216,8 @@ textarea {
 
 .draw-toolbar {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .button {
@@ -493,10 +493,42 @@ textarea {
   min-height: 0;
   height: 100%;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(330px, 380px);
+  grid-template-columns: 148px minmax(0, 1fr) minmax(330px, 380px);
   background:
     radial-gradient(circle at center, rgba(255, 232, 178, 0.14), transparent 45%),
     #26190d;
+}
+
+.tool-rail {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 13px 10px;
+  overflow-y: auto;
+  background:
+    linear-gradient(rgba(231, 207, 156, 0.95), rgba(199, 165, 99, 0.94)),
+    repeating-linear-gradient(90deg, rgba(84, 54, 22, 0.06) 0 1px, transparent 1px 8px);
+  border-right: 2px solid rgba(65, 40, 17, 0.42);
+  box-shadow: inset -8px 0 18px rgba(60, 35, 12, 0.12);
+}
+
+.tool-rail-label {
+  margin: 0;
+  color: #694c2f;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.tool-rail-section {
+  padding-top: 13px;
+  border-top: 1px solid rgba(64, 42, 19, 0.24);
+}
+
+.tool-rail .button {
+  width: 100%;
 }
 
 .panel {
@@ -529,17 +561,18 @@ textarea {
 
 .segmented {
   display: grid;
-  grid-template-columns: repeat(4, minmax(82px, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 8px;
 }
 
 .tool-button {
   min-width: 0;
-  min-height: 44px;
+  min-height: 48px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 8px;
+  padding: 8px 10px;
   border: 1px solid rgba(65, 40, 17, 0.45);
   border-radius: 3px;
   color: var(--ink);
@@ -969,13 +1002,16 @@ textarea {
     grid-template-columns: 1fr;
   }
 
-  .draw-toolbar,
   .topbar-actions {
     justify-content: flex-start;
   }
 
   .workspace {
-    grid-template-columns: minmax(0, 1fr) minmax(300px, 340px);
+    grid-template-columns: 132px minmax(0, 1fr) minmax(300px, 340px);
+  }
+
+  .tool-rail {
+    padding-inline: 8px;
   }
 }
 
@@ -1061,27 +1097,19 @@ textarea {
   }
 
   .topbar-actions .action-group:nth-child(1) {
-    grid-column: 1 / -1;
-  }
-
-  .topbar-actions .action-group:nth-child(2) {
-    grid-column: 1 / 2;
-  }
-
-  .topbar-actions .action-group:nth-child(3) {
-    grid-column: 2 / -1;
+    grid-column: 1 / 3;
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .topbar-actions .action-group:nth-child(2) {
+    grid-column: 3 / 4;
+  }
+
+  .topbar-actions .action-group:nth-child(3) {
+    grid-column: 1 / 4;
+  }
+
   .topbar-actions .action-group:nth-child(4) {
-    grid-column: 1 / 3;
-  }
-
-  .topbar-actions .action-group:nth-child(5) {
-    grid-column: 3 / 5;
-  }
-
-  .topbar-actions .action-group:nth-child(6) {
     grid-column: 4 / 5;
     justify-items: end;
   }
@@ -1109,8 +1137,34 @@ textarea {
 
   .workspace {
     grid-template-columns: 1fr;
-    grid-template-rows: minmax(0, 1fr) minmax(240px, 34dvh);
+    grid-template-rows: auto minmax(0, 1fr) minmax(240px, 34dvh);
     min-height: 0;
+  }
+
+  .tool-rail {
+    min-height: auto;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(170px, 0.65fr) minmax(80px, auto);
+    align-items: end;
+    gap: 10px;
+    padding: 9px 10px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    border-right: 0;
+    border-bottom: 2px solid rgba(65, 40, 17, 0.42);
+    box-shadow: 0 6px 16px rgba(24, 15, 7, 0.2);
+  }
+
+  .tool-rail-section {
+    min-width: 0;
+    padding-top: 0;
+    padding-left: 10px;
+    border-top: 0;
+    border-left: 1px solid rgba(64, 42, 19, 0.24);
+  }
+
+  .tool-rail .segmented {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   .panel {
@@ -1145,7 +1199,24 @@ textarea {
 
 @media (max-width: 440px) {
   .topbar {
-    max-height: 38dvh;
+    max-height: 32dvh;
+  }
+
+  .tool-rail {
+    grid-template-columns: minmax(0, 1fr) 90px;
+  }
+
+  .tool-rail .draw-toolbar {
+    grid-column: 1 / -1;
+  }
+
+  .tool-rail-section {
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .tool-rail-section:last-child {
+    align-self: end;
   }
 
   .tool-glyph {
