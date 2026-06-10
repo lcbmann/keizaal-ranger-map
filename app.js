@@ -1480,7 +1480,7 @@
       if (isSupabaseConfigured()) {
         try {
           code = await uploadShareCode(shareFeatures);
-          status = `Copied short share code ${code} (${shareFeatures.length} ${shareFeatures.length === 1 ? "entry" : "entries"})`;
+          status = `Copied atlas share code ${code} (${shareFeatures.length} ${shareFeatures.length === 1 ? "entry" : "entries"})`;
         } catch (error) {
           console.error("Could not upload share code", error);
           const codes = encodeShareCodes(shareFeatures);
@@ -1492,7 +1492,7 @@
         const codes = encodeShareCodes(shareFeatures);
         code = codes.join("\n");
         const partText = codes.length === 1 ? "1 fallback code" : `${codes.length} fallback codes`;
-        status = `Supabase anon key missing; copied ${partText}`;
+        status = `Supabase anon key missing; copied ${partText} for atlas data`;
       }
 
       try {
@@ -1506,7 +1506,7 @@
       }
     } catch (error) {
       console.error(error);
-      elements.shareStatus.textContent = "Could not create a share code for those entries.";
+      elements.shareStatus.textContent = "Could not create an atlas share code for those entries.";
     } finally {
       setShareBusy(false);
     }

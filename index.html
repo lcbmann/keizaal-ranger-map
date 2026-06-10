@@ -72,10 +72,14 @@
           <div class="action-group">
             <button id="undoBtn" class="button secondary" type="button" title="Undo last change (Ctrl+Z)" disabled>Undo</button>
           </div>
-          <div class="action-group">
-            <button id="exportBtn" class="button secondary" type="button">Copy Code</button>
-            <button id="importBtn" class="button secondary" type="button">Receive Code</button>
-            <button id="exportMapBtn" class="button secondary" type="button">Export Map</button>
+          <div class="action-group action-cluster" aria-label="Atlas data sharing">
+            <span class="action-cluster-label">Atlas Data</span>
+            <button id="exportBtn" class="button secondary" type="button" title="Choose entries and copy a share code">Share Atlas</button>
+            <button id="importBtn" class="button secondary" type="button" title="Paste a share code or receive the GUILD Atlas">Add Atlas</button>
+          </div>
+          <div class="action-group action-cluster" aria-label="Map image export">
+            <span class="action-cluster-label">Map Image</span>
+            <button id="exportMapBtn" class="button secondary" type="button" title="Save the current visible map as a PNG">Save Image</button>
           </div>
           <div class="action-group">
             <button id="clearBtn" class="button danger" type="button">Scrape Clean</button>
@@ -169,8 +173,8 @@
           threats, caches, hunting grounds, ore veins, ingredients, contacts, and reports worth passing on.
         </p>
         <p>
-          Keep entries clear, current, and useful. Copy a code to pass your notes to others, or receive
-          one to fold another traveler's findings into your own map.
+          Keep entries clear, current, and useful. Share Atlas creates a data code for others to merge;
+          Save Image makes a picture of the current view.
         </p>
         <p class="field-note-signature">Good maps save lives.<br />Ranger-Captain Lorn Valecroft</p>
       </div>
@@ -202,10 +206,10 @@
           <section class="help-step">
             <h3>Share Entries</h3>
             <ol>
-              <li>Copy Code lets you choose entries to share.</li>
-              <li>Receive Code imports another atlas code.</li>
+              <li>Share Atlas creates a code containing the entries you choose.</li>
+              <li>Add Atlas imports a code from another Ranger.</li>
               <li>Choose Receive GUILD Atlas to pull the current official map from the server.</li>
-              <li>Export Map saves the current map view as a PNG.</li>
+              <li>Save Image downloads a PNG of the current visible map.</li>
             </ol>
           </section>
           <section class="help-step">
@@ -245,8 +249,8 @@
     <dialog id="shareDialog" class="field-note workflow-dialog">
       <div class="field-note-inner">
         <button id="shareCancelBtn" class="field-note-close" type="button" aria-label="Cancel share code">&times;</button>
-        <p class="field-note-kicker">Copy Atlas Code</p>
-        <h2>Choose Entries to Share</h2>
+        <p class="field-note-kicker">Share Atlas Data</p>
+        <h2>Choose Entries for a Share Code</h2>
         <p id="shareSummary">Select the marks, trails, and ranges to include. Printed cities and towns are never included.</p>
         <div class="share-select-actions">
           <button id="shareSelectAllBtn" class="button secondary" type="button">Select All</button>
@@ -255,7 +259,7 @@
         <div id="shareEntryList" class="share-entry-list" aria-label="Entries to share"></div>
         <p id="shareStatus" class="dialog-status" aria-live="polite"></p>
         <div class="dialog-actions">
-          <button id="shareCopyBtn" class="button primary" type="button">Copy Code</button>
+          <button id="shareCopyBtn" class="button primary" type="button">Copy Share Code</button>
           <button id="shareKeepBtn" class="button secondary" type="button">Cancel</button>
         </div>
       </div>
