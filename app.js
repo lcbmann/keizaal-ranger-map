@@ -174,6 +174,7 @@
     shareSelectAllBtn: document.getElementById("shareSelectAllBtn"),
     shareSelectNoneBtn: document.getElementById("shareSelectNoneBtn"),
     exportBtn: document.getElementById("exportBtn"),
+    exportMapBtn: document.getElementById("exportMapBtn"),
     importBtn: document.getElementById("importBtn"),
     clearBtn: document.getElementById("clearBtn"),
     creatorInput: document.getElementById("creatorInput"),
@@ -259,6 +260,7 @@
     elements.guildEntryList.addEventListener("change", updateGuildPublishDialogState);
     closeDialogOnBackdrop(elements.guildPublishDialog);
     elements.exportBtn.addEventListener("click", openShareDialog);
+    elements.exportMapBtn.addEventListener("click", exportVisibleMap);
     elements.shareCopyBtn.addEventListener("click", copySelectedShareCode);
     elements.shareCancelBtn.addEventListener("click", () => closeShareDialog());
     elements.shareKeepBtn.addEventListener("click", () => closeShareDialog());
@@ -1131,6 +1133,294 @@
     saveState();
     renderAll();
     setStatus("Deleted");
+  }
+
+  async function exportVisibleMap() {
+    elements.exportMapBtn.disabled = true;
+    setStatus("Preparing map image...");
+
+    try {
+      const image = await loadImage(MAP_IMAGE);
+      const canvas = renderVisibleMapToCanvas(image);
+      const blob = await canvasToBlob(canvas);
+      downloadBlob(blob, `ranger-corps-field-atlas-${formatDateForFilename(new Date())}.png`);
+      setStatus("Map image exported");
+    } catch (error) {
+      console.error(error);
+      setStatus("Could not export map image");
+    } finally {
+      elements.exportMapBtn.disabled = false;
+    }
+  }
+
+  function renderVisibleMapToCanvas(image) {
+    const size = map.getSize();
+    const maxSide = 2400;
+    const deviceScale = Math.max(1, Math.min(window.devicePixelRatio || 1, 2));
+    const scale = Math.min(deviceScale, maxSide / Math.max(size.x, size.y));
+    const width = Math.max(1, Math.round(size.x * scale));
+    const height = Math.max(1, Math.round(size.y * scale));
+    const canvas = document.createElement("canvas");
+    const bounds = getExportBounds();
+    const ctx = canvas.getContext("2d");
+
+    canvas.width = width;
+    canvas.height = height;
+    ctx.fillStyle = "#19140d";
+    ctx.fillRect(0, 0, width, height);
+    drawExportMapImage(ctx, image, bounds, width, height);
+    drawExportFeatures(ctx, bounds, width, height, scale);
+    drawExportFrame(ctx, width, height, scale);
+    return canvas;
+  }
+
+  function getExportBounds() {
+    const bounds = map.getBounds();
+    return {
+      west: bounds.getWest(),
+      east: bounds.getEast(),
+      south: bounds.getSouth(),
+      north: bounds.getNorth(),
+    };
+  }
+
+  function drawExportMapImage(ctx, image, bounds, width, height) {
+    const cropWest = Math.max(0, bounds.west);
+    const cropEast = Math.min(MAP_WIDTH, bounds.east);
+    const cropSouth = Math.max(0, bounds.south);
+    const cropNorth = Math.min(MAP_HEIGHT, bounds.north);
+    if (cropEast <= cropWest || cropNorth <= cropSouth) {
+      return;
+    }
+
+    const sourceX = (cropWest / MAP_WIDTH) * image.naturalWidth;
+    const sourceY = ((MAP_HEIGHT - cropNorth) / MAP_HEIGHT) * image.naturalHeight;
+    const sourceWidth = ((cropEast - cropWest) / MAP_WIDTH) * image.naturalWidth;
+    const sourceHeight = ((cropNorth - cropSouth) / MAP_HEIGHT) * image.naturalHeight;
+    const destX = ((cropWest - bounds.west) / (bounds.east - bounds.west)) * width;
+    const destY = ((bounds.north - cropNorth) / (bounds.north - bounds.south)) * height;
+    const destWidth = ((cropEast - cropWest) / (bounds.east - bounds.west)) * width;
+    const destHeight = ((cropNorth - cropSouth) / (bounds.north - bounds.south)) * height;
+
+    ctx.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, destX, destY, destWidth, destHeight);
+  }
+
+  function drawExportFeatures(ctx, bounds, width, height, scale) {
+    getVisibleFeatures()
+      .filter((feature) => featureIntersectsBounds(feature, bounds))
+      .slice()
+      .sort(compareFeaturesForMap)
+      .forEach((feature) => {
+        const category = categoryById[feature.category] || categoryById.landmark;
+        if (feature.type === "range") {
+          drawExportRange(ctx, feature, category, bounds, width, height, scale);
+        } else if (feature.type === "route") {
+          drawExportRoute(ctx, feature, category, bounds, width, height, scale);
+        } else {
+          drawExportMarker(ctx, feature, category, bounds, width, height, scale);
+        }
+      });
+  }
+
+  function drawExportRange(ctx, feature, category, bounds, width, height, scale) {
+    const points = feature.points.map((point) => mapPointToExport(point, bounds, width, height));
+    if (points.length < 2) {
+      return;
+    }
+    const color = getFeatureColor(feature, category);
+    ctx.save();
+    ctx.beginPath();
+    points.forEach((point, index) => {
+      if (index === 0) {
+        ctx.moveTo(point.x, point.y);
+      } else {
+        ctx.lineTo(point.x, point.y);
+      }
+    });
+    ctx.closePath();
+    ctx.globalAlpha = isFeatureSelected(feature.id) ? 0.22 : 0.16;
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.globalAlpha = isFeatureSelected(feature.id) ? 0.95 : 0.78;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = (isFeatureSelected(feature.id) ? 4 : 2.5) * scale;
+    ctx.lineJoin = "round";
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawExportRoute(ctx, feature, category, bounds, width, height, scale) {
+    const points = feature.points.map((point) => mapPointToExport(point, bounds, width, height));
+    if (points.length < 2) {
+      return;
+    }
+
+    ctx.save();
+    drawExportPath(ctx, points);
+    ctx.strokeStyle = "#efe3c2";
+    ctx.globalAlpha = 0.55;
+    ctx.lineWidth = (isFeatureSelected(feature.id) ? 10 : 8) * scale;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.stroke();
+
+    drawExportPath(ctx, points);
+    ctx.strokeStyle = category.color;
+    ctx.globalAlpha = isFeatureSelected(feature.id) ? 0.96 : 0.84;
+    ctx.lineWidth = (isFeatureSelected(feature.id) ? 4 : 3) * scale;
+    ctx.setLineDash([18 * scale, 16 * scale, 4 * scale, 16 * scale]);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawExportMarker(ctx, feature, category, bounds, width, height, scale) {
+    const point = mapPointToExport(feature.points[0], bounds, width, height);
+    const selected = isFeatureSelected(feature.id);
+    const radius = (isDefaultFeature(feature) ? 6 : selected ? 11 : 9) * scale;
+    const labelVisible = !isDefaultFeature(feature) || selected || map.getZoom() >= -0.75;
+
+    ctx.save();
+    ctx.shadowColor = "rgba(24, 15, 7, 0.34)";
+    ctx.shadowBlur = 5 * scale;
+    ctx.shadowOffsetY = 2 * scale;
+    ctx.beginPath();
+    ctx.arc(point.x, point.y, radius, 0, Math.PI * 2);
+    ctx.fillStyle = category.color;
+    ctx.fill();
+    ctx.shadowColor = "transparent";
+    ctx.lineWidth = (selected ? 3 : 2) * scale;
+    ctx.strokeStyle = selected ? "#fff4d7" : "#efe3c2";
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(point.x, point.y, Math.max(2.5 * scale, radius * 0.36), 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(255, 246, 222, 0.76)";
+    ctx.fill();
+
+    if (labelVisible) {
+      drawExportLabel(ctx, feature.title || category.label, point.x + radius + 5 * scale, point.y, scale);
+    }
+    ctx.restore();
+  }
+
+  function drawExportPath(ctx, points) {
+    ctx.beginPath();
+    points.forEach((point, index) => {
+      if (index === 0) {
+        ctx.moveTo(point.x, point.y);
+      } else {
+        ctx.lineTo(point.x, point.y);
+      }
+    });
+  }
+
+  function drawExportLabel(ctx, text, x, y, scale) {
+    const label = truncate(String(text || ""), 32);
+    const fontSize = 12 * scale;
+    const paddingX = 6 * scale;
+    const paddingY = 4 * scale;
+
+    ctx.font = `${fontSize}px Georgia, "Times New Roman", serif`;
+    const metrics = ctx.measureText(label);
+    const width = metrics.width + paddingX * 2;
+    const height = fontSize + paddingY * 2;
+    const labelY = y - height / 2;
+
+    ctx.fillStyle = "rgba(246, 235, 208, 0.86)";
+    ctx.strokeStyle = "rgba(72, 45, 17, 0.42)";
+    ctx.lineWidth = 1 * scale;
+    drawRoundedRectPath(ctx, x, labelY, width, height, 3 * scale);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = "#24190f";
+    ctx.fillText(label, x + paddingX, labelY + paddingY + fontSize * 0.78);
+  }
+
+  function drawRoundedRectPath(ctx, x, y, width, height, radius) {
+    const safeRadius = Math.min(radius, width / 2, height / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + safeRadius, y);
+    ctx.lineTo(x + width - safeRadius, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + safeRadius);
+    ctx.lineTo(x + width, y + height - safeRadius);
+    ctx.quadraticCurveTo(x + width, y + height, x + width - safeRadius, y + height);
+    ctx.lineTo(x + safeRadius, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - safeRadius);
+    ctx.lineTo(x, y + safeRadius);
+    ctx.quadraticCurveTo(x, y, x + safeRadius, y);
+    ctx.closePath();
+  }
+
+  function drawExportFrame(ctx, width, height, scale) {
+    const inset = 7 * scale;
+    ctx.save();
+    ctx.strokeStyle = "rgba(238, 210, 151, 0.54)";
+    ctx.lineWidth = 2 * scale;
+    ctx.strokeRect(inset, inset, width - inset * 2, height - inset * 2);
+    ctx.fillStyle = "rgba(246, 235, 208, 0.82)";
+    ctx.font = `${12 * scale}px Georgia, "Times New Roman", serif`;
+    ctx.fillText("The Ranger Corps - Field Atlas", 14 * scale, height - 14 * scale);
+    ctx.restore();
+  }
+
+  function mapPointToExport(point, bounds, width, height) {
+    return {
+      x: ((point.x - bounds.west) / (bounds.east - bounds.west)) * width,
+      y: ((bounds.north - point.y) / (bounds.north - bounds.south)) * height,
+    };
+  }
+
+  function featureIntersectsBounds(feature, bounds) {
+    if (feature.type === "marker") {
+      const point = feature.points[0];
+      return point.x >= bounds.west && point.x <= bounds.east && point.y >= bounds.south && point.y <= bounds.north;
+    }
+
+    const featureBounds = feature.points.reduce(
+      (accumulator, point) => ({
+        west: Math.min(accumulator.west, point.x),
+        east: Math.max(accumulator.east, point.x),
+        south: Math.min(accumulator.south, point.y),
+        north: Math.max(accumulator.north, point.y),
+      }),
+      { west: Infinity, east: -Infinity, south: Infinity, north: -Infinity },
+    );
+    return featureBounds.east >= bounds.west && featureBounds.west <= bounds.east && featureBounds.north >= bounds.south && featureBounds.south <= bounds.north;
+  }
+
+  function loadImage(src) {
+    return new Promise((resolve, reject) => {
+      const image = new Image();
+      image.onload = () => resolve(image);
+      image.onerror = reject;
+      image.src = src;
+    });
+  }
+
+  function canvasToBlob(canvas) {
+    return new Promise((resolve, reject) => {
+      canvas.toBlob((blob) => {
+        if (blob) {
+          resolve(blob);
+        } else {
+          reject(new Error("Could not create map image"));
+        }
+      }, "image/png");
+    });
+  }
+
+  function downloadBlob(blob, filename) {
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  function formatDateForFilename(date) {
+    return date.toISOString().slice(0, 10);
   }
 
   function openShareDialog() {
