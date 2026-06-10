@@ -188,6 +188,8 @@
     titleInput: document.getElementById("titleInput"),
     categoryInput: document.getElementById("categoryInput"),
     confidenceInput: document.getElementById("confidenceInput"),
+    rangeColorField: document.getElementById("rangeColorField"),
+    rangeColorInput: document.getElementById("rangeColorInput"),
     creatorMeta: document.getElementById("creatorMeta"),
     notesInput: document.getElementById("notesInput"),
     saveFeatureBtn: document.getElementById("saveFeatureBtn"),
@@ -281,7 +283,7 @@
       renderAll();
     });
 
-    [elements.titleInput, elements.categoryInput, elements.confidenceInput, elements.notesInput].forEach((element) => {
+    [elements.titleInput, elements.categoryInput, elements.confidenceInput, elements.rangeColorInput, elements.notesInput].forEach((element) => {
       element.addEventListener("input", syncDraftFromEditor);
       element.addEventListener("change", syncDraftFromEditor);
     });
@@ -652,11 +654,12 @@
       return createRouteLayer(latLngs, category, selected, feature);
     }
 
+    const rangeColor = getFeatureColor(feature, category);
     const layer = L.polygon(latLngs, {
-      color: category.color,
+      color: rangeColor,
       weight: selected ? 4 : 2.5,
       opacity: selected ? 0.95 : 0.78,
-      fillColor: category.color,
+      fillColor: rangeColor,
       fillOpacity: selected ? 0.18 : 0.12,
       lineCap: "round",
       lineJoin: "round",
@@ -997,6 +1000,9 @@
     elements.titleInput.value = feature ? feature.title : "";
     elements.categoryInput.value = feature ? feature.category : "landmark";
     elements.confidenceInput.value = feature ? feature.confidence : "scouted";
+    const showRangeColor = Boolean(feature && feature.type === "range");
+    elements.rangeColorField.hidden = !showRangeColor;
+    elements.rangeColorInput.value = feature ? getFeatureColor(feature, categoryById[feature.category] || categoryById.range) : categoryById.range.color;
     elements.creatorMeta.innerHTML = feature ? getAttributionHtml(feature) : "";
     elements.creatorMeta.hidden = !feature || !elements.creatorMeta.innerHTML;
     elements.notesInput.value = feature ? feature.notes : "";
@@ -1009,6 +1015,7 @@
       elements.titleInput,
       elements.categoryInput,
       elements.confidenceInput,
+      elements.rangeColorInput,
       elements.notesInput,
       elements.saveFeatureBtn,
       elements.deleteFeatureBtn,
@@ -1826,6 +1833,7 @@
       encodeDate(feature.updatedAt),
       feature.creator || "",
       feature.updatedBy || "",
+      feature.type === "range" ? normalizeHexColor(feature.color) : "",
     ];
   }
 
@@ -1861,6 +1869,7 @@
       updatedAt: decodeDate(value[8] || value[7]),
       creator: normalizeCreatorName(value[9] || ""),
       updatedBy: normalizeCreatorName(value[10] || ""),
+      color: normalizeHexColor(value[11] || ""),
     };
   }
 
@@ -1959,6 +1968,11 @@
     feature.title = elements.titleInput.value.trim() || "Untitled";
     feature.category = elements.categoryInput.value;
     feature.confidence = elements.confidenceInput.value;
+    if (feature.type === "range") {
+      feature.color = normalizeHexColor(elements.rangeColorInput.value) || categoryById.range.color;
+    } else {
+      delete feature.color;
+    }
     feature.notes = elements.notesInput.value.trim();
   }
 
@@ -2086,6 +2100,7 @@
         category,
         creator: normalizeCreatorName(rest.creator || ""),
         updatedBy: normalizeCreatorName(rest.updatedBy || ""),
+        color: rest.type === "range" ? normalizeHexColor(rest.color) : "",
         source,
         points: rest.points.map((point) =>
         clampPoint({
@@ -2125,6 +2140,18 @@
 
   function normalizeCreatorName(value) {
     return String(value || "").trim().replace(/\s+/g, " ").slice(0, 40);
+  }
+
+  function getFeatureColor(feature, category) {
+    if (feature.type === "range") {
+      return normalizeHexColor(feature.color) || category.color;
+    }
+    return category.color;
+  }
+
+  function normalizeHexColor(value) {
+    const color = String(value || "").trim();
+    return /^#[0-9a-f]{6}$/i.test(color) ? color.toLowerCase() : "";
   }
 
   function getFeatureTooltip(feature, category) {

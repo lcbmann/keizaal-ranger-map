@@ -616,6 +616,26 @@ textarea {
   resize: vertical;
 }
 
+.range-color-field {
+  margin-top: 2px;
+}
+
+.color-input {
+  width: 64px;
+  height: 38px;
+  border: 1px solid rgba(72, 45, 17, 0.42);
+  border-radius: 3px;
+  padding: 3px;
+  background: rgba(255, 246, 222, 0.7);
+  box-shadow: inset 0 1px 4px rgba(70, 43, 14, 0.12);
+  cursor: pointer;
+}
+
+.color-input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .field-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
