@@ -149,6 +149,9 @@
     receiveCancelBtn: document.getElementById("receiveCancelBtn"),
     clearDialog: document.getElementById("clearDialog"),
     clearSummary: document.getElementById("clearSummary"),
+    clearCategoryList: document.getElementById("clearCategoryList"),
+    clearSelectAllBtn: document.getElementById("clearSelectAllBtn"),
+    clearSelectNoneBtn: document.getElementById("clearSelectNoneBtn"),
     clearConfirmBtn: document.getElementById("clearConfirmBtn"),
     clearCancelBtn: document.getElementById("clearCancelBtn"),
     clearKeepBtn: document.getElementById("clearKeepBtn"),
@@ -160,6 +163,7 @@
     guildPassphraseInput: document.getElementById("guildPassphraseInput"),
     guildPublishStatus: document.getElementById("guildPublishStatus"),
     guildPublishConfirmBtn: document.getElementById("guildPublishConfirmBtn"),
+    guildRecoverAllBtn: document.getElementById("guildRecoverAllBtn"),
     guildPublishCancelBtn: document.getElementById("guildPublishCancelBtn"),
     guildPublishKeepBtn: document.getElementById("guildPublishKeepBtn"),
     guildSelectAllBtn: document.getElementById("guildSelectAllBtn"),
@@ -253,6 +257,7 @@
     elements.undoBtn.addEventListener("click", undoLastAction);
     elements.guildAdminBtn.addEventListener("click", openGuildPublishDialog);
     elements.guildPublishConfirmBtn.addEventListener("click", publishGuildAtlas);
+    elements.guildRecoverAllBtn.addEventListener("click", recoverAllAtlasEntries);
     elements.guildPublishCancelBtn.addEventListener("click", () => closeGuildPublishDialog());
     elements.guildPublishKeepBtn.addEventListener("click", () => closeGuildPublishDialog());
     elements.guildSelectAllBtn.addEventListener("click", () => setGuildEntryChecks(true));
@@ -278,6 +283,9 @@
     closeDialogOnBackdrop(elements.receiveDialog);
     elements.clearBtn.addEventListener("click", openClearDialog);
     elements.clearConfirmBtn.addEventListener("click", clearAtlas);
+    elements.clearSelectAllBtn.addEventListener("click", () => setClearCategoryChecks(true));
+    elements.clearSelectNoneBtn.addEventListener("click", () => setClearCategoryChecks(false));
+    elements.clearCategoryList.addEventListener("change", updateClearDialogState);
     elements.clearCancelBtn.addEventListener("click", () => elements.clearDialog.close());
     elements.clearKeepBtn.addEventListener("click", () => elements.clearDialog.close());
     closeDialogOnBackdrop(elements.clearDialog);
@@ -1628,12 +1636,57 @@
     }
   }
 
+  async function recoverAllAtlasEntries() {
+    const passphrase = elements.guildPassphraseInput.value.trim();
+    if (!passphrase) {
+      elements.guildPublishStatus.textContent = "Enter the senior ranger passphrase.";
+      return;
+    }
+    if (!isSupabaseConfigured()) {
+      elements.guildPublishStatus.textContent = "Supabase anon key missing; cannot recover the archive.";
+      return;
+    }
+
+    setGuildPublishBusy(true);
+    elements.guildPublishStatus.textContent = "Recovering archived atlas entries...";
+    try {
+      const payload = await callSupabaseRpc("get_all_atlas_entries", {
+        admin_passphrase: passphrase,
+      });
+      const imported = decodeStoredSharePayload(payload);
+      const recoveredFeatures = markFeaturesAsPersonal(
+        normalizeFeatures(imported.features.filter(isValidFeature), imported.map).filter((feature) => !isDefaultFeature(feature)),
+      );
+      if (!recoveredFeatures.length) {
+        elements.guildPublishStatus.textContent = "The archive does not contain any entries yet.";
+        return;
+      }
+
+      const summary = summarizeIncomingFeatures(recoveredFeatures);
+      pushUndo("recover atlas archive");
+      state.features = mergePersonalFeatures(state.features, recoveredFeatures);
+      state.selectedId = null;
+      state.selectedIds = [];
+      resetViewFilters();
+      saveState();
+      renderAll();
+      closeGuildPublishDialog();
+      setStatus(`Recovered ${recoveredFeatures.length} archived entries${summary.duplicateCount ? `; ${summary.duplicateCount} already existed locally` : ""}`);
+    } catch (error) {
+      console.error(error);
+      elements.guildPublishStatus.textContent = "Recovery failed. Check the passphrase and make sure the archive migration has run.";
+    } finally {
+      setGuildPublishBusy(false);
+    }
+  }
+
   function setGuildPublishBusy(busy) {
     elements.guildEntryList.querySelectorAll("input").forEach((input) => {
       input.disabled = busy;
     });
     elements.guildPassphraseInput.disabled = busy;
     elements.guildPublishConfirmBtn.disabled = busy || !elements.guildEntryList.querySelector(".guild-entry-checkbox:checked");
+    elements.guildRecoverAllBtn.disabled = busy;
     elements.guildPublishCancelBtn.disabled = busy;
     elements.guildPublishKeepBtn.disabled = busy;
     elements.guildSelectAllBtn.disabled = busy;
@@ -1935,20 +1988,72 @@
       return;
     }
 
-    elements.clearSummary.textContent = `${customFeatures.length} custom ${customFeatures.length === 1 ? "entry" : "entries"} will be removed from this browser. Default cities and towns will stay on the atlas.`;
-    elements.clearConfirmBtn.textContent = `Scrape ${customFeatures.length} Custom ${customFeatures.length === 1 ? "Entry" : "Entries"}`;
+    const countsByCategory = customFeatures.reduce((counts, feature) => {
+      counts[feature.category] = (counts[feature.category] || 0) + 1;
+      return counts;
+    }, {});
+    elements.clearCategoryList.innerHTML = "";
+    categories
+      .filter((category) => countsByCategory[category.id])
+      .forEach((category) => {
+        const label = document.createElement("label");
+        label.className = "check-row";
+        label.innerHTML = `
+          <span>
+            <i class="swatch" style="background:${category.color}" aria-hidden="true"></i>
+            ${escapeHtml(category.label)} (${countsByCategory[category.id]})
+          </span>
+          <input class="clear-category-checkbox" type="checkbox" value="${escapeHtml(category.id)}" checked />
+        `;
+        elements.clearCategoryList.appendChild(label);
+      });
     elements.clearDialog.showModal();
+    updateClearDialogState();
   }
 
   function clearAtlas() {
-    pushUndo("clear");
-    state.features = defaultFeatures.map(cloneFeature);
+    const selectedCategories = getSelectedClearCategories();
+    const featuresToRemove = state.features.filter((feature) => !isDefaultFeature(feature) && selectedCategories.has(feature.category));
+    if (!featuresToRemove.length) {
+      return;
+    }
+
+    pushUndo("scrape selected categories");
+    state.features = applyDefaultFeatures(
+      state.features.filter((feature) => isDefaultFeature(feature) || !selectedCategories.has(feature.category)),
+    );
     state.selectedId = null;
     state.selectedIds = [];
     saveState();
     renderAll();
     elements.clearDialog.close();
-    setStatus("Custom entries scraped; default settlements kept");
+    setStatus(`${featuresToRemove.length} custom ${featuresToRemove.length === 1 ? "entry" : "entries"} scraped; default settlements kept`);
+  }
+
+  function getSelectedClearCategories() {
+    return new Set(
+      Array.from(elements.clearCategoryList.querySelectorAll(".clear-category-checkbox:checked")).map((input) => input.value),
+    );
+  }
+
+  function setClearCategoryChecks(checked) {
+    elements.clearCategoryList.querySelectorAll(".clear-category-checkbox").forEach((input) => {
+      input.checked = checked;
+    });
+    updateClearDialogState();
+  }
+
+  function updateClearDialogState() {
+    const selectedCategories = getSelectedClearCategories();
+    const selectedFeatures = state.features.filter((feature) => !isDefaultFeature(feature) && selectedCategories.has(feature.category));
+    const categoryCount = selectedCategories.size;
+    elements.clearSummary.textContent = selectedFeatures.length
+      ? `${selectedFeatures.length} custom ${selectedFeatures.length === 1 ? "entry" : "entries"} across ${categoryCount} ${categoryCount === 1 ? "category" : "categories"} will be removed from this browser. Default cities and towns will stay.`
+      : "Select at least one category to scrape. Default cities and towns always stay.";
+    elements.clearConfirmBtn.textContent = selectedFeatures.length
+      ? `Scrape ${selectedFeatures.length} ${selectedFeatures.length === 1 ? "Entry" : "Entries"}`
+      : "Scrape Selected Categories";
+    elements.clearConfirmBtn.disabled = selectedFeatures.length === 0;
   }
 
   function isSupabaseConfigured() {

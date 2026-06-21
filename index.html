@@ -218,7 +218,7 @@
             <h3>Clean Up</h3>
             <ol>
               <li>Undo reverses recent changes.</li>
-              <li>Scrape Clean removes your notes.</li>
+              <li>Scrape Clean lets you choose which categories to remove.</li>
               <li>Default cities and towns stay as references.</li>
             </ol>
           </section>
@@ -288,6 +288,11 @@
           <button id="guildPublishKeepBtn" class="button secondary" type="button">Keep Local Copy</button>
         </div>
         <p class="dialog-help">Anyone who loads the Guild Atlas code will receive this official copy. Personal notes on their own map are left alone.</p>
+        <section class="admin-recovery">
+          <h3>Archive Recovery</h3>
+          <p>Recover every unique entry ever retained from an uploaded share code or Guild Atlas publication. Recovered entries are added to this browser only.</p>
+          <button id="guildRecoverAllBtn" class="button secondary" type="button">Recover All Archived Entries</button>
+        </section>
       </div>
     </dialog>
 
@@ -297,6 +302,11 @@
         <p class="field-note-kicker">Scrape Clean</p>
         <h2>Clear Custom Entries?</h2>
         <p id="clearSummary">This will remove your custom marks, trails, and ranges. Default cities and towns will stay.</p>
+        <div class="share-select-actions">
+          <button id="clearSelectAllBtn" class="button secondary" type="button">Select All</button>
+          <button id="clearSelectNoneBtn" class="button secondary" type="button">Select None</button>
+        </div>
+        <div id="clearCategoryList" class="clear-category-list" aria-label="Categories to scrape"></div>
         <div class="dialog-actions">
           <button id="clearConfirmBtn" class="button danger" type="button">Scrape Custom Entries</button>
           <button id="clearKeepBtn" class="button secondary" type="button">Keep Atlas</button>
