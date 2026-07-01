@@ -11,8 +11,8 @@
       "category": "landmark",
       "title": "Abandoned Shack",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 3408,
@@ -29,8 +29,8 @@
       "category": "landmark",
       "title": "Alftand",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Dwemer ruin or ancient site marked on Skyrim's map.",
       "points": [
         {
           "x": 5474,
@@ -47,8 +47,8 @@
       "category": "landmark",
       "title": "Ancestor Glade",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Dawnguard.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 3767,
@@ -65,8 +65,8 @@
       "category": "landmark",
       "title": "Ancients Ascent",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Mountain landmark marked on Skyrim's map.",
       "points": [
         {
           "x": 3989,
@@ -83,8 +83,8 @@
       "category": "landmark",
       "title": "Angarvunde",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 6056,
@@ -101,8 +101,8 @@
       "category": "landmark",
       "title": "Angas Mill",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Farm, mill, or rural holding marked on Skyrim's map.",
       "points": [
         {
           "x": 6063,
@@ -119,8 +119,8 @@
       "category": "landmark",
       "title": "Ansilvund",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 7167,
@@ -137,8 +137,8 @@
       "category": "landmark",
       "title": "Arcwind Point",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Mountain landmark marked on Skyrim's map.",
       "points": [
         {
           "x": 5244,
@@ -155,8 +155,8 @@
       "category": "landmark",
       "title": "Arkngthamz",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Dawnguard.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Dwemer ruin or ancient site marked on Skyrim's map.",
       "points": [
         {
           "x": 1556,
@@ -173,8 +173,8 @@
       "category": "landmark",
       "title": "Autumnwatch Tower",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Tower or lookout marked on Skyrim's map.",
       "points": [
         {
           "x": 5539,
@@ -191,8 +191,8 @@
       "category": "landmark",
       "title": "Avanchnzel",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Dwemer ruin or ancient site marked on Skyrim's map.",
       "points": [
         {
           "x": 6203,
@@ -209,8 +209,8 @@
       "category": "landmark",
       "title": "Bilegulch Mine",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Mine marked on Skyrim's map.",
       "points": [
         {
           "x": 2589,
@@ -227,8 +227,8 @@
       "category": "landmark",
       "title": "Bleak Falls Barrow",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Nordic tomb or burial site marked on Skyrim's map.",
       "points": [
         {
           "x": 4065,
@@ -243,10 +243,10 @@
       "id": "canon-skyrim-00016213",
       "type": "marker",
       "category": "landmark",
-      "title": "Blind Cliff",
+      "title": "Blind Cliff Cave",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Cave or cavern marked on Skyrim's map.",
       "points": [
         {
           "x": 1485,
@@ -261,10 +261,10 @@
       "id": "canon-skyrim-00016215",
       "type": "marker",
       "category": "landmark",
-      "title": "Bloated Mans Grotto",
+      "title": "Bloated Man's Grotto",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Cave or cavern marked on Skyrim's map.",
       "points": [
         {
           "x": 3327,
@@ -281,8 +281,8 @@
       "category": "landmark",
       "title": "Bloodlet Throne",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 4062,
@@ -299,8 +299,8 @@
       "category": "landmark",
       "title": "Bonestrewn Crest",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 6430,
@@ -315,10 +315,10 @@
       "id": "canon-skyrim-00016339",
       "type": "marker",
       "category": "landmark",
-      "title": "Brandy Mug Farm",
+      "title": "Brandy-Mug Farm",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Farm, mill, or rural holding marked on Skyrim's map.",
       "points": [
         {
           "x": 6579,
@@ -333,32 +333,14 @@
       "id": "canon-skyrim-00016265",
       "type": "marker",
       "category": "landmark",
-      "title": "Brittle Shin Pass North",
+      "title": "Brittleshin Pass",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 3623,
           "y": 2368
-        }
-      ],
-      "source": "personal",
-      "createdAt": "2026-07-01T00:00:00.000Z",
-      "updatedAt": "2026-07-01T00:00:00.000Z"
-    },
-    {
-      "id": "canon-skyrim-00082213",
-      "type": "marker",
-      "category": "landmark",
-      "title": "Brittle Shin Pass South",
-      "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
-      "points": [
-        {
-          "x": 3696,
-          "y": 2069
         }
       ],
       "source": "personal",
@@ -371,8 +353,8 @@
       "category": "landmark",
       "title": "Broken Fang Cave",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Cave or cavern marked on Skyrim's map.",
       "points": [
         {
           "x": 3107,
@@ -389,8 +371,8 @@
       "category": "landmark",
       "title": "Broken Tower Redoubt",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Tower or lookout marked on Skyrim's map.",
       "points": [
         {
           "x": 2076,
@@ -407,12 +389,30 @@
       "category": "landmark",
       "title": "Castle Volkihar",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Dawnguard.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Castle or major stronghold marked on Skyrim's map.",
       "points": [
         {
           "x": 1266,
           "y": 4317
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-02008e41",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Castle Volkihar Ferry",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Coastal landing or ship location marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 1342,
+          "y": 5211
         }
       ],
       "source": "personal",
@@ -425,8 +425,8 @@
       "category": "landmark",
       "title": "Civil War Attacker Camp Whiterun",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Military camp or field camp marked on Skyrim's map.",
       "points": [
         {
           "x": 4510,
@@ -438,53 +438,35 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
+      "id": "canon-skyrim-00046bdf",
+      "type": "marker",
+      "category": "landmark",
+      "title": "College of Winterhold",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "College or institutional site marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 6141,
+          "y": 5041
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
       "id": "canon-skyrim-0001625b",
       "type": "marker",
       "category": "landmark",
-      "title": "Cracked Tusk",
+      "title": "Cracked Tusk Keep",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 3029,
           "y": 1401
-        }
-      ],
-      "source": "personal",
-      "createdAt": "2026-07-01T00:00:00.000Z",
-      "updatedAt": "2026-07-01T00:00:00.000Z"
-    },
-    {
-      "id": "canon-skyrim-000246a5",
-      "type": "marker",
-      "category": "landmark",
-      "title": "Dagon Shrine",
-      "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
-      "points": [
-        {
-          "x": 3996,
-          "y": 3932
-        }
-      ],
-      "source": "personal",
-      "createdAt": "2026-07-01T00:00:00.000Z",
-      "updatedAt": "2026-07-01T00:00:00.000Z"
-    },
-    {
-      "id": "canon-skyrim-0007bc2d",
-      "type": "marker",
-      "category": "landmark",
-      "title": "Dainty Sload",
-      "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
-      "points": [
-        {
-          "x": 3114,
-          "y": 5203
         }
       ],
       "source": "personal",
@@ -497,8 +479,8 @@
       "category": "landmark",
       "title": "Dark Brotherhood Sanctuary",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Secluded refuge or faction site marked on Skyrim's map.",
       "points": [
         {
           "x": 3251,
@@ -515,8 +497,8 @@
       "category": "landmark",
       "title": "Darklight Tower",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Tower or lookout marked on Skyrim's map.",
       "points": [
         {
           "x": 6719,
@@ -533,8 +515,8 @@
       "category": "landmark",
       "title": "Darkwater Crossing",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 6207,
@@ -551,8 +533,8 @@
       "category": "landmark",
       "title": "Dawnstar Docks",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Dawnguard.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Coastal landing or ship location marked on Skyrim's map.",
       "points": [
         {
           "x": 4590,
@@ -569,8 +551,8 @@
       "category": "landmark",
       "title": "Dead Crone Rock",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 744,
@@ -587,30 +569,12 @@
       "category": "landmark",
       "title": "Deepwood Redoubt",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Forsworn redoubt or fortified camp marked on Skyrim's map.",
       "points": [
         {
           "x": 1636,
           "y": 4464
-        }
-      ],
-      "source": "personal",
-      "createdAt": "2026-07-01T00:00:00.000Z",
-      "updatedAt": "2026-07-01T00:00:00.000Z"
-    },
-    {
-      "id": "canon-skyrim-000e0f69",
-      "type": "marker",
-      "category": "landmark",
-      "title": "Doomstone Serpent",
-      "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
-      "points": [
-        {
-          "x": 6805,
-          "y": 5113
         }
       ],
       "source": "personal",
@@ -623,8 +587,8 @@
       "category": "landmark",
       "title": "Dragontooth Crater",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Mountain landmark marked on Skyrim's map.",
       "points": [
         {
           "x": 1486,
@@ -641,8 +605,8 @@
       "category": "landmark",
       "title": "Driftshade Sanctuary",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Secluded refuge or faction site marked on Skyrim's map.",
       "points": [
         {
           "x": 5032,
@@ -659,8 +623,8 @@
       "category": "landmark",
       "title": "Druadach Redoubt",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Forsworn redoubt or fortified camp marked on Skyrim's map.",
       "points": [
         {
           "x": 1265,
@@ -677,8 +641,8 @@
       "category": "landmark",
       "title": "Dushnikh Yal",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 1409,
@@ -695,8 +659,8 @@
       "category": "landmark",
       "title": "Ebony Warrior",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Dragonborn.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 7534,
@@ -713,8 +677,8 @@
       "category": "landmark",
       "title": "Eldergleam Sanctuary",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Secluded refuge or faction site marked on Skyrim's map.",
       "points": [
         {
           "x": 6207,
@@ -731,8 +695,8 @@
       "category": "landmark",
       "title": "Eldersblood Peak",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Mountain landmark marked on Skyrim's map.",
       "points": [
         {
           "x": 3257,
@@ -749,8 +713,8 @@
       "category": "landmark",
       "title": "Embershard Mine",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Mine marked on Skyrim's map.",
       "points": [
         {
           "x": 4212,
@@ -767,8 +731,8 @@
       "category": "landmark",
       "title": "Fellglow Keep",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 5176,
@@ -780,31 +744,13 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
-      "id": "canon-skyrim-02016866",
-      "type": "marker",
-      "category": "landmark",
-      "title": "Ferry Drop Off",
-      "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Dawnguard.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
-      "points": [
-        {
-          "x": 1342,
-          "y": 5211
-        }
-      ],
-      "source": "personal",
-      "createdAt": "2026-07-01T00:00:00.000Z",
-      "updatedAt": "2026-07-01T00:00:00.000Z"
-    },
-    {
       "id": "canon-skyrim-02003cfe",
       "type": "marker",
       "category": "landmark",
-      "title": "Forbears Holdout",
+      "title": "Forebears' Holdout",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Dawnguard.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 2521,
@@ -821,8 +767,8 @@
       "category": "landmark",
       "title": "Forsaken Cave",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Cave or cavern marked on Skyrim's map.",
       "points": [
         {
           "x": 5621,
@@ -839,8 +785,8 @@
       "category": "landmark",
       "title": "Fort Greymoor",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Fortified site marked on Skyrim's map.",
       "points": [
         {
           "x": 3772,
@@ -857,8 +803,8 @@
       "category": "landmark",
       "title": "Fort Hraggstad",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Fortified site marked on Skyrim's map.",
       "points": [
         {
           "x": 2006,
@@ -875,8 +821,8 @@
       "category": "landmark",
       "title": "Fort Snowhawk",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Fortified site marked on Skyrim's map.",
       "points": [
         {
           "x": 3038,
@@ -893,8 +839,8 @@
       "category": "landmark",
       "title": "Gallows Rock",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 5840,
@@ -909,10 +855,10 @@
       "id": "canon-skyrim-00016255",
       "type": "marker",
       "category": "landmark",
-      "title": "Geirmunds Hall",
+      "title": "Geirmund's Hall",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Secluded refuge or faction site marked on Skyrim's map.",
       "points": [
         {
           "x": 5615,
@@ -929,8 +875,8 @@
       "category": "landmark",
       "title": "Glenmoril Coven",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Secluded refuge or faction site marked on Skyrim's map.",
       "points": [
         {
           "x": 2588,
@@ -945,10 +891,10 @@
       "id": "canon-skyrim-0001a710",
       "type": "marker",
       "category": "landmark",
-      "title": "Goldenglow",
+      "title": "Goldenglow Estate",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Estate or rural holding marked on Skyrim's map.",
       "points": [
         {
           "x": 6868,
@@ -965,8 +911,8 @@
       "category": "landmark",
       "title": "Graywinter Watch",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 4953,
@@ -981,10 +927,10 @@
       "id": "canon-skyrim-0001625d",
       "type": "marker",
       "category": "landmark",
-      "title": "Haemars Shame",
+      "title": "Haemar's Shame",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 5023,
@@ -1001,8 +947,8 @@
       "category": "landmark",
       "title": "Hag Rock Redoubt",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Forsworn redoubt or fortified camp marked on Skyrim's map.",
       "points": [
         {
           "x": 892,
@@ -1019,8 +965,8 @@
       "category": "landmark",
       "title": "Half Moon Mill",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Farm, mill, or rural holding marked on Skyrim's map.",
       "points": [
         {
           "x": 3252,
@@ -1035,10 +981,10 @@
       "id": "canon-skyrim-000c342a",
       "type": "marker",
       "category": "landmark",
-      "title": "Hallofthe Vigilant",
+      "title": "Hall of the Vigilant",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Secluded refuge or faction site marked on Skyrim's map.",
       "points": [
         {
           "x": 4366,
@@ -1055,8 +1001,8 @@
       "category": "landmark",
       "title": "Halted Stream Camp",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Military camp or field camp marked on Skyrim's map.",
       "points": [
         {
           "x": 4364,
@@ -1073,8 +1019,8 @@
       "category": "landmark",
       "title": "Heljarchen Hall",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from HearthFires.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Secluded refuge or faction site marked on Skyrim's map.",
       "points": [
         {
           "x": 4586,
@@ -1091,8 +1037,8 @@
       "category": "landmark",
       "title": "High Hrothgar",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 4952,
@@ -1107,10 +1053,10 @@
       "id": "canon-skyrim-000162cb",
       "type": "marker",
       "category": "landmark",
-      "title": "Hillgrunds Tomb",
+      "title": "Hillgrund's Tomb",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Nordic tomb or burial site marked on Skyrim's map.",
       "points": [
         {
           "x": 5469,
@@ -1127,8 +1073,8 @@
       "category": "landmark",
       "title": "Hlaalu Farm",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Farm, mill, or rural holding marked on Skyrim's map.",
       "points": [
         {
           "x": 6653,
@@ -1143,10 +1089,10 @@
       "id": "canon-skyrim-00016266",
       "type": "marker",
       "category": "landmark",
-      "title": "Hobs Fall Cave",
+      "title": "Hob's Fall Cave",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Cave or cavern marked on Skyrim's map.",
       "points": [
         {
           "x": 5254,
@@ -1163,8 +1109,8 @@
       "category": "landmark",
       "title": "Hollyfrost Farm",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Farm, mill, or rural holding marked on Skyrim's map.",
       "points": [
         {
           "x": 6727,
@@ -1181,8 +1127,8 @@
       "category": "landmark",
       "title": "Honningbrew Meadery",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Farm, mill, or rural holding marked on Skyrim's map.",
       "points": [
         {
           "x": 4583,
@@ -1199,8 +1145,8 @@
       "category": "landmark",
       "title": "Icerunner",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Coastal landing or ship location marked on Skyrim's map.",
       "points": [
         {
           "x": 3409,
@@ -1212,13 +1158,31 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
+      "id": "canon-skyrim-02016866",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Icewater Jetty",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Coastal landing or ship location marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 1342,
+          "y": 5211
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
       "id": "canon-skyrim-0001626a",
       "type": "marker",
       "category": "landmark",
-      "title": "Ilinaltas Deep",
+      "title": "Ilinalta's Deep",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 3475,
@@ -1235,8 +1199,8 @@
       "category": "landmark",
       "title": "Irkngthand",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Dwemer ruin or ancient site marked on Skyrim's map.",
       "points": [
         {
           "x": 5398,
@@ -1253,8 +1217,8 @@
       "category": "landmark",
       "title": "Karthspire",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 1632,
@@ -1271,8 +1235,8 @@
       "category": "landmark",
       "title": "Kilkreath Ruins",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Dwemer ruin or ancient site marked on Skyrim's map.",
       "points": [
         {
           "x": 2375,
@@ -1289,8 +1253,8 @@
       "category": "landmark",
       "title": "Knifepoint Ridge",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Mountain landmark marked on Skyrim's map.",
       "points": [
         {
           "x": 2735,
@@ -1307,8 +1271,8 @@
       "category": "landmark",
       "title": "Kolskeggr Mine",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Mine marked on Skyrim's map.",
       "points": [
         {
           "x": 1337,
@@ -1325,8 +1289,8 @@
       "category": "landmark",
       "title": "Korvanjund",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 5029,
@@ -1343,8 +1307,8 @@
       "category": "landmark",
       "title": "Kynesgrove",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 6431,
@@ -1359,10 +1323,10 @@
       "id": "canon-skyrim-0001626e",
       "type": "marker",
       "category": "landmark",
-      "title": "Labryinthian",
+      "title": "Labyrinthian",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 3701,
@@ -1379,8 +1343,8 @@
       "category": "landmark",
       "title": "Lakeview Manor",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from HearthFires.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Player homestead location from Hearthfire.",
       "points": [
         {
           "x": 3843,
@@ -1397,8 +1361,8 @@
       "category": "landmark",
       "title": "Largashbur",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 6498,
@@ -1415,8 +1379,8 @@
       "category": "landmark",
       "title": "Left Hand Mine",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Mine marked on Skyrim's map.",
       "points": [
         {
           "x": 1041,
@@ -1431,10 +1395,10 @@
       "id": "canon-skyrim-00016367",
       "type": "marker",
       "category": "landmark",
-      "title": "Loreius",
+      "title": "Loreius Farm",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Farm, mill, or rural holding marked on Skyrim's map.",
       "points": [
         {
           "x": 4660,
@@ -1451,8 +1415,8 @@
       "category": "landmark",
       "title": "Lost Tongue Overlook",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 7162,
@@ -1469,8 +1433,8 @@
       "category": "landmark",
       "title": "Markarth Stables",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 967,
@@ -1485,10 +1449,10 @@
       "id": "canon-skyrim-000268ff",
       "type": "marker",
       "category": "landmark",
-      "title": "Merry Fair",
+      "title": "Merryfair Farm",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Farm, mill, or rural holding marked on Skyrim's map.",
       "points": [
         {
           "x": 7016,
@@ -1505,8 +1469,8 @@
       "category": "landmark",
       "title": "Military Camp Eastmarch Imperial",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Military camp or field camp marked on Skyrim's map.",
       "points": [
         {
           "x": 7167,
@@ -1523,8 +1487,8 @@
       "category": "landmark",
       "title": "Military Camp Falkreath Imperial",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Military camp or field camp marked on Skyrim's map.",
       "points": [
         {
           "x": 2810,
@@ -1541,8 +1505,8 @@
       "category": "landmark",
       "title": "Military Camp Falkreath Sons",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Military camp or field camp marked on Skyrim's map.",
       "points": [
         {
           "x": 4728,
@@ -1559,8 +1523,8 @@
       "category": "landmark",
       "title": "Military Camp Haafingar Sons",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Military camp or field camp marked on Skyrim's map.",
       "points": [
         {
           "x": 2374,
@@ -1577,8 +1541,8 @@
       "category": "landmark",
       "title": "Military Camp Hjaalmarch Imperial",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Military camp or field camp marked on Skyrim's map.",
       "points": [
         {
           "x": 3703,
@@ -1595,8 +1559,8 @@
       "category": "landmark",
       "title": "Military Camp Hjaalmarch Sons",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Military camp or field camp marked on Skyrim's map.",
       "points": [
         {
           "x": 3851,
@@ -1613,8 +1577,8 @@
       "category": "landmark",
       "title": "Military Camp Pale Imperial",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Military camp or field camp marked on Skyrim's map.",
       "points": [
         {
           "x": 3999,
@@ -1631,8 +1595,8 @@
       "category": "landmark",
       "title": "Military Camp Pale Sons",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Military camp or field camp marked on Skyrim's map.",
       "points": [
         {
           "x": 5620,
@@ -1649,8 +1613,8 @@
       "category": "landmark",
       "title": "Military Camp Reach Imperial",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Military camp or field camp marked on Skyrim's map.",
       "points": [
         {
           "x": 1116,
@@ -1667,8 +1631,8 @@
       "category": "landmark",
       "title": "Military Camp Reach Sons",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Military camp or field camp marked on Skyrim's map.",
       "points": [
         {
           "x": 1856,
@@ -1685,8 +1649,8 @@
       "category": "landmark",
       "title": "Military Camp Rift Imperial",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Military camp or field camp marked on Skyrim's map.",
       "points": [
         {
           "x": 5466,
@@ -1703,8 +1667,8 @@
       "category": "landmark",
       "title": "Military Camp Rift Sons",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Military camp or field camp marked on Skyrim's map.",
       "points": [
         {
           "x": 6131,
@@ -1721,8 +1685,8 @@
       "category": "landmark",
       "title": "Military Camp Whiterun Imperial",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Military camp or field camp marked on Skyrim's map.",
       "points": [
         {
           "x": 2887,
@@ -1739,8 +1703,8 @@
       "category": "landmark",
       "title": "Military Camp Whiterun Sons",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Military camp or field camp marked on Skyrim's map.",
       "points": [
         {
           "x": 4953,
@@ -1757,8 +1721,8 @@
       "category": "landmark",
       "title": "Military Camp Winterhold Imperial",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Military camp or field camp marked on Skyrim's map.",
       "points": [
         {
           "x": 4959,
@@ -1775,8 +1739,8 @@
       "category": "landmark",
       "title": "Military Camp Winterhold Sons",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Military camp or field camp marked on Skyrim's map.",
       "points": [
         {
           "x": 6654,
@@ -1793,8 +1757,8 @@
       "category": "landmark",
       "title": "Moldering Ruins",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Dawnguard.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Dwemer ruin or ancient site marked on Skyrim's map.",
       "points": [
         {
           "x": 2222,
@@ -1811,8 +1775,8 @@
       "category": "landmark",
       "title": "Mor Khazgur",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 1266,
@@ -1829,8 +1793,8 @@
       "category": "landmark",
       "title": "Morvunskar",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 6210,
@@ -1847,8 +1811,8 @@
       "category": "landmark",
       "title": "Mount Anthor",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 5769,
@@ -1865,8 +1829,8 @@
       "category": "landmark",
       "title": "Mzinchaleft",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Dwemer ruin or ancient site marked on Skyrim's map.",
       "points": [
         {
           "x": 4146,
@@ -1883,8 +1847,8 @@
       "category": "landmark",
       "title": "Narzulbur",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 6874,
@@ -1899,10 +1863,10 @@
       "id": "canon-skyrim-00017082",
       "type": "marker",
       "category": "landmark",
-      "title": "Night Caller",
+      "title": "Nightcaller Temple",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Religious shrine or temple marked on Skyrim's map.",
       "points": [
         {
           "x": 4737,
@@ -1919,8 +1883,8 @@
       "category": "landmark",
       "title": "Nightgate Inn",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 5399,
@@ -1935,10 +1899,10 @@
       "id": "canon-skyrim-00047d25",
       "type": "marker",
       "category": "landmark",
-      "title": "nightingale Cave",
+      "title": "Nightingale Hall",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Secluded refuge or faction site marked on Skyrim's map.",
       "points": [
         {
           "x": 7163,
@@ -1955,8 +1919,8 @@
       "category": "landmark",
       "title": "Northwind Summit",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 6722,
@@ -1973,8 +1937,8 @@
       "category": "landmark",
       "title": "Old Hroldan",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 2000,
@@ -1991,8 +1955,8 @@
       "category": "landmark",
       "title": "Orphan Rock",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 4655,
@@ -2009,8 +1973,8 @@
       "category": "landmark",
       "title": "Palemoon Crypt",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Nordic tomb or burial site marked on Skyrim's map.",
       "points": [
         {
           "x": 4219,
@@ -2027,8 +1991,8 @@
       "category": "landmark",
       "title": "Pinewatch",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 3842,
@@ -2045,8 +2009,8 @@
       "category": "landmark",
       "title": "Reachcliff Cave",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Cave or cavern marked on Skyrim's map.",
       "points": [
         {
           "x": 1631,
@@ -2061,10 +2025,10 @@
       "id": "canon-skyrim-0010b2c8",
       "type": "marker",
       "category": "landmark",
-      "title": "Reachcliff Secret",
+      "title": "Reachcliff Secret Entrance",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 1335,
@@ -2081,8 +2045,8 @@
       "category": "landmark",
       "title": "Red Road Pass",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 4441,
@@ -2099,8 +2063,8 @@
       "category": "landmark",
       "title": "Redwater Den",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Dawnguard.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 6500,
@@ -2117,8 +2081,8 @@
       "category": "landmark",
       "title": "Riften Military Camp",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Military camp or field camp marked on Skyrim's map.",
       "points": [
         {
           "x": 7164,
@@ -2135,8 +2099,8 @@
       "category": "landmark",
       "title": "Riften Stables",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 7164,
@@ -2153,8 +2117,8 @@
       "category": "landmark",
       "title": "Ruunvald",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Dawnguard.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 7313,
@@ -2171,8 +2135,8 @@
       "category": "landmark",
       "title": "Saarthal",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 5697,
@@ -2189,8 +2153,8 @@
       "category": "landmark",
       "title": "Sacellum of Boethiah",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Religious shrine or temple marked on Skyrim's map.",
       "points": [
         {
           "x": 6948,
@@ -2207,8 +2171,8 @@
       "category": "landmark",
       "title": "Salvius Farm",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Farm, mill, or rural holding marked on Skyrim's map.",
       "points": [
         {
           "x": 1041,
@@ -2225,8 +2189,8 @@
       "category": "landmark",
       "title": "Sarethi Farm",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Farm, mill, or rural holding marked on Skyrim's map.",
       "points": [
         {
           "x": 6057,
@@ -2243,8 +2207,8 @@
       "category": "landmark",
       "title": "Septimus Signus Outpost",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 6142,
@@ -2261,8 +2225,8 @@
       "category": "landmark",
       "title": "Shearpoint",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Mountain landmark marked on Skyrim's map.",
       "points": [
         {
           "x": 5324,
@@ -2279,8 +2243,8 @@
       "category": "landmark",
       "title": "Shriekwind Bastion",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 3621,
@@ -2295,10 +2259,10 @@
       "id": "canon-skyrim-00092496",
       "type": "marker",
       "category": "landmark",
-      "title": "Shrineof Azura",
+      "title": "Shrine of Azura",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Religious shrine or temple marked on Skyrim's map.",
       "points": [
         {
           "x": 6065,
@@ -2310,13 +2274,31 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
+      "id": "canon-skyrim-000246a5",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Shrine of Mehrunes Dagon",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Religious shrine or temple marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 3996,
+          "y": 3932
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
       "id": "canon-skyrim-0006ccc8",
       "type": "marker",
       "category": "landmark",
-      "title": "Shroud Hearth",
+      "title": "Shroud Hearth Barrow",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Nordic tomb or burial site marked on Skyrim's map.",
       "points": [
         {
           "x": 5467,
@@ -2333,8 +2315,8 @@
       "category": "landmark",
       "title": "Skyborn Altar",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 3922,
@@ -2351,8 +2333,8 @@
       "category": "landmark",
       "title": "Snow Veil Sanctum",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 6655,
@@ -2369,8 +2351,8 @@
       "category": "landmark",
       "title": "Solitude Lighthouse",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 3188,
@@ -2387,8 +2369,8 @@
       "category": "landmark",
       "title": "Solitude Stables",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 2670,
@@ -2403,10 +2385,10 @@
       "id": "canon-skyrim-000162bb",
       "type": "marker",
       "category": "landmark",
-      "title": "Soljunds Sinkhole",
+      "title": "Soljund's Sinkhole",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 1927,
@@ -2418,13 +2400,31 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
+      "id": "canon-skyrim-00082213",
+      "type": "marker",
+      "category": "landmark",
+      "title": "South Brittleshin Pass",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 3696,
+          "y": 2069
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
       "id": "canon-skyrim-00108a58",
       "type": "marker",
       "category": "landmark",
-      "title": "Stendarrs Beacon",
+      "title": "Stendarr's Beacon",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 7605,
@@ -2441,8 +2441,8 @@
       "category": "landmark",
       "title": "Stonehill Bluff",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Standing stone marked on Skyrim's map.",
       "points": [
         {
           "x": 4365,
@@ -2459,8 +2459,8 @@
       "category": "landmark",
       "title": "Stony Creek Cave",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Cave or cavern marked on Skyrim's map.",
       "points": [
         {
           "x": 7167,
@@ -2472,13 +2472,49 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
+      "id": "canon-skyrim-0007bc2d",
+      "type": "marker",
+      "category": "landmark",
+      "title": "The Dainty Sload",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Coastal landing or ship location marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 3114,
+          "y": 5203
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000e0f69",
+      "type": "marker",
+      "category": "landmark",
+      "title": "The Serpent Stone",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Standing stone marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 6805,
+          "y": 5113
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
       "id": "canon-skyrim-000162c4",
       "type": "marker",
       "category": "landmark",
-      "title": "Throatofthe World",
+      "title": "Throat of the World",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Mountain landmark marked on Skyrim's map.",
       "points": [
         {
           "x": 5025,
@@ -2495,8 +2531,8 @@
       "category": "landmark",
       "title": "To Solstheim",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Dragonborn.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 7393,
@@ -2511,10 +2547,10 @@
       "id": "canon-skyrim-000162c5",
       "type": "marker",
       "category": "landmark",
-      "title": "Tolvalds Cave",
+      "title": "Tolvald's Cave",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Cave or cavern marked on Skyrim's map.",
       "points": [
         {
           "x": 7240,
@@ -2529,10 +2565,10 @@
       "id": "canon-skyrim-000d30da",
       "type": "marker",
       "category": "landmark",
-      "title": "Towerof Mzark",
+      "title": "Tower of Mzark",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Tower or lookout marked on Skyrim's map.",
       "points": [
         {
           "x": 4513,
@@ -2549,8 +2585,8 @@
       "category": "landmark",
       "title": "Twilight Sepulcher",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 2735,
@@ -2567,8 +2603,8 @@
       "category": "landmark",
       "title": "Ustengrav",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 3629,
@@ -2585,48 +2621,12 @@
       "category": "landmark",
       "title": "Uttering Hills Cave",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Cave or cavern marked on Skyrim's map.",
       "points": [
         {
           "x": 5914,
           "y": 3327
-        }
-      ],
-      "source": "personal",
-      "createdAt": "2026-07-01T00:00:00.000Z",
-      "updatedAt": "2026-07-01T00:00:00.000Z"
-    },
-    {
-      "id": "canon-skyrim-0200ba4d",
-      "type": "marker",
-      "category": "landmark",
-      "title": "Vampire Castle",
-      "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Dawnguard.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
-      "points": [
-        {
-          "x": 827,
-          "y": 5661
-        }
-      ],
-      "source": "personal",
-      "createdAt": "2026-07-01T00:00:00.000Z",
-      "updatedAt": "2026-07-01T00:00:00.000Z"
-    },
-    {
-      "id": "canon-skyrim-02008e41",
-      "type": "marker",
-      "category": "landmark",
-      "title": "Volkihar Ferry",
-      "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Dawnguard.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
-      "points": [
-        {
-          "x": 1342,
-          "y": 5211
         }
       ],
       "source": "personal",
@@ -2639,8 +2639,8 @@
       "category": "landmark",
       "title": "Volskygge",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 1710,
@@ -2657,8 +2657,8 @@
       "category": "landmark",
       "title": "White River Watch",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 4805,
@@ -2675,8 +2675,8 @@
       "category": "landmark",
       "title": "Whiterun Stables",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 4362,
@@ -2693,8 +2693,8 @@
       "category": "landmark",
       "title": "Whiterun Watchtower",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Tower or lookout marked on Skyrim's map.",
       "points": [
         {
           "x": 4067,
@@ -2711,8 +2711,8 @@
       "category": "landmark",
       "title": "Windhelm Docks",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Dawnguard.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Coastal landing or ship location marked on Skyrim's map.",
       "points": [
         {
           "x": 6580,
@@ -2729,30 +2729,12 @@
       "category": "landmark",
       "title": "Windstad Manor",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from HearthFires.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Player homestead location from Hearthfire.",
       "points": [
         {
           "x": 3630,
           "y": 4828
-        }
-      ],
-      "source": "personal",
-      "createdAt": "2026-07-01T00:00:00.000Z",
-      "updatedAt": "2026-07-01T00:00:00.000Z"
-    },
-    {
-      "id": "canon-skyrim-00046bdf",
-      "type": "marker",
-      "category": "landmark",
-      "title": "Winterhold College",
-      "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
-      "points": [
-        {
-          "x": 6141,
-          "y": 5041
         }
       ],
       "source": "personal",
@@ -2765,8 +2747,8 @@
       "category": "landmark",
       "title": "Witchmist Grove",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 6430,
@@ -2783,8 +2765,8 @@
       "category": "landmark",
       "title": "Wolfskull Cave",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Cave or cavern marked on Skyrim's map.",
       "points": [
         {
           "x": 2301,
@@ -2801,8 +2783,8 @@
       "category": "landmark",
       "title": "Yngol Barrow",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Nordic tomb or burial site marked on Skyrim's map.",
       "points": [
         {
           "x": 6876,
@@ -2819,8 +2801,8 @@
       "category": "landmark",
       "title": "Yngvild",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 5107,
@@ -2835,10 +2817,10 @@
       "id": "canon-skyrim-000162d2",
       "type": "marker",
       "category": "landmark",
-      "title": "Ysgramors Tomb",
+      "title": "Ysgramor's Tomb",
       "confidence": "scouted",
-      "creator": "Skyrim.esm",
-      "notes": "Vanilla Skyrim map marker exported from Skyrim.esm. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+      "creator": "",
+      "notes": "Nordic tomb or burial site marked on Skyrim's map.",
       "points": [
         {
           "x": 5772,
@@ -2854,6 +2836,6 @@
     "name": "Skyrim Canon Locations",
     "source": "SSEEdit MapMarker export",
     "coordinateBasis": "Exterior cell coordinates fitted to atlas defaults",
-    "featureCount": 158
+    "featureCount": 157
   }
 }

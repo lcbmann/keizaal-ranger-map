@@ -41,15 +41,85 @@ DEFAULT_TITLES = {
     "riverwood",
 }
 TITLE_OVERRIDES = {
+    "BlindCliffMapMarker": "Blind Cliff Cave",
+    "BloatedMansGrottoMapMarker": "Bloated Man's Grotto",
+    "BrandyMugFarmMapMarkerRef": "Brandy-Mug Farm",
+    "BrittleShinPassNorthMapMarker": "Brittleshin Pass",
+    "BrittleShinPassSouthMapMarker": "South Brittleshin Pass",
+    "CrackedTuskMapMarker": "Cracked Tusk Keep",
     "BYOHHouse1MapMarker": "Lakeview Manor",
     "BYOHHouse2MapMarker": "Windstad Manor",
     "BYOHHouse3MapMarker": "Heljarchen Hall",
+    "ShrineofAzuraMapMarkerREF": "Shrine of Azura",
     "DA02BoethiahShrineMapMarker": "Sacellum of Boethiah",
+    "DagonShrineMapMarker": "Shrine of Mehrunes Dagon",
+    "DaintySloadMapMarker": "The Dainty Sload",
     "DBSanctuaryMapMarker": "Dark Brotherhood Sanctuary",
+    "DoomstoneSerpentMapMarker": "The Serpent Stone",
     "DLC1VQ07MapMarker": "Castle Volkihar",
+    "DLC1_AncestorGladeMapMarker": "Ancestor Glade",
+    "DLC1_DarkfallCaveMapMarker": "Darkfall Cave",
+    "DLC1_FortDawnguardMapMarker": "Fort Dawnguard",
+    "DLC1_ForebearsHoldoutMapMarker": "Forebears' Holdout",
+    "DLC1DawnguardMapMarkerMain": "Fort Dawnguard",
+    "DLC1DawnguardMapMarkerValley01": "Dayspring Canyon",
+    "DLC1FerryDropOffMapMarker": "Icewater Jetty",
+    "DLC1FerryDropOffMarker": "Icewater Jetty",
+    "DLC1ForbearsHoldoutMapMarkerREF": "Forebears' Holdout",
+    "DLC1ToSolstheimMapMarker": "Windhelm Docks",
+    "DLC1VampireCastleMapMarker": "Castle Volkihar",
+    "DLC1VolkiharFerryRef": "Castle Volkihar Ferry",
+    "GeirmundsHallMapMarker": "Geirmund's Hall",
+    "GoldenglowMapMarkerRef": "Goldenglow Estate",
+    "HaemarsShameMapMarker": "Haemar's Shame",
+    "HaemarsShameMapMarkerREF": "Haemar's Shame",
+    "HalloftheVigilantMapMarker": "Hall of the Vigilant",
+    "HillgrundsTombMapMarker": "Hillgrund's Tomb",
+    "HobsFallCaveMapMarker": "Hob's Fall Cave",
+    "IlinaltasDeepMapMarker": "Ilinalta's Deep",
+    "LabyrinthianMapMarker": "Labyrinthian",
+    "LabryinthianMapMarker": "Labyrinthian",
+    "LoreiusMapMarker": "Loreius Farm",
+    "MerryFairMapMarker": "Merryfair Farm",
     "MS04AvanchnzelMarker": "Avanchnzel",
     "MS07ShipwreckMapMarker": "Icerunner",
+    "NightingaleHallMapMarker": "Nightingale Hall",
+    "NightCallerMapMarker": "Nightcaller Temple",
+    "nightingaleCaveMapMarkerREF": "Nightingale Hall",
+    "RedRoadPassMapMarker": "Red Road Pass",
+    "ReachcliffSecretMapMarker": "Reachcliff Secret Entrance",
+    "SerpentsBluffRedoubtMapMarker": "Serpent's Bluff Redoubt",
+    "ShroudHearthBarrowMapMarker": "Shroud Hearth Barrow",
+    "ShroudHearthMapMarker": "Shroud Hearth Barrow",
+    "SoljundsSinkholeMapMarker": "Soljund's Sinkhole",
+    "StendarrsBeaconMapMarkerREF": "Stendarr's Beacon",
+    "ThroatoftheWorldMapMarker": "Throat of the World",
+    "TolvaldsCaveMapMarkerRef": "Tolvald's Cave",
+    "TowerofMzarkMapMarker": "Tower of Mzark",
+    "WinterholdCollegeMapMarkerRef": "College of Winterhold",
+    "YsgramorsTombMapMarkerREF": "Ysgramor's Tomb",
 }
+
+NOTE_RULES = [
+    (("camp",), "Military camp or field camp marked on Skyrim's map."),
+    (("cave", "grotto", "cavern"), "Cave or cavern marked on Skyrim's map."),
+    (("mine",), "Mine marked on Skyrim's map."),
+    (("fort",), "Fortified site marked on Skyrim's map."),
+    (("tower",), "Tower or lookout marked on Skyrim's map."),
+    (("redoubt",), "Forsworn redoubt or fortified camp marked on Skyrim's map."),
+    (("barrow", "tomb", "crypt"), "Nordic tomb or burial site marked on Skyrim's map."),
+    (("ruin", "ruins", "bthardamz", "mzinchaleft", "alftand", "irkngthand", "raldbthar", "avanchnzel", "arkngthamz"), "Dwemer ruin or ancient site marked on Skyrim's map."),
+    (("shrine", "sacellum", "temple"), "Religious shrine or temple marked on Skyrim's map."),
+    (("sanctuary", "hall", "coven"), "Secluded refuge or faction site marked on Skyrim's map."),
+    (("farm", "mill", "meadery"), "Farm, mill, or rural holding marked on Skyrim's map."),
+    (("docks", "jetty", "ship", "sload", "icerunner", "ferry"), "Coastal landing or ship location marked on Skyrim's map."),
+    (("manor",), "Player homestead location from Hearthfire."),
+    (("college",), "College or institutional site marked on Skyrim's map."),
+    (("castle",), "Castle or major stronghold marked on Skyrim's map."),
+    (("estate",), "Estate or rural holding marked on Skyrim's map."),
+    (("stone",), "Standing stone marked on Skyrim's map."),
+    (("peak", "point", "crater", "ascent", "throat"), "Mountain landmark marked on Skyrim's map."),
+]
 
 # Cell-to-atlas affine transform fitted from known exterior settlement markers
 # against the hand-placed atlas defaults in app.js.
@@ -72,6 +142,14 @@ def title_from_editor_id(editor_id, fallback):
     if not raw:
         return fallback.strip() or "Skyrim Location"
     return raw
+
+
+def location_note(title):
+    title_lower = title.lower()
+    for keywords, note in NOTE_RULES:
+      if any(keyword in title_lower for keyword in keywords):
+          return note
+    return "Vanilla Skyrim map location."
 
 
 def marker_cell(row):
@@ -130,8 +208,8 @@ def main():
             "category": "landmark",
             "title": title,
             "confidence": "scouted",
-            "creator": "Skyrim.esm",
-            "notes": f"Vanilla Skyrim map marker exported from {row.get('file', 'Skyrim.esm')}. Position is fitted from exterior cell coordinates, so treat placement as approximate.",
+            "creator": "",
+            "notes": location_note(title),
             "points": [{"x": x, "y": y}],
             "source": "personal",
             "createdAt": CREATED_AT,
