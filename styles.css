@@ -422,6 +422,25 @@ textarea {
   margin-top: 12px;
 }
 
+.clear-scope-options {
+  display: grid;
+  gap: 7px;
+  margin: 12px 0 10px;
+  padding: 0;
+  border: 0;
+}
+
+.clear-scope-options label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid rgba(72, 45, 17, 0.28);
+  border-radius: 4px;
+  background: rgba(255, 246, 222, 0.48);
+  cursor: pointer;
+}
+
 .share-entry-list {
   max-height: min(360px, 42vh);
   display: grid;

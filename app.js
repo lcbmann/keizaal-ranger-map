@@ -152,6 +152,7 @@
     receiveCancelBtn: document.getElementById("receiveCancelBtn"),
     clearDialog: document.getElementById("clearDialog"),
     clearSummary: document.getElementById("clearSummary"),
+    clearScopeInputs: Array.from(document.querySelectorAll('input[name="clearScope"]')),
     clearCategoryList: document.getElementById("clearCategoryList"),
     clearSelectAllBtn: document.getElementById("clearSelectAllBtn"),
     clearSelectNoneBtn: document.getElementById("clearSelectNoneBtn"),
@@ -289,6 +290,7 @@
     elements.clearConfirmBtn.addEventListener("click", clearAtlas);
     elements.clearSelectAllBtn.addEventListener("click", () => setClearCategoryChecks(true));
     elements.clearSelectNoneBtn.addEventListener("click", () => setClearCategoryChecks(false));
+    elements.clearScopeInputs.forEach((input) => input.addEventListener("change", renderClearCategories));
     elements.clearCategoryList.addEventListener("change", updateClearDialogState);
     elements.clearCancelBtn.addEventListener("click", () => elements.clearDialog.close());
     elements.clearKeepBtn.addEventListener("click", () => elements.clearDialog.close());
@@ -2039,16 +2041,16 @@
   }
 
   function openClearDialog() {
-    const customFeatures = state.features.filter((feature) => !isDefaultFeature(feature) && !isCanonFeature(feature));
-    if (!customFeatures.length) {
-      state.features = applyDefaultFeatures(state.features);
-      saveState();
-      renderAll();
-      setStatus("No custom entries to scrape");
-      return;
-    }
+    elements.clearScopeInputs.forEach((input) => {
+      input.checked = input.value === "custom";
+    });
+    renderClearCategories();
+    elements.clearDialog.showModal();
+  }
 
-    const countsByCategory = customFeatures.reduce((counts, feature) => {
+  function renderClearCategories() {
+    const clearFeatures = getClearEligibleFeatures();
+    const countsByCategory = clearFeatures.reduce((counts, feature) => {
       counts[feature.category] = (counts[feature.category] || 0) + 1;
       return counts;
     }, {});
@@ -2067,27 +2069,25 @@
         `;
         elements.clearCategoryList.appendChild(label);
       });
-    elements.clearDialog.showModal();
     updateClearDialogState();
   }
 
   function clearAtlas() {
     const selectedCategories = getSelectedClearCategories();
-    const featuresToRemove = state.features.filter((feature) => !isDefaultFeature(feature) && !isCanonFeature(feature) && selectedCategories.has(feature.category));
+    const clearScope = getClearScope();
+    const featuresToRemove = state.features.filter((feature) => shouldClearFeature(feature, clearScope) && selectedCategories.has(feature.category));
     if (!featuresToRemove.length) {
       return;
     }
 
-    pushUndo("scrape selected categories");
-    state.features = applyDefaultFeatures(
-      state.features.filter((feature) => isDefaultFeature(feature) || isCanonFeature(feature) || !selectedCategories.has(feature.category)),
-    );
+    pushUndo(`scrape ${clearScope} categories`);
+    state.features = state.features.filter((feature) => !(shouldClearFeature(feature, clearScope) && selectedCategories.has(feature.category)));
     state.selectedId = null;
     state.selectedIds = [];
     saveState();
     renderAll();
     elements.clearDialog.close();
-    setStatus(`${featuresToRemove.length} custom ${featuresToRemove.length === 1 ? "entry" : "entries"} scraped; reference locations kept`);
+    setStatus(`${featuresToRemove.length} ${featuresToRemove.length === 1 ? "entry" : "entries"} scraped`);
   }
 
   function getSelectedClearCategories() {
@@ -2105,15 +2105,49 @@
 
   function updateClearDialogState() {
     const selectedCategories = getSelectedClearCategories();
-    const selectedFeatures = state.features.filter((feature) => !isDefaultFeature(feature) && !isCanonFeature(feature) && selectedCategories.has(feature.category));
+    const clearScope = getClearScope();
+    const selectedFeatures = state.features.filter((feature) => shouldClearFeature(feature, clearScope) && selectedCategories.has(feature.category));
+    const eligibleFeatures = getClearEligibleFeatures(clearScope);
     const categoryCount = selectedCategories.size;
+    const scopeLabel = getClearScopeLabel(clearScope);
     elements.clearSummary.textContent = selectedFeatures.length
-      ? `${selectedFeatures.length} custom ${selectedFeatures.length === 1 ? "entry" : "entries"} across ${categoryCount} ${categoryCount === 1 ? "category" : "categories"} will be removed from this browser. Reference locations will stay.`
-      : "Select at least one category to scrape. Reference locations always stay.";
+      ? `${selectedFeatures.length} ${scopeLabel} ${selectedFeatures.length === 1 ? "entry" : "entries"} across ${categoryCount} ${categoryCount === 1 ? "category" : "categories"} will be removed from this browser.`
+      : eligibleFeatures.length
+        ? "Select at least one category to scrape."
+        : `No ${scopeLabel} entries are currently on this atlas.`;
     elements.clearConfirmBtn.textContent = selectedFeatures.length
       ? `Scrape ${selectedFeatures.length} ${selectedFeatures.length === 1 ? "Entry" : "Entries"}`
       : "Scrape Selected Categories";
     elements.clearConfirmBtn.disabled = selectedFeatures.length === 0;
+  }
+
+  function getClearScope() {
+    const selected = elements.clearScopeInputs.find((input) => input.checked);
+    return selected ? selected.value : "custom";
+  }
+
+  function getClearScopeLabel(scope = getClearScope()) {
+    if (scope === "skyrim") {
+      return "Skyrim reference";
+    }
+    if (scope === "all") {
+      return "map";
+    }
+    return "custom/Guild";
+  }
+
+  function getClearEligibleFeatures(scope = getClearScope()) {
+    return state.features.filter((feature) => shouldClearFeature(feature, scope));
+  }
+
+  function shouldClearFeature(feature, scope = getClearScope()) {
+    if (scope === "skyrim") {
+      return isCanonFeature(feature);
+    }
+    if (scope === "all") {
+      return true;
+    }
+    return !isDefaultFeature(feature) && !isCanonFeature(feature);
   }
 
   function isSupabaseConfigured() {
