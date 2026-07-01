@@ -6,6 +6,24 @@
   },
   "features": [
     {
+      "id": "canon-skyrim-000ecf49",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Abandoned Prison",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 5765,
+          "y": 2731
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
       "id": "canon-skyrim-0005254d",
       "type": "marker",
       "category": "landmark",
@@ -17,6 +35,24 @@
         {
           "x": 3408,
           "y": 4680
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000d3931",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Alchemist's Shack",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 5318,
+          "y": 1465
         }
       ],
       "source": "personal",
@@ -63,7 +99,7 @@
       "id": "canon-skyrim-00016231",
       "type": "marker",
       "category": "landmark",
-      "title": "Ancients Ascent",
+      "title": "Ancient's Ascent",
       "confidence": "scouted",
       "creator": "",
       "notes": "Mountain landmark marked on Skyrim's map.",
@@ -71,6 +107,24 @@
         {
           "x": 3989,
           "y": 1173
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000162d6",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Anga's Mill",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Farm, mill, or rural holding marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 6063,
+          "y": 3550
         }
       ],
       "source": "personal",
@@ -96,17 +150,35 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
-      "id": "canon-skyrim-000162d6",
+      "id": "canon-skyrim-000cf27d",
       "type": "marker",
       "category": "landmark",
-      "title": "Angas Mill",
+      "title": "Angi's Camp",
       "confidence": "scouted",
       "creator": "",
-      "notes": "Farm, mill, or rural holding marked on Skyrim's map.",
+      "notes": "Military camp or field camp marked on Skyrim's map.",
       "points": [
         {
-          "x": 6063,
-          "y": 3550
+          "x": 3545,
+          "y": 1100
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000d9531",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Anise's Cabin",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 4065,
+          "y": 2067
         }
       ],
       "source": "personal",
@@ -168,6 +240,24 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
+      "id": "canon-skyrim-0001620c",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Autumnshade Clearing",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 6795,
+          "y": 1534
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
       "id": "canon-skyrim-00016233",
       "type": "marker",
       "category": "landmark",
@@ -204,6 +294,60 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
+      "id": "canon-skyrim-0004781e",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Bannermist Tower",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Tower or lookout marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 3031,
+          "y": 1848
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-0001620e",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Bard's Leap Summit",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 2368,
+          "y": 2373
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00016332",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Battle-Born Farm",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Farm, mill, or rural holding marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 4658,
+          "y": 2885
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
       "id": "canon-skyrim-00016275",
       "type": "marker",
       "category": "landmark",
@@ -215,6 +359,24 @@
         {
           "x": 2589,
           "y": 2298
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000a7ce5",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Black-Briar Lodge",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 7606,
+          "y": 1232
         }
       ],
       "source": "personal",
@@ -240,6 +402,60 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
+      "id": "canon-skyrim-0001620f",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Bleakcoast Cave",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Cave or cavern marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 6656,
+          "y": 4666
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00016211",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Bleakwind Basin",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Giant camp or open landmark marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 4068,
+          "y": 3037
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000bb47c",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Bleakwind Bluff",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Giant camp or open landmark marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 2149,
+          "y": 3269
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
       "id": "canon-skyrim-00016213",
       "type": "marker",
       "category": "landmark",
@@ -251,6 +467,24 @@
         {
           "x": 1485,
           "y": 3421
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00016214",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Blizzard Rest",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 4734,
+          "y": 3705
         }
       ],
       "source": "personal",
@@ -294,6 +528,24 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
+      "id": "canon-skyrim-000fda48",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Bonechill Passage",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Mountain landmark marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 4063,
+          "y": 1322
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
       "id": "canon-skyrim-000162b6",
       "type": "marker",
       "category": "landmark",
@@ -305,6 +557,24 @@
         {
           "x": 6430,
           "y": 2803
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000f52d8",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Boulderfall Cave",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Cave or cavern marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 6648,
+          "y": 1758
         }
       ],
       "source": "personal",
@@ -330,17 +600,17 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
-      "id": "canon-skyrim-00016265",
+      "id": "canon-skyrim-0002c652",
       "type": "marker",
       "category": "landmark",
-      "title": "Brittleshin Pass",
+      "title": "Brinewater Grotto",
       "confidence": "scouted",
       "creator": "",
-      "notes": "Vanilla Skyrim map location.",
+      "notes": "Cave or cavern marked on Skyrim's map.",
       "points": [
         {
-          "x": 3623,
-          "y": 2368
+          "x": 3041,
+          "y": 5428
         }
       ],
       "source": "personal",
@@ -366,6 +636,60 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
+      "id": "canon-skyrim-00016219",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Broken Helm Hollow",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 7458,
+          "y": 1009
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000ecf86",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Broken Limb Camp",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Military camp or field camp marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 6060,
+          "y": 2730
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000b77c3",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Broken Oar Grotto",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Cave or cavern marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 2820,
+          "y": 5578
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
       "id": "canon-skyrim-0001621a",
       "type": "marker",
       "category": "landmark",
@@ -384,7 +708,79 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
-      "id": "canon-skyrim-02004c0f",
+      "id": "canon-skyrim-00046bab",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Bronze Water Cave",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Cave or cavern marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 5546,
+          "y": 3776
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-0001621b",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Brood Cavern",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Cave or cavern marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 3036,
+          "y": 3787
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-0001621c",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Bruca's Leap Redoubt",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Forsworn redoubt or fortified camp marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 1782,
+          "y": 4165
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-0001621d",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Bthardamz",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Dwemer ruin or ancient site marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 1043,
+          "y": 3870
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-0200ba4d",
       "type": "marker",
       "category": "landmark",
       "title": "Castle Volkihar",
@@ -393,8 +789,8 @@
       "notes": "Castle or major stronghold marked on Skyrim's map.",
       "points": [
         {
-          "x": 1266,
-          "y": 4317
+          "x": 827,
+          "y": 5661
         }
       ],
       "source": "personal",
@@ -402,17 +798,17 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
-      "id": "canon-skyrim-02008e41",
+      "id": "canon-skyrim-0200d165",
       "type": "marker",
       "category": "landmark",
-      "title": "Castle Volkihar Ferry",
+      "title": "Castle Volkihar Balcony",
       "confidence": "scouted",
       "creator": "",
-      "notes": "Coastal landing or ship location marked on Skyrim's map.",
+      "notes": "Castle or major stronghold marked on Skyrim's map.",
       "points": [
         {
-          "x": 1342,
-          "y": 5211
+          "x": 975,
+          "y": 5735
         }
       ],
       "source": "personal",
@@ -420,17 +816,89 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
-      "id": "canon-skyrim-00094a1f",
+      "id": "canon-skyrim-0001633c",
       "type": "marker",
       "category": "landmark",
-      "title": "Civil War Attacker Camp Whiterun",
+      "title": "Chillfurrow Farm",
       "confidence": "scouted",
       "creator": "",
-      "notes": "Military camp or field camp marked on Skyrim's map.",
+      "notes": "Farm, mill, or rural holding marked on Skyrim's map.",
       "points": [
         {
-          "x": 4510,
-          "y": 2662
+          "x": 4584,
+          "y": 2811
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00016220",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Chillwind Depths",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 2225,
+          "y": 4089
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00016222",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Clearpine Pond",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 2079,
+          "y": 4761
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00016223",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Clearspring Tarn",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 6427,
+          "y": 1983
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000b238b",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Cliffside Retreat",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 2077,
+          "y": 4015
         }
       ],
       "source": "personal",
@@ -456,6 +924,24 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
+      "id": "canon-skyrim-000e66a7",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Crabber's Shanty",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 2741,
+          "y": 3788
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
       "id": "canon-skyrim-0001625b",
       "type": "marker",
       "category": "landmark",
@@ -467,6 +953,132 @@
         {
           "x": 3029,
           "y": 1401
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000b23a1",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Cradle Stone Tower",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Tower or lookout marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 2220,
+          "y": 2374
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00016225",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Cradlecrush Rock",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 5691,
+          "y": 2881
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00016226",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Cragslane Cavern",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Cave or cavern marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 7019,
+          "y": 2353
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00016227",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Cragwallow Slope",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 6873,
+          "y": 2950
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00016228",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Cronvangr Cave",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Cave or cavern marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 6208,
+          "y": 2878
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00016229",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Crystaldrift Cave",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Cave or cavern marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 6941,
+          "y": 787
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-0007bc2d",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Dainty Sload",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Coastal landing or ship location marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 3114,
+          "y": 5203
         }
       ],
       "source": "personal",
@@ -492,6 +1104,24 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
+      "id": "canon-skyrim-02004c0f",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Darkfall Cave",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Cave or cavern marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 1266,
+          "y": 4317
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
       "id": "canon-skyrim-0001622a",
       "type": "marker",
       "category": "landmark",
@@ -503,6 +1133,24 @@
         {
           "x": 6719,
           "y": 863
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000b6046",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Darkshade",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 5470,
+          "y": 2956
         }
       ],
       "source": "personal",
@@ -528,6 +1176,24 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
+      "id": "canon-skyrim-0001622c",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Darkwater Pass",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Mountain landmark marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 6058,
+          "y": 2133
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
       "id": "canon-skyrim-02019aa5",
       "type": "marker",
       "category": "landmark",
@@ -539,6 +1205,24 @@
         {
           "x": 4590,
           "y": 4973
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-0005e0a6",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Dawnstar Sanctuary",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Secluded refuge or faction site marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 4590,
+          "y": 5048
         }
       ],
       "source": "personal",
@@ -564,6 +1248,42 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
+      "id": "canon-skyrim-0001622e",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Dead Men's Respite",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 2815,
+          "y": 3937
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000b238f",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Deep Folk Crossing",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 970,
+          "y": 4094
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
       "id": "canon-skyrim-0001622f",
       "type": "marker",
       "category": "landmark",
@@ -575,6 +1295,42 @@
         {
           "x": 1636,
           "y": 4464
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-02002f6f",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Dimhollow Crypt",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Nordic tomb or burial site marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 4145,
+          "y": 4155
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000b2393",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Dragon Bridge Overlook",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 2152,
+          "y": 4238
         }
       ],
       "source": "personal",
@@ -600,13 +1356,31 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
+      "id": "canon-skyrim-000e66ad",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Drelas' Cottage",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 3478,
+          "y": 3487
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
       "id": "canon-skyrim-0001623b",
       "type": "marker",
       "category": "landmark",
-      "title": "Driftshade Sanctuary",
+      "title": "Driftshade Refuge",
       "confidence": "scouted",
       "creator": "",
-      "notes": "Secluded refuge or faction site marked on Skyrim's map.",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
           "x": 5032,
@@ -654,17 +1428,71 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
-      "id": "canon-skyrim-0402c49b",
+      "id": "canon-skyrim-0001623f",
       "type": "marker",
       "category": "landmark",
-      "title": "Ebony Warrior",
+      "title": "Duskglow Crevice",
       "confidence": "scouted",
       "creator": "",
       "notes": "Vanilla Skyrim map location.",
       "points": [
         {
-          "x": 7534,
-          "y": 1605
+          "x": 4883,
+          "y": 4077
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000f5b8d",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Dustman's Cairn",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 3699,
+          "y": 3337
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-0004fef2",
+      "type": "marker",
+      "category": "landmark",
+      "title": "East Empire Company Warehouse",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 2818,
+          "y": 4832
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00095a08",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Eastmarch Imperial Camp",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Military camp or field camp marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 7167,
+          "y": 2650
         }
       ],
       "source": "personal",
@@ -726,6 +1554,114 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
+      "id": "canon-skyrim-00016241",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Evergreen Grove",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 3104,
+          "y": 1773
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00016242",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Faldar's Tooth",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 6647,
+          "y": 1310
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00016283",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Falkreath Imperial Camp",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Military camp or field camp marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 2810,
+          "y": 2073
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00016282",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Falkreath Stormcloak Camp",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Military camp or field camp marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 4728,
+          "y": 1617
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-0004788c",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Falkreath Watchtower",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Tower or lookout marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 3399,
+          "y": 1698
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00016243",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Fallowstone Cave",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Cave or cavern marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 7533,
+          "y": 1456
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
       "id": "canon-skyrim-00016244",
       "type": "marker",
       "category": "landmark",
@@ -737,6 +1673,42 @@
         {
           "x": 5176,
           "y": 3181
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-02016866",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Ferry Drop off Marker",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Coastal landing or ship location marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 1342,
+          "y": 5211
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00016246",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Folgunthur",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 3187,
+          "y": 4681
         }
       ],
       "source": "personal",
@@ -762,6 +1734,24 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
+      "id": "canon-skyrim-00016247",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Forelhost",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 7384,
+          "y": 934
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
       "id": "canon-skyrim-00016248",
       "type": "marker",
       "category": "landmark",
@@ -773,6 +1763,78 @@
         {
           "x": 5621,
           "y": 3925
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00016249",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Fort Amol",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Fortified site marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 5838,
+          "y": 2582
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-0001624b",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Fort Dunstad",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Fortified site marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 4588,
+          "y": 4153
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-0001624c",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Fort Fellhammer",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Fortified site marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 4810,
+          "y": 4301
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-0001624d",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Fort Greenwall",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Fortified site marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 7091,
+          "y": 1681
         }
       ],
       "source": "personal",
@@ -816,6 +1878,42 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
+      "id": "canon-skyrim-0001624f",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Fort Kastav",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Fortified site marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 6064,
+          "y": 3997
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00016250",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Fort Neugrad",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Fortified site marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 4653,
+          "y": 1319
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
       "id": "canon-skyrim-00016251",
       "type": "marker",
       "category": "landmark",
@@ -827,6 +1925,96 @@
         {
           "x": 3038,
           "y": 4309
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00016252",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Fort Sungard",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Fortified site marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 2738,
+          "y": 2595
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000b23a7",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Four Skull Lookout",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 1633,
+          "y": 3420
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000d392d",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Froki's Shack",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 5760,
+          "y": 1165
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00016253",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Frostflow Lighthouse",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 5180,
+          "y": 4598
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000162c2",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Frostmere Crypt",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Nordic tomb or burial site marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 4219,
+          "y": 4304
         }
       ],
       "source": "personal",
@@ -870,6 +2058,24 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
+      "id": "canon-skyrim-000ded8e",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Gjukar's Monument",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 2886,
+          "y": 2818
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
       "id": "canon-skyrim-00016257",
       "type": "marker",
       "category": "landmark",
@@ -881,6 +2087,42 @@
         {
           "x": 2588,
           "y": 1999
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00016349",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Gloombound Mine",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Mine marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 6947,
+          "y": 3099
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00016258",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Gloomreach",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 2221,
+          "y": 2523
         }
       ],
       "source": "personal",
@@ -917,6 +2159,132 @@
         {
           "x": 4953,
           "y": 2958
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000f81db",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Great Lift at Alftand",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Dwemer ruin or ancient site marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 5473,
+          "y": 4000
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000f81da",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Great Lift at Mzinchaleft",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Dwemer ruin or ancient site marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 4146,
+          "y": 4453
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000f81d9",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Great Lift at Raldbthar",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Dwemer ruin or ancient site marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 5619,
+          "y": 3477
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00016269",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Greenspring Hollow",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 3552,
+          "y": 3263
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-0001625a",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Greywater Grotto",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Cave or cavern marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 4284,
+          "y": 1321
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-0001625c",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Guldun Rock",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 5322,
+          "y": 2808
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00094f96",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Haafingar Stormcloak Camp",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Military camp or field camp marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 2374,
+          "y": 4610
         }
       ],
       "source": "personal",
@@ -963,7 +2331,7 @@
       "id": "canon-skyrim-00016370",
       "type": "marker",
       "category": "landmark",
-      "title": "Half Moon Mill",
+      "title": "Half-Moon Mill",
       "confidence": "scouted",
       "creator": "",
       "notes": "Farm, mill, or rural holding marked on Skyrim's map.",
@@ -996,6 +2364,24 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
+      "id": "canon-skyrim-00016260",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Halldir's Cairn",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Secluded refuge or faction site marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 3250,
+          "y": 1251
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
       "id": "canon-skyrim-00016261",
       "type": "marker",
       "category": "landmark",
@@ -1014,6 +2400,78 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
+      "id": "canon-skyrim-000ee79c",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Hamvir's Rest",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 3700,
+          "y": 3411
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00016262",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Harmugstahl",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 1560,
+          "y": 4017
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-0001634f",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Heartwood Mill",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Farm, mill, or rural holding marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 6425,
+          "y": 1237
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000162ac",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Hela's Folly",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 4960,
+          "y": 5270
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
       "id": "canon-skyrim-03010de8",
       "type": "marker",
       "category": "landmark",
@@ -1025,6 +2483,24 @@
         {
           "x": 4586,
           "y": 3706
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00016263",
+      "type": "marker",
+      "category": "landmark",
+      "title": "High Gate Ruins",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Dwemer ruin or ancient site marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 3704,
+          "y": 4903
         }
       ],
       "source": "personal",
@@ -1061,6 +2537,42 @@
         {
           "x": 5469,
           "y": 2658
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00016279",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Hjaalmarch Imperial Camp",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Military camp or field camp marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 3703,
+          "y": 4455
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-0001627a",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Hjaalmarch Stormcloak Camp",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Military camp or field camp marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 3851,
+          "y": 4529
         }
       ],
       "source": "personal",
@@ -1122,6 +2634,24 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
+      "id": "canon-skyrim-00016267",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Honeystrand Cave",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Cave or cavern marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 5466,
+          "y": 1614
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
       "id": "canon-skyrim-00038593",
       "type": "marker",
       "category": "landmark",
@@ -1140,17 +2670,17 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
-      "id": "canon-skyrim-000162aa",
+      "id": "canon-skyrim-000f52b2",
       "type": "marker",
       "category": "landmark",
-      "title": "Icerunner",
+      "title": "Hunter's Rest",
       "confidence": "scouted",
       "creator": "",
-      "notes": "Coastal landing or ship location marked on Skyrim's map.",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
-          "x": 3409,
-          "y": 4979
+          "x": 3031,
+          "y": 1997
         }
       ],
       "source": "personal",
@@ -1158,7 +2688,7 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
-      "id": "canon-skyrim-02016866",
+      "id": "canon-skyrim-02008e41",
       "type": "marker",
       "category": "landmark",
       "title": "Icewater Jetty",
@@ -1212,6 +2742,78 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
+      "id": "canon-skyrim-000ef543",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Ironback Hideout",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 2376,
+          "y": 5058
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-0003f076",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Ironbind Barrow",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Nordic tomb or burial site marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 5326,
+          "y": 4001
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000ef549",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Journeyman's Nook",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 6434,
+          "y": 4443
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00080e56",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Kagrenzel",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 7462,
+          "y": 2425
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
       "id": "canon-skyrim-0001626c",
       "type": "marker",
       "category": "landmark",
@@ -1230,17 +2832,53 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
-      "id": "canon-skyrim-0001626d",
+      "id": "canon-skyrim-000f6698",
       "type": "marker",
       "category": "landmark",
-      "title": "Kilkreath Ruins",
+      "title": "Karthspire Camp",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Military camp or field camp marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 1706,
+          "y": 3196
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-0001635e",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Katla's Farm",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Farm, mill, or rural holding marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 2670,
+          "y": 4758
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000c2eef",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Kjenstag Ruins",
       "confidence": "scouted",
       "creator": "",
       "notes": "Dwemer ruin or ancient site marked on Skyrim's map.",
       "points": [
         {
-          "x": 2375,
-          "y": 4834
+          "x": 3702,
+          "y": 4306
         }
       ],
       "source": "personal",
@@ -1374,6 +3012,24 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
+      "id": "canon-skyrim-0402c49b",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Last Vigil",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 7534,
+          "y": 1605
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
       "id": "canon-skyrim-00016364",
       "type": "marker",
       "category": "landmark",
@@ -1385,6 +3041,24 @@
         {
           "x": 1041,
           "y": 2976
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00016270",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Liar's Retreat",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 2003,
+          "y": 3941
         }
       ],
       "source": "personal",
@@ -1410,6 +3084,60 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
+      "id": "canon-skyrim-000af89b",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Lost Echo Cave",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Cave or cavern marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 1710,
+          "y": 4837
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00016273",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Lost Knife Hideout",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 5764,
+          "y": 2433
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000d3938",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Lost Prospect Mine",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Mine marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 7607,
+          "y": 1381
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
       "id": "canon-skyrim-00016235",
       "type": "marker",
       "category": "landmark",
@@ -1421,6 +3149,114 @@
         {
           "x": 7162,
           "y": 712
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000eaa63",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Lost Valkygg",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 3775,
+          "y": 3858
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00016274",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Lost Valley Redoubt",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Forsworn redoubt or fortified camp marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 2442,
+          "y": 2373
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000f4fe7",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Lower Steepfall Burrow",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 1712,
+          "y": 5210
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000e66a3",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Lund's Hut",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 2371,
+          "y": 3343
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000ecf51",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Mara's Eye Pond",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 5988,
+          "y": 3178
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00094c29",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Markarth Military Camp",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Military camp or field camp marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 1188,
+          "y": 3049
         }
       ],
       "source": "personal",
@@ -1446,6 +3282,24 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
+      "id": "canon-skyrim-000f6f11",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Meeko's Shack",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 2743,
+          "y": 4385
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
       "id": "canon-skyrim-000268ff",
       "type": "marker",
       "category": "landmark",
@@ -1464,17 +3318,17 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
-      "id": "canon-skyrim-00095a08",
+      "id": "canon-skyrim-00016286",
       "type": "marker",
       "category": "landmark",
-      "title": "Military Camp Eastmarch Imperial",
+      "title": "Mistwatch",
       "confidence": "scouted",
       "creator": "",
-      "notes": "Military camp or field camp marked on Skyrim's map.",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
-          "x": 7167,
-          "y": 2650
+          "x": 6502,
+          "y": 2355
         }
       ],
       "source": "personal",
@@ -1482,269 +3336,17 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
-      "id": "canon-skyrim-00016283",
+      "id": "canon-skyrim-0001636d",
       "type": "marker",
       "category": "landmark",
-      "title": "Military Camp Falkreath Imperial",
+      "title": "Mixwater Mill",
       "confidence": "scouted",
       "creator": "",
-      "notes": "Military camp or field camp marked on Skyrim's map.",
+      "notes": "Farm, mill, or rural holding marked on Skyrim's map.",
       "points": [
         {
-          "x": 2810,
-          "y": 2073
-        }
-      ],
-      "source": "personal",
-      "createdAt": "2026-07-01T00:00:00.000Z",
-      "updatedAt": "2026-07-01T00:00:00.000Z"
-    },
-    {
-      "id": "canon-skyrim-00016282",
-      "type": "marker",
-      "category": "landmark",
-      "title": "Military Camp Falkreath Sons",
-      "confidence": "scouted",
-      "creator": "",
-      "notes": "Military camp or field camp marked on Skyrim's map.",
-      "points": [
-        {
-          "x": 4728,
-          "y": 1617
-        }
-      ],
-      "source": "personal",
-      "createdAt": "2026-07-01T00:00:00.000Z",
-      "updatedAt": "2026-07-01T00:00:00.000Z"
-    },
-    {
-      "id": "canon-skyrim-00094f96",
-      "type": "marker",
-      "category": "landmark",
-      "title": "Military Camp Haafingar Sons",
-      "confidence": "scouted",
-      "creator": "",
-      "notes": "Military camp or field camp marked on Skyrim's map.",
-      "points": [
-        {
-          "x": 2374,
-          "y": 4610
-        }
-      ],
-      "source": "personal",
-      "createdAt": "2026-07-01T00:00:00.000Z",
-      "updatedAt": "2026-07-01T00:00:00.000Z"
-    },
-    {
-      "id": "canon-skyrim-00016279",
-      "type": "marker",
-      "category": "landmark",
-      "title": "Military Camp Hjaalmarch Imperial",
-      "confidence": "scouted",
-      "creator": "",
-      "notes": "Military camp or field camp marked on Skyrim's map.",
-      "points": [
-        {
-          "x": 3703,
-          "y": 4455
-        }
-      ],
-      "source": "personal",
-      "createdAt": "2026-07-01T00:00:00.000Z",
-      "updatedAt": "2026-07-01T00:00:00.000Z"
-    },
-    {
-      "id": "canon-skyrim-0001627a",
-      "type": "marker",
-      "category": "landmark",
-      "title": "Military Camp Hjaalmarch Sons",
-      "confidence": "scouted",
-      "creator": "",
-      "notes": "Military camp or field camp marked on Skyrim's map.",
-      "points": [
-        {
-          "x": 3851,
-          "y": 4529
-        }
-      ],
-      "source": "personal",
-      "createdAt": "2026-07-01T00:00:00.000Z",
-      "updatedAt": "2026-07-01T00:00:00.000Z"
-    },
-    {
-      "id": "canon-skyrim-0001627b",
-      "type": "marker",
-      "category": "landmark",
-      "title": "Military Camp Pale Imperial",
-      "confidence": "scouted",
-      "creator": "",
-      "notes": "Military camp or field camp marked on Skyrim's map.",
-      "points": [
-        {
-          "x": 3999,
-          "y": 4827
-        }
-      ],
-      "source": "personal",
-      "createdAt": "2026-07-01T00:00:00.000Z",
-      "updatedAt": "2026-07-01T00:00:00.000Z"
-    },
-    {
-      "id": "canon-skyrim-0001627c",
-      "type": "marker",
-      "category": "landmark",
-      "title": "Military Camp Pale Sons",
-      "confidence": "scouted",
-      "creator": "",
-      "notes": "Military camp or field camp marked on Skyrim's map.",
-      "points": [
-        {
-          "x": 5620,
-          "y": 3627
-        }
-      ],
-      "source": "personal",
-      "createdAt": "2026-07-01T00:00:00.000Z",
-      "updatedAt": "2026-07-01T00:00:00.000Z"
-    },
-    {
-      "id": "canon-skyrim-00016277",
-      "type": "marker",
-      "category": "landmark",
-      "title": "Military Camp Reach Imperial",
-      "confidence": "scouted",
-      "creator": "",
-      "notes": "Military camp or field camp marked on Skyrim's map.",
-      "points": [
-        {
-          "x": 1116,
-          "y": 3646
-        }
-      ],
-      "source": "personal",
-      "createdAt": "2026-07-01T00:00:00.000Z",
-      "updatedAt": "2026-07-01T00:00:00.000Z"
-    },
-    {
-      "id": "canon-skyrim-00016276",
-      "type": "marker",
-      "category": "landmark",
-      "title": "Military Camp Reach Sons",
-      "confidence": "scouted",
-      "creator": "",
-      "notes": "Military camp or field camp marked on Skyrim's map.",
-      "points": [
-        {
-          "x": 1856,
-          "y": 3941
-        }
-      ],
-      "source": "personal",
-      "createdAt": "2026-07-01T00:00:00.000Z",
-      "updatedAt": "2026-07-01T00:00:00.000Z"
-    },
-    {
-      "id": "canon-skyrim-00016281",
-      "type": "marker",
-      "category": "landmark",
-      "title": "Military Camp Rift Imperial",
-      "confidence": "scouted",
-      "creator": "",
-      "notes": "Military camp or field camp marked on Skyrim's map.",
-      "points": [
-        {
-          "x": 5466,
-          "y": 1390
-        }
-      ],
-      "source": "personal",
-      "createdAt": "2026-07-01T00:00:00.000Z",
-      "updatedAt": "2026-07-01T00:00:00.000Z"
-    },
-    {
-      "id": "canon-skyrim-00016280",
-      "type": "marker",
-      "category": "landmark",
-      "title": "Military Camp Rift Sons",
-      "confidence": "scouted",
-      "creator": "",
-      "notes": "Military camp or field camp marked on Skyrim's map.",
-      "points": [
-        {
-          "x": 6131,
-          "y": 1835
-        }
-      ],
-      "source": "personal",
-      "createdAt": "2026-07-01T00:00:00.000Z",
-      "updatedAt": "2026-07-01T00:00:00.000Z"
-    },
-    {
-      "id": "canon-skyrim-00016284",
-      "type": "marker",
-      "category": "landmark",
-      "title": "Military Camp Whiterun Imperial",
-      "confidence": "scouted",
-      "creator": "",
-      "notes": "Military camp or field camp marked on Skyrim's map.",
-      "points": [
-        {
-          "x": 2887,
-          "y": 3042
-        }
-      ],
-      "source": "personal",
-      "createdAt": "2026-07-01T00:00:00.000Z",
-      "updatedAt": "2026-07-01T00:00:00.000Z"
-    },
-    {
-      "id": "canon-skyrim-00095885",
-      "type": "marker",
-      "category": "landmark",
-      "title": "Military Camp Whiterun Sons",
-      "confidence": "scouted",
-      "creator": "",
-      "notes": "Military camp or field camp marked on Skyrim's map.",
-      "points": [
-        {
-          "x": 4953,
-          "y": 2735
-        }
-      ],
-      "source": "personal",
-      "createdAt": "2026-07-01T00:00:00.000Z",
-      "updatedAt": "2026-07-01T00:00:00.000Z"
-    },
-    {
-      "id": "canon-skyrim-0001627d",
-      "type": "marker",
-      "category": "landmark",
-      "title": "Military Camp Winterhold Imperial",
-      "confidence": "scouted",
-      "creator": "",
-      "notes": "Military camp or field camp marked on Skyrim's map.",
-      "points": [
-        {
-          "x": 4959,
-          "y": 4748
-        }
-      ],
-      "source": "personal",
-      "createdAt": "2026-07-01T00:00:00.000Z",
-      "updatedAt": "2026-07-01T00:00:00.000Z"
-    },
-    {
-      "id": "canon-skyrim-0001627e",
-      "type": "marker",
-      "category": "landmark",
-      "title": "Military Camp Winterhold Sons",
-      "confidence": "scouted",
-      "creator": "",
-      "notes": "Military camp or field camp marked on Skyrim's map.",
-      "points": [
-        {
-          "x": 6654,
-          "y": 3995
+          "x": 5987,
+          "y": 2879
         }
       ],
       "source": "personal",
@@ -1806,6 +3408,24 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
+      "id": "canon-skyrim-00016289",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Moss Mother Cavern",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Cave or cavern marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 3031,
+          "y": 2072
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
       "id": "canon-skyrim-0001628a",
       "type": "marker",
       "category": "landmark",
@@ -1824,6 +3444,24 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
+      "id": "canon-skyrim-00016256",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Movarth's Lair",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 3481,
+          "y": 4382
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
       "id": "canon-skyrim-0001628b",
       "type": "marker",
       "category": "landmark",
@@ -1835,6 +3473,24 @@
         {
           "x": 4146,
           "y": 4528
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-0001628c",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Mzulft",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 7020,
+          "y": 2726
         }
       ],
       "source": "personal",
@@ -1914,6 +3570,132 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
+      "id": "canon-skyrim-0001628f",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Nilheim",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 5836,
+          "y": 1911
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00016265",
+      "type": "marker",
+      "category": "landmark",
+      "title": "North Brittleshin Pass",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Mountain landmark marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 3623,
+          "y": 2368
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000f5eb1",
+      "type": "marker",
+      "category": "landmark",
+      "title": "North Cold Rock Pass",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Mountain landmark marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 3184,
+          "y": 3712
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000a0e46",
+      "type": "marker",
+      "category": "landmark",
+      "title": "North Shriekwind Bastion",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 3547,
+          "y": 1697
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-0004b6eb",
+      "type": "marker",
+      "category": "landmark",
+      "title": "North Skybound Watch",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 4655,
+          "y": 1916
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00016290",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Northwatch Keep",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 1416,
+          "y": 5136
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000fdbde",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Northwind Mine",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Mine marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 6723,
+          "y": 2130
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
       "id": "canon-skyrim-00016234",
       "type": "marker",
       "category": "landmark",
@@ -1950,6 +3732,24 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
+      "id": "canon-skyrim-00016291",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Orotheim",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 2815,
+          "y": 3713
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
       "id": "canon-skyrim-00016292",
       "type": "marker",
       "category": "landmark",
@@ -1968,17 +3768,161 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
-      "id": "canon-skyrim-000162c2",
+      "id": "canon-skyrim-000162b0",
       "type": "marker",
       "category": "landmark",
-      "title": "Palemoon Crypt",
+      "title": "Orphan's Tear",
       "confidence": "scouted",
       "creator": "",
-      "notes": "Nordic tomb or burial site marked on Skyrim's map.",
+      "notes": "Vanilla Skyrim map location.",
       "points": [
         {
-          "x": 4219,
-          "y": 4304
+          "x": 1860,
+          "y": 5358
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-0001627b",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Pale Imperial Camp",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Military camp or field camp marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 3999,
+          "y": 4827
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-0001627c",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Pale Stormcloak Camp",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Military camp or field camp marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 5620,
+          "y": 3627
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00047880",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Peak's Shade Tower",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Tower or lookout marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 3694,
+          "y": 1398
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00016373",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Pelagia Farm",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Farm, mill, or rural holding marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 4362,
+          "y": 2663
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000162ad",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Pilgrim's Trench",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 5550,
+          "y": 5118
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000ef0ba",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Pinefrost Tower",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Tower or lookout marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 1489,
+          "y": 4838
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00016293",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Pinemoon Cave",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Cave or cavern marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 1931,
+          "y": 4687
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00016294",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Pinepeak Cavern",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Cave or cavern marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 5394,
+          "y": 1987
         }
       ],
       "source": "personal",
@@ -1997,6 +3941,132 @@
         {
           "x": 3842,
           "y": 1621
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00032875",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Purewater Run",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 1187,
+          "y": 2677
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-0001629a",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Ragnvald",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 894,
+          "y": 3498
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00090595",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Raldbthar",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Dwemer ruin or ancient site marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 5619,
+          "y": 3328
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-0001629b",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Rannveig's Fast",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 3183,
+          "y": 3488
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-0001629c",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Ravenscar Hollow",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 2376,
+          "y": 5281
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00016277",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Reach Imperial Camp",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Military camp or field camp marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 1116,
+          "y": 3646
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00016276",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Reach Stormcloak Camp",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Military camp or field camp marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 1856,
+          "y": 3941
         }
       ],
       "source": "personal",
@@ -2040,17 +4110,107 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
+      "id": "canon-skyrim-0001629e",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Reachwater Rock",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 1484,
+          "y": 2974
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000b23a3",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Reachwind Eyrie",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 1483,
+          "y": 2750
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000b629f",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Rebel's Cairn",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 2075,
+          "y": 3418
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-0001623d",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Red Eagle Redoubt",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Forsworn redoubt or fortified camp marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 1780,
+          "y": 3271
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
       "id": "canon-skyrim-000162a0",
       "type": "marker",
       "category": "landmark",
       "title": "Red Road Pass",
       "confidence": "scouted",
       "creator": "",
-      "notes": "Vanilla Skyrim map location.",
+      "notes": "Mountain landmark marked on Skyrim's map.",
       "points": [
         {
           "x": 4441,
           "y": 4452
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-0001629f",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Redoran's Retreat",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 3773,
+          "y": 3113
         }
       ],
       "source": "personal",
@@ -2069,6 +4229,78 @@
         {
           "x": 6500,
           "y": 1609
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000ef570",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Refugees' Rest",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 7097,
+          "y": 3695
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00016281",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Rift Imperial Camp",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Military camp or field camp marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 5466,
+          "y": 1390
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00016280",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Rift Stormcloak Camp",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Military camp or field camp marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 6131,
+          "y": 1835
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000d3930",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Rift Watchtower",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Tower or lookout marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 6205,
+          "y": 1760
         }
       ],
       "source": "personal",
@@ -2112,10 +4344,118 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
+      "id": "canon-skyrim-000162a1",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Rimerock Burrow",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 1415,
+          "y": 4913
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000ecf4f",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Riverside Shack",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 6209,
+          "y": 3102
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00047875",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Roadside Ruins",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Dwemer ruin or ancient site marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 3251,
+          "y": 1549
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000162a7",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Robber's Gorge",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 2594,
+          "y": 3864
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000d393c",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Ruins of Bthalft",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Dwemer ruin or ancient site marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 5613,
+          "y": 1390
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000d3939",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Ruins of Rkund",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Dwemer ruin or ancient site marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 6793,
+          "y": 713
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
       "id": "canon-skyrim-02007b23",
       "type": "marker",
       "category": "landmark",
-      "title": "Ruunvald",
+      "title": "Ruunvald Excavation",
       "confidence": "scouted",
       "creator": "",
       "notes": "Vanilla Skyrim map location.",
@@ -2202,10 +4542,28 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
+      "id": "canon-skyrim-000162a6",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Secunda's Kiss",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Mountain landmark marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 3992,
+          "y": 2515
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
       "id": "canon-skyrim-0002d511",
       "type": "marker",
       "category": "landmark",
-      "title": "Septimus Signus Outpost",
+      "title": "Septimus Signus's Outpost",
       "confidence": "scouted",
       "creator": "",
       "notes": "Vanilla Skyrim map location.",
@@ -2213,6 +4571,42 @@
         {
           "x": 6142,
           "y": 5563
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000162cc",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Serpent's Bluff Redoubt",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Giant camp or open landmark marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 2295,
+          "y": 2895
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000162a8",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Shadowgreen Cavern",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Cave or cavern marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 2671,
+          "y": 5280
         }
       ],
       "source": "personal",
@@ -2238,17 +4632,35 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
-      "id": "canon-skyrim-000b83c8",
+      "id": "canon-skyrim-000162a9",
       "type": "marker",
       "category": "landmark",
-      "title": "Shriekwind Bastion",
+      "title": "Shimmermist Cave",
       "confidence": "scouted",
       "creator": "",
-      "notes": "Vanilla Skyrim map location.",
+      "notes": "Cave or cavern marked on Skyrim's map.",
       "points": [
         {
-          "x": 3621,
-          "y": 1622
+          "x": 4880,
+          "y": 3182
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000d3934",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Shor's Watchtower",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Tower or lookout marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 7092,
+          "y": 2054
         }
       ],
       "source": "personal",
@@ -2292,6 +4704,24 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
+      "id": "canon-skyrim-000ad066",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Shrine to Peryite",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Religious shrine or temple marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 1412,
+          "y": 3720
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
       "id": "canon-skyrim-0006ccc8",
       "type": "marker",
       "category": "landmark",
@@ -2303,6 +4733,78 @@
         {
           "x": 5467,
           "y": 1838
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000162b1",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Shrouded Grove",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 5103,
+          "y": 3778
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000162b3",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Sightless Pit",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 5844,
+          "y": 4446
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000162b4",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Silent Moons Camp",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Military camp or field camp marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 4068,
+          "y": 3261
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000162b5",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Silverdrift Lair",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 5104,
+          "y": 4002
         }
       ],
       "source": "personal",
@@ -2328,6 +4830,60 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
+      "id": "canon-skyrim-000ef0ae",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Skytemple Ruins",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Dwemer ruin or ancient site marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 6215,
+          "y": 5190
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000162b8",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Sleeping Tree Camp",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Military camp or field camp marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 3328,
+          "y": 2667
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00068094",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Snapleg Cave",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Cave or cavern marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 6132,
+          "y": 1984
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
       "id": "canon-skyrim-0002ddd1",
       "type": "marker",
       "category": "landmark",
@@ -2339,6 +4895,42 @@
         {
           "x": 6655,
           "y": 4293
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-0001634c",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Snow-Shod Farm",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Farm, mill, or rural holding marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 7015,
+          "y": 1011
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000c2ef6",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Snowpoint Beacon",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Mountain landmark marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 5031,
+          "y": 4300
         }
       ],
       "source": "personal",
@@ -2364,17 +4956,35 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
-      "id": "canon-skyrim-0001635e",
+      "id": "canon-skyrim-00034896",
       "type": "marker",
       "category": "landmark",
-      "title": "Solitude Stables",
+      "title": "Solitude Military Camp",
       "confidence": "scouted",
       "creator": "",
-      "notes": "Vanilla Skyrim map location.",
+      "notes": "Military camp or field camp marked on Skyrim's map.",
       "points": [
         {
-          "x": 2670,
+          "x": 2596,
           "y": 4758
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00016382",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Solitude Sawmill",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Farm, mill, or rural holding marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 2596,
+          "y": 4684
         }
       ],
       "source": "personal",
@@ -2400,17 +5010,161 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
+      "id": "canon-skyrim-04016fe7",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Solstheim",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 7393,
+          "y": 4215
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
       "id": "canon-skyrim-00082213",
       "type": "marker",
       "category": "landmark",
       "title": "South Brittleshin Pass",
       "confidence": "scouted",
       "creator": "",
-      "notes": "Vanilla Skyrim map location.",
+      "notes": "Mountain landmark marked on Skyrim's map.",
       "points": [
         {
           "x": 3696,
           "y": 2069
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000f5eaf",
+      "type": "marker",
+      "category": "landmark",
+      "title": "South Cold Rock Pass",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Mountain landmark marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 3183,
+          "y": 3563
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000b83c8",
+      "type": "marker",
+      "category": "landmark",
+      "title": "South Shriekwind Bastion",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 3621,
+          "y": 1622
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000479bb",
+      "type": "marker",
+      "category": "landmark",
+      "title": "South Skybound Watch",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 4433,
+          "y": 1768
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00016217",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Southfringe Sanctum",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 4579,
+          "y": 1096
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-0001626d",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Statue to Meridia",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 2375,
+          "y": 4834
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-0001623a",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Steamcrag Camp",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Military camp or field camp marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 6651,
+          "y": 2802
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000162bf",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Steepfall Burrow",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 1711,
+          "y": 5135
         }
       ],
       "source": "personal",
@@ -2436,17 +5190,53 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
+      "id": "canon-skyrim-000162c0",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Stillborn Cave",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Cave or cavern marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 6360,
+          "y": 4145
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
       "id": "canon-skyrim-000162c1",
       "type": "marker",
       "category": "landmark",
       "title": "Stonehill Bluff",
       "confidence": "scouted",
       "creator": "",
-      "notes": "Standing stone marked on Skyrim's map.",
+      "notes": "Giant camp or open landmark marked on Skyrim's map.",
       "points": [
         {
           "x": 4365,
           "y": 3781
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000177e4",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Stonehills",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Standing stone marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 3923,
+          "y": 4156
         }
       ],
       "source": "personal",
@@ -2472,17 +5262,233 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
-      "id": "canon-skyrim-0007bc2d",
+      "id": "canon-skyrim-000b6295",
       "type": "marker",
       "category": "landmark",
-      "title": "The Dainty Sload",
+      "title": "Sundered Towers",
       "confidence": "scouted",
       "creator": "",
-      "notes": "Coastal landing or ship location marked on Skyrim's map.",
+      "notes": "Tower or lookout marked on Skyrim's map.",
       "points": [
         {
-          "x": 3114,
-          "y": 5203
+          "x": 1928,
+          "y": 3494
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000f5ea8",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Sunderstone Gorge",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Standing stone marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 2958,
+          "y": 2296
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00015d4d",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Swindler's Den",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 3182,
+          "y": 3041
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000162c3",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Talking Stone Camp",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Military camp or field camp marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 2740,
+          "y": 3416
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00033e45",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Thalmor Embassy",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 2597,
+          "y": 5057
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-0001bab9",
+      "type": "marker",
+      "category": "landmark",
+      "title": "The Apprentice Stone",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Standing stone marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 3038,
+          "y": 4458
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000e0f4c",
+      "type": "marker",
+      "category": "landmark",
+      "title": "The Atronach Stone",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Standing stone marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 6355,
+          "y": 2430
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-0001babd",
+      "type": "marker",
+      "category": "landmark",
+      "title": "The Guardian Stones",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Standing stone marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 4065,
+          "y": 1918
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000c4d20",
+      "type": "marker",
+      "category": "landmark",
+      "title": "The Katariah",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 3187,
+          "y": 4979
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000ded90",
+      "type": "marker",
+      "category": "landmark",
+      "title": "The Lady Stone",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Standing stone marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 3474,
+          "y": 1996
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000e0f47",
+      "type": "marker",
+      "category": "landmark",
+      "title": "The Lord Stone",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Standing stone marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 4144,
+          "y": 4006
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-0001babb",
+      "type": "marker",
+      "category": "landmark",
+      "title": "The Lover Stone",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Standing stone marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 1337,
+          "y": 3347
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000dd9d5",
+      "type": "marker",
+      "category": "landmark",
+      "title": "The Ritual Stone",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Standing stone marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 4953,
+          "y": 2884
         }
       ],
       "source": "personal",
@@ -2508,6 +5514,60 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
+      "id": "canon-skyrim-000d3935",
+      "type": "marker",
+      "category": "landmark",
+      "title": "The Shadow Stone",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Standing stone marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 7089,
+          "y": 1010
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-0001bac0",
+      "type": "marker",
+      "category": "landmark",
+      "title": "The Steed Stone",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Standing stone marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 2302,
+          "y": 5132
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000e0ed5",
+      "type": "marker",
+      "category": "landmark",
+      "title": "The Tower Stone",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Tower or lookout marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 5328,
+          "y": 4896
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
       "id": "canon-skyrim-000162c4",
       "type": "marker",
       "category": "landmark",
@@ -2519,24 +5579,6 @@
         {
           "x": 5025,
           "y": 2138
-        }
-      ],
-      "source": "personal",
-      "createdAt": "2026-07-01T00:00:00.000Z",
-      "updatedAt": "2026-07-01T00:00:00.000Z"
-    },
-    {
-      "id": "canon-skyrim-04016fe7",
-      "type": "marker",
-      "category": "landmark",
-      "title": "To Solstheim",
-      "confidence": "scouted",
-      "creator": "",
-      "notes": "Vanilla Skyrim map location.",
-      "points": [
-        {
-          "x": 7393,
-          "y": 4215
         }
       ],
       "source": "personal",
@@ -2573,6 +5615,60 @@
         {
           "x": 4513,
           "y": 3855
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000c2ee9",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Traitor's Post",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 6949,
+          "y": 3695
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000162c6",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Treva's Watch",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 6057,
+          "y": 1462
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000162c7",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Tumble Arch Pass",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Mountain landmark marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 5250,
+          "y": 3554
         }
       ],
       "source": "personal",
@@ -2634,6 +5730,42 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
+      "id": "canon-skyrim-000162c9",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Valtheim Towers",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Tower or lookout marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 5396,
+          "y": 2956
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-0008d5d6",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Valthume",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 1925,
+          "y": 2450
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
       "id": "canon-skyrim-000162ca",
       "type": "marker",
       "category": "landmark",
@@ -2645,6 +5777,96 @@
         {
           "x": 1710,
           "y": 4688
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00016264",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Volunruud",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 4217,
+          "y": 3558
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000c2efa",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Wayward Pass",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Mountain landmark marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 5400,
+          "y": 4150
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000db889",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Western Watchtower",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Tower or lookout marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 4067,
+          "y": 2739
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000bc0aa",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Weynon Stones",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Standing stone marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 4808,
+          "y": 3854
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00016385",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Whistling Mine",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Mine marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 6286,
+          "y": 4369
         }
       ],
       "source": "personal",
@@ -2670,6 +5892,42 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
+      "id": "canon-skyrim-00016284",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Whiterun Imperial Camp",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Military camp or field camp marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 2887,
+          "y": 3042
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-00094a1f",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Whiterun Military Camp",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Military camp or field camp marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 4510,
+          "y": 2662
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
       "id": "canon-skyrim-00072879",
       "type": "marker",
       "category": "landmark",
@@ -2688,17 +5946,53 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
-      "id": "canon-skyrim-000db889",
+      "id": "canon-skyrim-00095885",
       "type": "marker",
       "category": "landmark",
-      "title": "Whiterun Watchtower",
+      "title": "Whiterun Stormcloak Camp",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Military camp or field camp marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 4953,
+          "y": 2735
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000dd99a",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Whitewatch Tower",
       "confidence": "scouted",
       "creator": "",
       "notes": "Tower or lookout marked on Skyrim's map.",
       "points": [
         {
-          "x": 4067,
-          "y": 2739
+          "x": 4585,
+          "y": 3258
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000ef0a7",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Widow's Watch Ruins",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Dwemer ruin or ancient site marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 2155,
+          "y": 5282
         }
       ],
       "source": "personal",
@@ -2724,6 +6018,42 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
+      "id": "canon-skyrim-0009003b",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Windhelm Military Camp",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Military camp or field camp marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 6727,
+          "y": 3473
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-0009846f",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Windhelm Stables",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 6505,
+          "y": 3474
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
       "id": "canon-skyrim-0300b8b0",
       "type": "marker",
       "category": "landmark",
@@ -2735,6 +6065,60 @@
         {
           "x": 3630,
           "y": 4828
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000c2eec",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Windward Ruins",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Dwemer ruin or ancient site marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 4368,
+          "y": 4676
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-0001627d",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Winterhold Imperial Camp",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Military camp or field camp marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 4959,
+          "y": 4748
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-0001627e",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Winterhold Stormcloak Camp",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Military camp or field camp marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 6654,
+          "y": 3995
         }
       ],
       "source": "personal",
@@ -2778,6 +6162,78 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
+      "id": "canon-skyrim-000162ab",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Wreck Of The Brinehammer",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 4000,
+          "y": 5200
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000162aa",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Wreck of the Icerunner",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Coastal landing or ship location marked on Skyrim's map.",
+      "points": [
+        {
+          "x": 3409,
+          "y": 4979
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000162ae",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Wreck of The Pride of Tel Vos",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 6510,
+          "y": 4965
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
+      "id": "canon-skyrim-000162af",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Wreck of the Winter War",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 7098,
+          "y": 4142
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
       "id": "canon-skyrim-00016271",
       "type": "marker",
       "category": "landmark",
@@ -2814,6 +6270,24 @@
       "updatedAt": "2026-07-01T00:00:00.000Z"
     },
     {
+      "id": "canon-skyrim-000c33ff",
+      "type": "marker",
+      "category": "landmark",
+      "title": "Yorgrim Overlook",
+      "confidence": "scouted",
+      "creator": "",
+      "notes": "Vanilla Skyrim map location.",
+      "points": [
+        {
+          "x": 5768,
+          "y": 3924
+        }
+      ],
+      "source": "personal",
+      "createdAt": "2026-07-01T00:00:00.000Z",
+      "updatedAt": "2026-07-01T00:00:00.000Z"
+    },
+    {
       "id": "canon-skyrim-000162d2",
       "type": "marker",
       "category": "landmark",
@@ -2836,6 +6310,6 @@
     "name": "Skyrim Canon Locations",
     "source": "SSEEdit MapMarker export",
     "coordinateBasis": "Exterior cell coordinates fitted to atlas defaults",
-    "featureCount": 157
+    "featureCount": 350
   }
 }

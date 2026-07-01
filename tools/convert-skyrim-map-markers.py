@@ -102,6 +102,7 @@ TITLE_OVERRIDES = {
 
 NOTE_RULES = [
     (("camp",), "Military camp or field camp marked on Skyrim's map."),
+    (("basin", "bluff"), "Giant camp or open landmark marked on Skyrim's map."),
     (("cave", "grotto", "cavern"), "Cave or cavern marked on Skyrim's map."),
     (("mine",), "Mine marked on Skyrim's map."),
     (("fort",), "Fortified site marked on Skyrim's map."),
@@ -118,7 +119,7 @@ NOTE_RULES = [
     (("castle",), "Castle or major stronghold marked on Skyrim's map."),
     (("estate",), "Estate or rural holding marked on Skyrim's map."),
     (("stone",), "Standing stone marked on Skyrim's map."),
-    (("peak", "point", "crater", "ascent", "throat"), "Mountain landmark marked on Skyrim's map."),
+    (("peak", "point", "crater", "ascent", "throat", "pass", "kiss"), "Mountain landmark marked on Skyrim's map."),
 ]
 
 # Cell-to-atlas affine transform fitted from known exterior settlement markers
@@ -142,6 +143,10 @@ def title_from_editor_id(editor_id, fallback):
     if not raw:
         return fallback.strip() or "Skyrim Location"
     return raw
+
+
+def clean_display_name(name):
+    return re.sub(r"\s+", " ", name.strip())
 
 
 def location_note(title):
@@ -192,9 +197,10 @@ def main():
             continue
         form_id = row.get("form_id", "").strip()
         editor_id = row.get("editor_id", "").strip()
-        if not editor_id:
+        display_name = clean_display_name(row.get("name", ""))
+        if not editor_id and not display_name:
             continue
-        title = title_from_editor_id(editor_id, form_id)
+        title = display_name or title_from_editor_id(editor_id, form_id)
         normalized_title = title.lower().replace("'", "")
         if normalized_title in DEFAULT_TITLES:
             continue

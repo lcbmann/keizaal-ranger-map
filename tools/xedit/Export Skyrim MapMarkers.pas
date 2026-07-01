@@ -114,9 +114,9 @@ begin
     CsvValue(formID) + ',' +
     CsvValue(GetFileName(GetFile(e))) + ',' +
     CsvValue(SafeElementValue(e, 'EDID')) + ',' +
-    CsvValue(SafeElementValue(e, 'FULL')) + ',' +
-    CsvValue(SafeElementValue(e, 'TNAM')) + ',' +
-    CsvValue(SafeElementValue(e, 'FNAM')) + ',' +
+    CsvValue(SafeElementValue(e, 'XMRK\FULL')) + ',' +
+    CsvValue(SafeElementValue(e, 'XMRK\TNAM')) + ',' +
+    CsvValue(SafeElementValue(e, 'XMRK\FNAM')) + ',' +
     CsvValue(x) + ',' +
     CsvValue(y) + ',' +
     CsvValue(z) + ',' +
