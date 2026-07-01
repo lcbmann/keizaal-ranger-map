@@ -15,6 +15,8 @@
   const SHARE_CODE_MAX_LENGTH = 2000;
   const SHARE_CODE_CHUNK_SIZE = 1800;
   const GUILD_ATLAS_CODE = "GUILD";
+  const SKYRIM_ATLAS_CODE = "SKYRIM";
+  const SKYRIM_ATLAS_DATA = "data/skyrim-canon-atlas.generated.json";
 
   const categories = [
     { id: "city", label: "City", color: "#2f5878", icon: "city" },
@@ -143,6 +145,7 @@
     receivePreview: document.getElementById("receivePreview"),
     receiveStatus: document.getElementById("receiveStatus"),
     receiveGuildBtn: document.getElementById("receiveGuildBtn"),
+    receiveSkyrimBtn: document.getElementById("receiveSkyrimBtn"),
     receiveReviewBtn: document.getElementById("receiveReviewBtn"),
     receiveMergeBtn: document.getElementById("receiveMergeBtn"),
     receiveReplaceBtn: document.getElementById("receiveReplaceBtn"),
@@ -277,6 +280,7 @@
     elements.receiveCancelBtn.addEventListener("click", () => closeReceiveDialog());
     elements.receiveCodeInput.addEventListener("input", resetReceivePreview);
     elements.receiveGuildBtn.addEventListener("click", reviewGuildAtlasCode);
+    elements.receiveSkyrimBtn.addEventListener("click", reviewSkyrimAtlasCode);
     elements.receiveReviewBtn.addEventListener("click", reviewReceiveCode);
     elements.receiveMergeBtn.addEventListener("click", () => receiveShareCode(false));
     elements.receiveReplaceBtn.addEventListener("click", () => receiveShareCode(true));
@@ -667,7 +671,7 @@
         zIndexOffset: getFeatureZIndexOffset(feature, selected),
         icon: L.divIcon({
           className: "",
-          html: `<div class="poi-marker marker-${escapeHtml(feature.category)}${isGuildFeature(feature) ? " is-guild" : ""}${selected ? " is-selected" : ""}" style="--marker-color:${category.color}">${getCategoryIcon(feature.category)}</div>`,
+          html: `<div class="poi-marker marker-${escapeHtml(feature.category)}${isGuildFeature(feature) ? " is-guild" : ""}${isCanonFeature(feature) ? " is-canon" : ""}${selected ? " is-selected" : ""}" style="--marker-color:${category.color}">${getCategoryIcon(feature.category)}</div>`,
           iconSize: [32, 32],
           iconAnchor: [16, 32],
         }),
@@ -952,7 +956,7 @@
     const creators = Array.from(
       new Set(
         state.features
-          .filter((feature) => !isDefaultFeature(feature) && feature.creator)
+          .filter((feature) => !isDefaultFeature(feature) && !isCanonFeature(feature) && feature.creator)
           .map((feature) => feature.creator),
       ),
     ).sort((a, b) => a.localeCompare(b));
@@ -995,7 +999,7 @@
           <span class="feature-meta">
             <i class="swatch" style="background:${category.color}" aria-hidden="true"></i>
             ${escapeHtml(category.label)}
-            ${isGuildFeature(feature) ? '<span class="source-badge">Guild</span>' : ""}
+            ${isGuildFeature(feature) ? '<span class="source-badge">Guild</span>' : isCanonFeature(feature) ? '<span class="source-badge">Skyrim</span>' : ""}
             <span>${escapeHtml(getFeatureFreshnessLabel(feature))}</span>
           </span>
           ${feature.creator ? `<span class="feature-creator">Mapped by ${escapeHtml(feature.creator)}</span>` : ""}
@@ -1285,7 +1289,7 @@
     const point = mapPointToExport(feature.points[0], bounds, width, height);
     const selected = isFeatureSelected(feature.id);
     const radius = (isDefaultFeature(feature) ? 6 : selected ? 11 : 9) * scale;
-    const labelVisible = !isDefaultFeature(feature) || selected || map.getZoom() >= -0.75;
+    const labelVisible = (!isDefaultFeature(feature) && !isCanonFeature(feature)) || selected || map.getZoom() >= -0.75;
 
     ctx.save();
     ctx.shadowColor = "rgba(24, 15, 7, 0.34)";
@@ -1455,7 +1459,7 @@
             <span class="share-entry-meta">
               <i class="swatch" style="background:${category.color}" aria-hidden="true"></i>
               ${escapeHtml(category.label)}
-              ${isGuildFeature(feature) ? '<span class="source-badge">Guild</span>' : ""}
+              ${isGuildFeature(feature) ? '<span class="source-badge">Guild</span>' : isCanonFeature(feature) ? '<span class="source-badge">Skyrim</span>' : ""}
               ${feature.creator ? `<span>Mapped by ${escapeHtml(feature.creator)}</span>` : ""}
             </span>
           </span>
@@ -1521,7 +1525,7 @@
   }
 
   function getShareableFeatures() {
-    return state.features.filter((feature) => !isDefaultFeature(feature));
+    return state.features.filter((feature) => !isDefaultFeature(feature) && !isCanonFeature(feature));
   }
 
   function getSelectedShareFeatures() {
@@ -1701,6 +1705,14 @@
     return atlas;
   }
 
+  async function fetchSkyrimAtlas() {
+    const response = await fetch(SKYRIM_ATLAS_DATA, { cache: "no-cache" });
+    if (!response.ok) {
+      throw new Error(`Skyrim Atlas data failed: ${response.status}`);
+    }
+    return response.json();
+  }
+
   function getGuildFeaturesFromResponse(guildAtlas) {
     const imported = decodeStoredSharePayload(guildAtlas.payload);
     if (!Array.isArray(imported.features)) {
@@ -1709,8 +1721,15 @@
     return markFeaturesAsGuild(normalizeFeatures(imported.features.filter(isValidFeature), imported.map).filter((feature) => !isDefaultFeature(feature)));
   }
 
+  function getSkyrimFeaturesFromResponse(imported) {
+    if (!Array.isArray(imported.features)) {
+      throw new Error("Skyrim Atlas payload is missing features");
+    }
+    return markFeaturesAsCanon(normalizeFeatures(imported.features.filter(isValidFeature), imported.map));
+  }
+
   function getGuildPublishFeatures() {
-    return state.features.filter((feature) => !isDefaultFeature(feature)).map(cloneFeature);
+    return state.features.filter((feature) => !isDefaultFeature(feature) && !isCanonFeature(feature)).map(cloneFeature);
   }
 
   function getSelectedGuildPublishFeatures() {
@@ -1743,6 +1762,13 @@
     }));
   }
 
+  function markFeaturesAsCanon(features) {
+    return features.map((feature) => ({
+      ...cloneFeature(feature),
+      source: "canon",
+    }));
+  }
+
   function markFeaturesAsPersonal(features) {
     return features.map((feature) => ({
       ...cloneFeature(feature),
@@ -1756,9 +1782,15 @@
     return applyDefaultFeatures(preserved.concat(guildFeatures));
   }
 
+  function replaceCanonFeatures(current, canonFeatures) {
+    const canonIds = new Set(canonFeatures.map((feature) => feature.id));
+    const preserved = current.filter((feature) => !isCanonFeature(feature) && !canonIds.has(feature.id));
+    return applyDefaultFeatures(preserved.concat(canonFeatures));
+  }
+
   function summarizeIncomingFeatures(features) {
     const existingIds = new Set(state.features.map((feature) => feature.id));
-    const customCount = state.features.filter((feature) => !isDefaultFeature(feature)).length;
+    const customCount = state.features.filter((feature) => !isDefaultFeature(feature) && !isCanonFeature(feature)).length;
     const uniqueCreators = Array.from(new Set(features.map((feature) => feature.creator).filter(Boolean))).sort((a, b) => a.localeCompare(b));
     const typeCounts = features.reduce(
       (counts, feature) => {
@@ -1788,13 +1820,15 @@
       ? summary.uniqueCreators.slice(0, 4).join(", ") + (summary.uniqueCreators.length > 4 ? `, and ${summary.uniqueCreators.length - 4} more` : "")
       : "Unsigned";
     return `
-      <strong>${summary.features.length} ${summary.isGuildCode ? "official Guild" : "received"} entries</strong>
+      <strong>${summary.features.length} ${summary.isGuildCode ? "official Guild" : summary.isSkyrimCode ? "Skyrim reference" : "received"} entries</strong>
       <span>${escapeHtml(typeText)}</span>
       <span>${escapeHtml(summary.newCount)} new, ${escapeHtml(summary.duplicateCount)} already on your atlas</span>
       <span>Mapped by: ${escapeHtml(creatorText)}</span>
       ${
         summary.isGuildCode
           ? "<span>Loading will refresh official Guild entries and leave personal notes alone.</span>"
+          : summary.isSkyrimCode
+            ? "<span>Loading will refresh vanilla Skyrim reference locations and leave Ranger notes alone.</span>"
           : `<span>Replace would remove ${escapeHtml(summary.customCount)} current custom ${summary.customCount === 1 ? "entry" : "entries"} first.</span>`
       }
     `;
@@ -1830,6 +1864,12 @@
     reviewReceiveCode();
   }
 
+  function reviewSkyrimAtlasCode() {
+    elements.receiveCodeInput.value = SKYRIM_ATLAS_CODE;
+    resetReceivePreview();
+    reviewReceiveCode();
+  }
+
   async function reviewReceiveCode() {
     const code = elements.receiveCodeInput.value.trim();
     if (!code) {
@@ -1842,31 +1882,39 @@
     try {
       const normalizedCode = normalizeRemoteShareCode(code);
       const isGuildCode = normalizedCode === GUILD_ATLAS_CODE;
-      const imported = isGuildCode ? await fetchGuildAtlas(GUILD_ATLAS_CODE) : await resolveShareInput(code);
+      const isSkyrimCode = normalizedCode === SKYRIM_ATLAS_CODE || normalizedCode === "CANON";
+      const imported = isGuildCode ? await fetchGuildAtlas(GUILD_ATLAS_CODE) : isSkyrimCode ? await fetchSkyrimAtlas() : await resolveShareInput(code);
       if (!isGuildCode && !Array.isArray(imported.features)) {
         throw new Error("Missing features array");
       }
       const nextFeatures = isGuildCode
         ? getGuildFeaturesFromResponse(imported)
+        : isSkyrimCode
+          ? getSkyrimFeaturesFromResponse(imported)
         : normalizeFeatures(imported.features.filter(isValidFeature), imported.map).filter((feature) => !isDefaultFeature(feature));
       if (!nextFeatures.length) {
         resetReceivePreview();
         elements.receiveStatus.textContent = isGuildCode
           ? "The Guild Atlas has no entries yet."
+          : isSkyrimCode
+            ? "The Skyrim reference atlas has no locations yet."
           : "That code has no custom entries to import.";
         return;
       }
       const summary = summarizeIncomingFeatures(nextFeatures);
       summary.isGuildCode = isGuildCode;
-      state.pendingReceive = { features: nextFeatures, isGuildCode, summary };
+      summary.isSkyrimCode = isSkyrimCode;
+      state.pendingReceive = { features: nextFeatures, isGuildCode, isSkyrimCode, summary };
       elements.receivePreview.hidden = false;
       elements.receivePreview.innerHTML = renderReceivePreview(summary);
-      elements.receiveMergeBtn.textContent = isGuildCode ? "Receive GUILD Atlas" : "Merge Entries";
-      elements.receiveReplaceBtn.hidden = isGuildCode;
+      elements.receiveMergeBtn.textContent = isGuildCode ? "Receive GUILD Atlas" : isSkyrimCode ? "Receive SKYRIM Locations" : "Merge Entries";
+      elements.receiveReplaceBtn.hidden = isGuildCode || isSkyrimCode;
       elements.receiveMergeBtn.disabled = false;
-      elements.receiveReplaceBtn.disabled = isGuildCode;
+      elements.receiveReplaceBtn.disabled = isGuildCode || isSkyrimCode;
       elements.receiveStatus.textContent = isGuildCode
         ? "Review the official entries, then receive them into your atlas."
+        : isSkyrimCode
+          ? "Review the vanilla Skyrim locations, then receive them as reference points."
         : "Review the entries, then merge or replace.";
     } catch (error) {
       console.error(error);
@@ -1901,6 +1949,17 @@
         setStatus(`Loaded ${nextFeatures.length} official Guild Atlas entries`);
         return;
       }
+      if (state.pendingReceive.isSkyrimCode) {
+        state.features = replaceCanonFeatures(state.features, nextFeatures);
+        state.selectedId = null;
+        state.selectedIds = [];
+        resetViewFilters();
+        saveState();
+        renderAll();
+        closeReceiveDialog();
+        setStatus(`Loaded ${nextFeatures.length} Skyrim reference locations`);
+        return;
+      }
       const personalIncoming = markFeaturesAsPersonal(nextFeatures);
       state.features = replace
         ? replacePersonalFeatures(state.features, personalIncoming)
@@ -1923,6 +1982,7 @@
   function setReceiveBusy(busy, keepImportDisabled = false) {
     elements.receiveCodeInput.disabled = busy;
     elements.receiveGuildBtn.disabled = busy;
+    elements.receiveSkyrimBtn.disabled = busy;
     elements.receiveReviewBtn.disabled = busy;
     elements.receiveMergeBtn.disabled = busy || (!state.pendingReceive && keepImportDisabled);
     elements.receiveReplaceBtn.disabled = busy || (!state.pendingReceive && keepImportDisabled);
@@ -1979,7 +2039,7 @@
   }
 
   function openClearDialog() {
-    const customFeatures = state.features.filter((feature) => !isDefaultFeature(feature));
+    const customFeatures = state.features.filter((feature) => !isDefaultFeature(feature) && !isCanonFeature(feature));
     if (!customFeatures.length) {
       state.features = applyDefaultFeatures(state.features);
       saveState();
@@ -2013,21 +2073,21 @@
 
   function clearAtlas() {
     const selectedCategories = getSelectedClearCategories();
-    const featuresToRemove = state.features.filter((feature) => !isDefaultFeature(feature) && selectedCategories.has(feature.category));
+    const featuresToRemove = state.features.filter((feature) => !isDefaultFeature(feature) && !isCanonFeature(feature) && selectedCategories.has(feature.category));
     if (!featuresToRemove.length) {
       return;
     }
 
     pushUndo("scrape selected categories");
     state.features = applyDefaultFeatures(
-      state.features.filter((feature) => isDefaultFeature(feature) || !selectedCategories.has(feature.category)),
+      state.features.filter((feature) => isDefaultFeature(feature) || isCanonFeature(feature) || !selectedCategories.has(feature.category)),
     );
     state.selectedId = null;
     state.selectedIds = [];
     saveState();
     renderAll();
     elements.clearDialog.close();
-    setStatus(`${featuresToRemove.length} custom ${featuresToRemove.length === 1 ? "entry" : "entries"} scraped; default settlements kept`);
+    setStatus(`${featuresToRemove.length} custom ${featuresToRemove.length === 1 ? "entry" : "entries"} scraped; reference locations kept`);
   }
 
   function getSelectedClearCategories() {
@@ -2045,11 +2105,11 @@
 
   function updateClearDialogState() {
     const selectedCategories = getSelectedClearCategories();
-    const selectedFeatures = state.features.filter((feature) => !isDefaultFeature(feature) && selectedCategories.has(feature.category));
+    const selectedFeatures = state.features.filter((feature) => !isDefaultFeature(feature) && !isCanonFeature(feature) && selectedCategories.has(feature.category));
     const categoryCount = selectedCategories.size;
     elements.clearSummary.textContent = selectedFeatures.length
-      ? `${selectedFeatures.length} custom ${selectedFeatures.length === 1 ? "entry" : "entries"} across ${categoryCount} ${categoryCount === 1 ? "category" : "categories"} will be removed from this browser. Default cities and towns will stay.`
-      : "Select at least one category to scrape. Default cities and towns always stay.";
+      ? `${selectedFeatures.length} custom ${selectedFeatures.length === 1 ? "entry" : "entries"} across ${categoryCount} ${categoryCount === 1 ? "category" : "categories"} will be removed from this browser. Reference locations will stay.`
+      : "Select at least one category to scrape. Reference locations always stay.";
     elements.clearConfirmBtn.textContent = selectedFeatures.length
       ? `Scrape ${selectedFeatures.length} ${selectedFeatures.length === 1 ? "Entry" : "Entries"}`
       : "Scrape Selected Categories";
@@ -2335,7 +2395,7 @@
         return false;
       }
 
-      if (state.creatorFilter && !forcedVisible && !isDefaultFeature(feature) && feature.creator !== state.creatorFilter) {
+      if (state.creatorFilter && !forcedVisible && !isDefaultFeature(feature) && !isCanonFeature(feature) && feature.creator !== state.creatorFilter) {
         return false;
       }
 
@@ -2406,10 +2466,20 @@
   function compareFeaturesForList(a, b) {
     const aDefault = isDefaultFeature(a);
     const bDefault = isDefaultFeature(b);
+    const aCanon = isCanonFeature(a);
+    const bCanon = isCanonFeature(b);
+    const aReference = aDefault || aCanon;
+    const bReference = bDefault || bCanon;
+    if (aReference !== bReference) {
+      return aReference ? 1 : -1;
+    }
+    if (aCanon !== bCanon) {
+      return aCanon ? -1 : 1;
+    }
     if (aDefault !== bDefault) {
       return aDefault ? 1 : -1;
     }
-    if (aDefault && bDefault) {
+    if (aReference && bReference) {
       return a.title.localeCompare(b.title);
     }
     const aTime = Date.parse(a.createdAt || "") || 0;
@@ -2435,6 +2505,9 @@
     if (isDefaultFeature(feature)) {
       return 0;
     }
+    if (isCanonFeature(feature)) {
+      return 5;
+    }
     if (isGuildFeature(feature)) {
       return 10;
     }
@@ -2447,6 +2520,9 @@
     }
     if (isGuildFeature(feature)) {
       return 100000;
+    }
+    if (isCanonFeature(feature)) {
+      return 50000;
     }
     if (isDefaultFeature(feature)) {
       return 0;
@@ -2462,8 +2538,12 @@
     return feature.source === "guild";
   }
 
+  function isCanonFeature(feature) {
+    return feature.source === "canon";
+  }
+
   function isPersonalFeature(feature) {
-    return !isDefaultFeature(feature) && !isGuildFeature(feature);
+    return !isDefaultFeature(feature) && !isGuildFeature(feature) && !isCanonFeature(feature);
   }
 
   function zoomToFeature(feature) {
@@ -2514,7 +2594,7 @@
     return features.map((feature) => {
       const { ranger, timer, ...rest } = feature;
       const category = categoryById[rest.category] ? rest.category : categoryAliases[rest.category] || "landmark";
-      const source = rest.source === "guild" ? "guild" : rest.id && rest.id.startsWith("default-") ? "default" : "personal";
+      const source = rest.source === "guild" ? "guild" : rest.source === "canon" ? "canon" : rest.id && rest.id.startsWith("default-") ? "default" : "personal";
       return {
         ...rest,
         category,

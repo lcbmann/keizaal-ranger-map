@@ -211,6 +211,7 @@
               <li>Share Atlas creates a code containing the entries you choose.</li>
               <li>Receive Atlas imports a code from another Ranger.</li>
               <li>Choose Receive GUILD Atlas to pull the current official map from the server.</li>
+              <li>Choose Receive SKYRIM Locations to add vanilla map markers as reference points.</li>
               <li>Save Image downloads a PNG of the current visible map.</li>
             </ol>
           </section>
@@ -231,9 +232,10 @@
         <button id="receiveCancelBtn" class="field-note-close" type="button" aria-label="Close receive code">&times;</button>
         <p class="field-note-kicker">Receive Atlas Notes</p>
         <h2>Add Shared Entries</h2>
-        <p>Paste a code from another Ranger, or load the maintained GUILD Atlas directly from the server.</p>
+        <p>Paste a code from another Ranger, load the maintained GUILD Atlas, or add vanilla Skyrim map locations.</p>
         <div class="receive-code-options">
           <button id="receiveGuildBtn" class="button secondary" type="button">Receive GUILD Atlas</button>
+          <button id="receiveSkyrimBtn" class="button secondary" type="button">Receive SKYRIM Locations</button>
         </div>
         <label class="field-label" for="receiveCodeInput">Share Code</label>
         <textarea id="receiveCodeInput" class="text-input textarea code-input" rows="5" placeholder="Paste code here"></textarea>
@@ -244,7 +246,7 @@
           <button id="receiveMergeBtn" class="button primary" type="button" disabled>Merge Entries</button>
           <button id="receiveReplaceBtn" class="button secondary" type="button" disabled>Replace Mine</button>
         </div>
-        <p class="dialog-help">Merge keeps your notes and adds incoming entries. Replace removes your custom notes first. Default cities and towns stay either way.</p>
+        <p class="dialog-help">Merge keeps your notes and adds incoming entries. GUILD refreshes official Ranger entries. SKYRIM adds vanilla map locations as reference points.</p>
       </div>
     </dialog>
 
