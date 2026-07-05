@@ -177,6 +177,7 @@
     shareEntryList: document.getElementById("shareEntryList"),
     shareStatus: document.getElementById("shareStatus"),
     shareCopyBtn: document.getElementById("shareCopyBtn"),
+    shareReportBtn: document.getElementById("shareReportBtn"),
     shareCancelBtn: document.getElementById("shareCancelBtn"),
     shareKeepBtn: document.getElementById("shareKeepBtn"),
     shareSelectAllBtn: document.getElementById("shareSelectAllBtn"),
@@ -271,6 +272,7 @@
     elements.exportBtn.addEventListener("click", openShareDialog);
     elements.exportMapBtn.addEventListener("click", exportVisibleMap);
     elements.shareCopyBtn.addEventListener("click", copySelectedShareCode);
+    elements.shareReportBtn.addEventListener("click", copySelectedFieldReport);
     elements.shareCancelBtn.addEventListener("click", () => closeShareDialog());
     elements.shareKeepBtn.addEventListener("click", () => closeShareDialog());
     elements.shareSelectAllBtn.addEventListener("click", () => setShareEntryChecks(true));
@@ -1487,27 +1489,9 @@
 
     setShareBusy(true);
     elements.shareStatus.textContent = "Preparing share code...";
-    let code = "";
-    let status = "";
 
     try {
-      if (isSupabaseConfigured()) {
-        try {
-          code = await uploadShareCode(shareFeatures);
-          status = `Copied atlas share code ${code} (${shareFeatures.length} ${shareFeatures.length === 1 ? "entry" : "entries"})`;
-        } catch (error) {
-          console.error("Could not upload share code", error);
-          const codes = encodeShareCodes(shareFeatures);
-          code = codes.join("\n");
-          const partText = codes.length === 1 ? "1 fallback code" : `${codes.length} fallback codes`;
-          status = `Supabase upload failed; copied ${partText}`;
-        }
-      } else {
-        const codes = encodeShareCodes(shareFeatures);
-        code = codes.join("\n");
-        const partText = codes.length === 1 ? "1 fallback code" : `${codes.length} fallback codes`;
-        status = `Supabase anon key missing; copied ${partText} for atlas data`;
-      }
+      const { code, status } = await createShareCodeForFeatures(shareFeatures);
 
       try {
         await navigator.clipboard.writeText(code);
@@ -1524,6 +1508,151 @@
     } finally {
       setShareBusy(false);
     }
+  }
+
+  async function copySelectedFieldReport() {
+    const shareFeatures = getSelectedShareFeatures();
+    if (!shareFeatures.length) {
+      elements.shareStatus.textContent = "Select at least one entry.";
+      return;
+    }
+
+    setShareBusy(true);
+    elements.shareStatus.textContent = "Preparing field report...";
+
+    try {
+      const { code, status } = await createShareCodeForFeatures(shareFeatures);
+      const report = createFieldReportText(shareFeatures, code);
+      try {
+        await navigator.clipboard.writeText(report);
+        setStatus(status.replace("Copied atlas share code", "Copied field report for Atlas code"));
+        closeShareDialog();
+      } catch (error) {
+        window.prompt("Copy this field report.", report);
+        setStatus("Field report ready to copy");
+        closeShareDialog();
+      }
+    } catch (error) {
+      console.error(error);
+      elements.shareStatus.textContent = "Could not create a field report for those entries.";
+    } finally {
+      setShareBusy(false);
+    }
+  }
+
+  async function createShareCodeForFeatures(features) {
+    if (isSupabaseConfigured()) {
+      try {
+        const code = await uploadShareCode(features);
+        return {
+          code,
+          status: `Copied atlas share code ${code} (${features.length} ${features.length === 1 ? "entry" : "entries"})`,
+        };
+      } catch (error) {
+        console.error("Could not upload share code", error);
+        const codes = encodeShareCodes(features);
+        const partText = codes.length === 1 ? "1 fallback code" : `${codes.length} fallback codes`;
+        return {
+          code: codes.join("\n"),
+          status: `Supabase upload failed; copied ${partText}`,
+        };
+      }
+    }
+
+    const codes = encodeShareCodes(features);
+    const partText = codes.length === 1 ? "1 fallback code" : `${codes.length} fallback codes`;
+    return {
+      code: codes.join("\n"),
+      status: `Supabase anon key missing; copied ${partText} for atlas data`,
+    };
+  }
+
+  function createFieldReportText(features, code) {
+    const summary = summarizeAtlasFeatures(features);
+    const entryLines = features
+      .slice()
+      .sort(compareFeaturesForList)
+      .slice(0, 8)
+      .map((feature) => `- ${featureReportLabel(feature)}`);
+    const remaining = Math.max(0, features.length - entryLines.length);
+    if (remaining) {
+      entryLines.push(`- ${remaining} more ${remaining === 1 ? "entry" : "entries"}`);
+    }
+
+    return [
+      "Field Atlas Report",
+      `Entries: ${summary.typeText}`,
+      `Categories: ${summary.categoryText}`,
+      `Confidence: ${summary.confidenceText}`,
+      `Mapped by: ${summary.creatorText}`,
+      code.includes("\n") ? "Atlas code:" : `Atlas code: ${code}`,
+      code.includes("\n") ? code : "",
+      "",
+      "Included entries:",
+      ...entryLines,
+      "",
+      "Paste the Atlas code into Receive Atlas to merge these mapped entries.",
+    ].filter((line, index, lines) => line || lines[index - 1] !== "").join("\n");
+  }
+
+  function summarizeAtlasFeatures(features) {
+    const typeCounts = countBy(features, (feature) => feature.type);
+    const categoryCounts = countBy(features, (feature) => (categoryById[feature.category] || categoryById.landmark).label);
+    const confidenceCounts = countBy(features, (feature) => titleCase(feature.confidence || "scouted"));
+    const creators = Array.from(new Set(features.map((feature) => feature.creator).filter(Boolean))).sort((a, b) => a.localeCompare(b));
+
+    return {
+      typeText: [
+        `${typeCounts.marker || 0} ${typeCounts.marker === 1 ? "mark" : "marks"}`,
+        `${typeCounts.route || 0} ${typeCounts.route === 1 ? "trail" : "trails"}`,
+        `${typeCounts.range || 0} ${typeCounts.range === 1 ? "range" : "ranges"}`,
+      ].join(", "),
+      categoryText: formatCountList(categoryCounts),
+      confidenceText: formatCountList(confidenceCounts),
+      creatorText: creators.length ? creators.slice(0, 5).join(", ") + (creators.length > 5 ? `, and ${creators.length - 5} more` : "") : "Unsigned",
+    };
+  }
+
+  function featureReportLabel(feature) {
+    const category = categoryById[feature.category] || categoryById.landmark;
+    const title = feature.title || category.label;
+    const confidence = feature.confidence ? `, ${feature.confidence}` : "";
+    const creator = feature.creator ? `, by ${feature.creator}` : "";
+    return `${category.label}: ${title} (${featureTypeLabel(feature.type)}${confidence}${creator})`;
+  }
+
+  function featureTypeLabel(type) {
+    if (type === "marker") {
+      return "mark";
+    }
+    if (type === "route") {
+      return "trail";
+    }
+    if (type === "range") {
+      return "range";
+    }
+    return type || "entry";
+  }
+
+  function countBy(items, keyForItem) {
+    return items.reduce((counts, item) => {
+      const key = keyForItem(item);
+      counts[key] = (counts[key] || 0) + 1;
+      return counts;
+    }, {});
+  }
+
+  function formatCountList(counts) {
+    const entries = Object.entries(counts).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+    return entries.length ? entries.map(([label, count]) => `${label} ${count}`).join(", ") : "None";
+  }
+
+  function titleCase(value) {
+    return String(value || "")
+      .split(/[\s_-]+/)
+      .filter(Boolean)
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+      .join(" ");
   }
 
   function getShareableFeatures() {
@@ -1549,6 +1678,7 @@
     const totalCount = elements.shareEntryList.querySelectorAll(".share-entry-checkbox").length;
     elements.shareSummary.textContent = `${selectedCount} of ${totalCount} ${totalCount === 1 ? "entry" : "entries"} selected. Printed cities and towns are not included.`;
     elements.shareCopyBtn.disabled = selectedCount === 0;
+    elements.shareReportBtn.disabled = selectedCount === 0;
   }
 
   function setShareBusy(busy) {
@@ -1556,6 +1686,7 @@
       input.disabled = busy;
     });
     elements.shareCopyBtn.disabled = busy || !elements.shareEntryList.querySelector(".share-entry-checkbox:checked");
+    elements.shareReportBtn.disabled = busy || !elements.shareEntryList.querySelector(".share-entry-checkbox:checked");
     elements.shareCancelBtn.disabled = busy;
     elements.shareKeepBtn.disabled = busy;
     elements.shareSelectAllBtn.disabled = busy;
