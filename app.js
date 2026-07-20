@@ -201,9 +201,8 @@
     editorForm: document.getElementById("editorForm"),
     featureId: document.getElementById("featureId"),
     titleInput: document.getElementById("titleInput"),
+    categoryField: document.getElementById("categoryField"),
     categoryInput: document.getElementById("categoryInput"),
-    additionalCategoriesField: document.getElementById("additionalCategoriesField"),
-    additionalCategoriesInput: document.getElementById("additionalCategoriesInput"),
     confidenceInput: document.getElementById("confidenceInput"),
     rangeColorField: document.getElementById("rangeColorField"),
     rangeColorInput: document.getElementById("rangeColorInput"),
@@ -212,13 +211,6 @@
     saveFeatureBtn: document.getElementById("saveFeatureBtn"),
     deleteFeatureBtn: document.getElementById("deleteFeatureBtn"),
   };
-
-  categories.forEach((category) => {
-    const option = document.createElement("option");
-    option.value = category.id;
-    option.textContent = category.label;
-    elements.categoryInput.appendChild(option);
-  });
 
   let lastDragEndedAt = 0;
   let suppressNextClickUntil = 0;
@@ -333,12 +325,7 @@
       element.addEventListener("input", syncDraftFromEditor);
       element.addEventListener("change", syncDraftFromEditor);
     });
-    elements.categoryInput.addEventListener("change", () => {
-      const additionalCategories = getAdditionalCategoryIds();
-      renderAdditionalCategoryInputs(additionalCategories, false);
-      syncDraftFromEditor();
-    });
-    elements.additionalCategoriesInput.addEventListener("change", syncDraftFromEditor);
+    elements.categoryInput.addEventListener("change", handleCategorySelectionChange);
 
     elements.editorForm.addEventListener("submit", (event) => {
       event.preventDefault();
@@ -691,11 +678,12 @@
 
     if (feature.type === "marker") {
       const point = feature.points[0];
+      const mixed = getFeatureCategories(feature).length > 1;
       const marker = L.marker([point.y, point.x], {
         zIndexOffset: getFeatureZIndexOffset(feature, selected),
         icon: L.divIcon({
           className: "",
-          html: `<div class="poi-marker marker-${escapeHtml(feature.category)}${isGuildFeature(feature) ? " is-guild" : ""}${isCanonFeature(feature) ? " is-canon" : ""}${selected ? " is-selected" : ""}" style="--marker-color:${category.color}">${getCategoryIcon(feature.category)}</div>`,
+          html: `<div class="poi-marker marker-${escapeHtml(feature.category)}${mixed ? " is-mixed" : ""}${isGuildFeature(feature) ? " is-guild" : ""}${isCanonFeature(feature) ? " is-canon" : ""}${selected ? " is-selected" : ""}" style="${getFeatureMarkerStyle(feature)}">${getFeatureMarkerIcon(feature)}</div>`,
           iconSize: [32, 32],
           iconAnchor: [16, 32],
         }),
@@ -762,12 +750,11 @@
 
     if (state.mode === "marker") {
       const draft = getDraftFeature();
-      const markerCategory = categoryById[draft.category] || categoryById.landmark;
       const point = draft.points[0];
       L.marker([point.y, point.x], {
         icon: L.divIcon({
           className: "",
-          html: `<div class="poi-marker marker-${escapeHtml(draft.category)} is-draft" style="--marker-color:${markerCategory.color}">${getCategoryIcon(draft.category)}</div>`,
+          html: `<div class="poi-marker marker-${escapeHtml(draft.category)}${getFeatureCategories(draft).length > 1 ? " is-mixed" : ""} is-draft" style="${getFeatureMarkerStyle(draft)}">${getFeatureMarkerIcon(draft)}</div>`,
           iconSize: [32, 32],
           iconAnchor: [16, 32],
         }),
@@ -1022,7 +1009,7 @@
         button.innerHTML = `
           <strong>${escapeHtml(feature.title || category.label)}</strong>
           <span class="feature-meta">
-            <i class="swatch" style="background:${category.color}" aria-hidden="true"></i>
+            <i class="swatch" style="${getFeatureSwatchStyle(feature)}" aria-hidden="true"></i>
             ${escapeHtml(getFeatureCategoryLabel(feature))}
             ${isGuildFeature(feature) ? '<span class="source-badge">Guild</span>' : isCanonFeature(feature) ? '<span class="source-badge">Skyrim</span>' : ""}
             <span>${escapeHtml(getFeatureFreshnessLabel(feature))}</span>
@@ -1080,8 +1067,7 @@
         : "Choose a mark, trail, or range from the map or ledger.";
     elements.featureId.value = feature ? feature.id : "";
     elements.titleInput.value = feature ? feature.title : "";
-    elements.categoryInput.value = feature ? feature.category : "landmark";
-    renderAdditionalCategoryInputs(feature ? getFeatureCategories(feature).slice(1) : [], disabled);
+    renderCategoryInputs(feature ? getFeatureCategories(feature) : ["landmark"], disabled);
     elements.confidenceInput.value = feature ? feature.confidence : "scouted";
     const showRangeColor = Boolean(feature && feature.type === "range");
     elements.rangeColorField.hidden = !showRangeColor;
@@ -1096,8 +1082,7 @@
 
     [
       elements.titleInput,
-      elements.categoryInput,
-      elements.additionalCategoriesField,
+      elements.categoryField,
       elements.confidenceInput,
       elements.rangeColorInput,
       elements.notesInput,
@@ -1108,31 +1093,58 @@
     });
   }
 
-  function renderAdditionalCategoryInputs(selectedCategoryIds, disabled) {
-    const primaryCategory = elements.categoryInput.value || "landmark";
+  function renderCategoryInputs(selectedCategoryIds, disabled) {
     const selected = new Set(selectedCategoryIds);
-    elements.additionalCategoriesInput.innerHTML = "";
+    elements.categoryInput.innerHTML = "";
 
     categories
-      .filter((category) => category.id !== primaryCategory)
       .forEach((category) => {
         const label = document.createElement("label");
-        label.className = "additional-category-option";
+        label.className = "entry-category-option";
         label.innerHTML = `
           <input type="checkbox" value="${escapeHtml(category.id)}"${selected.has(category.id) ? " checked" : ""} />
           <i class="swatch" style="background:${category.color}" aria-hidden="true"></i>
           <span>${escapeHtml(category.label)}</span>
         `;
-        elements.additionalCategoriesInput.appendChild(label);
+        elements.categoryInput.appendChild(label);
       });
 
-    elements.additionalCategoriesField.disabled = disabled;
+    elements.categoryField.disabled = disabled;
   }
 
-  function getAdditionalCategoryIds() {
-    return Array.from(elements.additionalCategoriesInput.querySelectorAll('input[type="checkbox"]:checked')).map(
+  function getSelectedCategoryIds() {
+    return Array.from(elements.categoryInput.querySelectorAll('input[type="checkbox"]:checked')).map(
       (input) => input.value,
     );
+  }
+
+  function handleCategorySelectionChange(event) {
+    if (!event.target.matches('input[type="checkbox"]')) {
+      return;
+    }
+
+    const feature = getSelectedFeature();
+    if (
+      event.target.checked &&
+      event.target.value !== "landmark" &&
+      feature &&
+      feature.type === "marker" &&
+      state.draftFeature &&
+      feature.id === state.draftFeature.id
+    ) {
+      const landmarkInput = elements.categoryInput.querySelector('input[value="landmark"]');
+      if (landmarkInput) {
+        landmarkInput.checked = false;
+      }
+    }
+
+    if (!getSelectedCategoryIds().length) {
+      event.target.checked = true;
+      setStatus("Each entry needs at least one category");
+      return;
+    }
+
+    syncDraftFromEditor();
   }
 
   function selectFeature(id, additive = false) {
@@ -1380,6 +1392,27 @@
     ctx.fillStyle = category.color;
     ctx.fill();
     ctx.shadowColor = "transparent";
+    const markerColors = getFeatureCategoryColors(feature);
+    markerColors.forEach((color, index) => {
+      ctx.beginPath();
+      if (markerColors.length > 1) {
+        ctx.moveTo(point.x, point.y);
+      }
+      ctx.arc(
+        point.x,
+        point.y,
+        radius,
+        -Math.PI / 2 + (index * Math.PI * 2) / markerColors.length,
+        -Math.PI / 2 + ((index + 1) * Math.PI * 2) / markerColors.length,
+      );
+      if (markerColors.length > 1) {
+        ctx.closePath();
+      }
+      ctx.fillStyle = color;
+      ctx.fill();
+    });
+    ctx.beginPath();
+    ctx.arc(point.x, point.y, radius, 0, Math.PI * 2);
     ctx.lineWidth = (selected ? 3 : 2) * scale;
     ctx.strokeStyle = selected ? "#fff4d7" : "#efe3c2";
     ctx.stroke();
@@ -1537,7 +1570,7 @@
           <span class="share-entry-main">
             <span class="share-entry-title">${escapeHtml(feature.title || category.label)}</span>
             <span class="share-entry-meta">
-              <i class="swatch" style="background:${category.color}" aria-hidden="true"></i>
+              <i class="swatch" style="${getFeatureSwatchStyle(feature)}" aria-hidden="true"></i>
               ${escapeHtml(getFeatureCategoryLabel(feature))}
               ${isGuildFeature(feature) ? '<span class="source-badge">Guild</span>' : isCanonFeature(feature) ? '<span class="source-badge">Skyrim</span>' : ""}
               ${feature.creator ? `<span>Mapped by ${escapeHtml(feature.creator)}</span>` : ""}
@@ -1796,7 +1829,7 @@
           <span class="share-entry-main">
             <span class="share-entry-title">${escapeHtml(feature.title || category.label)}</span>
             <span class="share-entry-meta">
-              <i class="swatch" style="background:${category.color}" aria-hidden="true"></i>
+              <i class="swatch" style="${getFeatureSwatchStyle(feature)}" aria-hidden="true"></i>
               ${escapeHtml(getFeatureCategoryLabel(feature))}
               ${isGuildFeature(feature) ? '<span class="source-badge">Guild</span>' : ""}
               ${feature.creator ? `<span>Mapped by ${escapeHtml(feature.creator)}</span>` : ""}
@@ -2726,8 +2759,15 @@
 
   function applyEditorValues(feature) {
     feature.title = elements.titleInput.value.trim() || "Untitled";
-    feature.category = elements.categoryInput.value;
-    feature.categories = [feature.category, ...getAdditionalCategoryIds()];
+    const selectedCategories = getSelectedCategoryIds();
+    const currentPrimary = normalizeCategoryId(feature.category);
+    const typeCategory = feature.type === "route" ? "route" : feature.type === "range" ? "range" : "";
+    feature.category =
+      (typeCategory && selectedCategories.includes(typeCategory) && typeCategory) ||
+      (selectedCategories.includes(currentPrimary) && currentPrimary) ||
+      selectedCategories[0] ||
+      "landmark";
+    feature.categories = [feature.category, ...selectedCategories.filter((categoryId) => categoryId !== feature.category)];
     feature.confidence = elements.confidenceInput.value;
     if (feature.type === "range") {
       feature.color = normalizeHexColor(elements.rangeColorInput.value) || categoryById.range.color;
@@ -2909,6 +2949,32 @@
     return normalizeFeatureCategoryIds(feature && feature.categories, feature && feature.category);
   }
 
+  function getFeatureCategoryColors(feature) {
+    return getFeatureCategories(feature).map((categoryId) => (categoryById[categoryId] || categoryById.landmark).color);
+  }
+
+  function getFeatureMarkerFill(feature) {
+    const colors = getFeatureCategoryColors(feature);
+    if (colors.length < 2) {
+      return colors[0] || categoryById.landmark.color;
+    }
+
+    const segmentSize = 100 / colors.length;
+    const segments = colors
+      .map((color, index) => `${color} ${(index * segmentSize).toFixed(3)}% ${((index + 1) * segmentSize).toFixed(3)}%`)
+      .join(", ");
+    return `conic-gradient(from -90deg, ${segments})`;
+  }
+
+  function getFeatureMarkerStyle(feature) {
+    const primaryColor = (categoryById[feature.category] || categoryById.landmark).color;
+    return `--marker-color:${primaryColor};--marker-fill:${getFeatureMarkerFill(feature)}`;
+  }
+
+  function getFeatureSwatchStyle(feature) {
+    return `background:${getFeatureMarkerFill(feature)}`;
+  }
+
   function getFeatureCategoryLabel(feature) {
     return getFeatureCategories(feature)
       .map((categoryId) => (categoryById[categoryId] || categoryById.landmark).label)
@@ -3032,6 +3098,20 @@
       town: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V10l7-5 7 5v10z"/><path d="M10 20v-6h4v6"/><path d="M8 12h2M14 12h2"/></svg>',
     };
     return icons[category] || icons.landmark;
+  }
+
+  function getFeatureMarkerIcon(feature) {
+    const featureCategories = getFeatureCategories(feature);
+    if (featureCategories.length < 2) {
+      return getCategoryIcon(feature.category);
+    }
+
+    const icons = featureCategories
+      .slice(0, 2)
+      .map((categoryId) => `<span>${getCategoryIcon(categoryId)}</span>`)
+      .join("");
+    const remaining = featureCategories.length > 2 ? `<b>+${featureCategories.length - 2}</b>` : "";
+    return `<span class="mixed-marker-icons">${icons}</span>${remaining}`;
   }
 
   function truncate(value, length) {

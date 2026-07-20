@@ -994,7 +994,7 @@ textarea {
   background: rgba(213, 190, 143, 0.5);
 }
 
-.additional-categories-field {
+.entry-categories-field {
   min-width: 0;
   margin: 12px 0 0;
   padding: 8px;
@@ -1003,7 +1003,7 @@ textarea {
   background: rgba(255, 246, 222, 0.3);
 }
 
-.additional-categories-field legend {
+.entry-categories-field legend {
   padding: 0 5px;
   color: #694c2f;
   font-size: 0.74rem;
@@ -1012,11 +1012,18 @@ textarea {
   letter-spacing: 0.05em;
 }
 
-.additional-categories-field:disabled {
+.entry-categories-field > p {
+  margin: 0 0 7px;
+  color: var(--ink-soft);
+  font-size: 0.78rem;
+  line-height: 1.3;
+}
+
+.entry-categories-field:disabled {
   opacity: 0.56;
 }
 
-.additional-categories-input {
+.entry-category-input {
   max-height: 132px;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1025,7 +1032,7 @@ textarea {
   padding-right: 3px;
 }
 
-.additional-category-option {
+.entry-category-option {
   min-width: 0;
   min-height: 30px;
   display: grid;
@@ -1041,17 +1048,17 @@ textarea {
   line-height: 1.15;
 }
 
-.additional-category-option:hover {
+.entry-category-option:hover {
   border-color: rgba(33, 79, 50, 0.42);
   background: rgba(255, 246, 222, 0.66);
 }
 
-.additional-category-option input {
+.entry-category-option input {
   margin: 0;
   accent-color: var(--green);
 }
 
-.additional-category-option span {
+.entry-category-option span {
   min-width: 0;
   overflow-wrap: anywhere;
 }
@@ -1274,7 +1281,7 @@ textarea {
   border: 2px solid rgba(52, 31, 12, 0.75);
   border-radius: 50%;
   color: #fff6df;
-  background: var(--marker-color);
+  background: var(--marker-fill, var(--marker-color));
   box-shadow:
     inset 0 0 0 2px rgba(255, 240, 199, 0.18),
     0 3px 8px rgba(31, 19, 7, 0.36);
@@ -1345,6 +1352,34 @@ textarea {
   stroke-width: 1.9;
   stroke-linecap: round;
   stroke-linejoin: round;
+}
+
+.mixed-marker-icons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+}
+
+.poi-marker .mixed-marker-icons svg {
+  width: 12px;
+  height: 12px;
+  stroke-width: 2.2;
+}
+
+.poi-marker > b {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  min-width: 13px;
+  height: 13px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(52, 31, 12, 0.72);
+  border-radius: 50%;
+  color: #fff6df;
+  background: #3f3529;
+  font: 700 8px/1 Georgia, serif;
 }
 
 .poi-marker.marker-city svg {
