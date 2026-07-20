@@ -140,7 +140,10 @@
           </section>
 
           <section class="tool-section atlas-section">
-            <h2>Atlas</h2>
+            <div class="section-heading-row">
+              <h2>Atlas</h2>
+              <span id="atlasCount" class="atlas-count" aria-live="polite"></span>
+            </div>
             <label class="field-label" for="searchInput">Search</label>
             <input
               id="searchInput"
@@ -158,6 +161,13 @@
             />
             <label class="field-label" for="creatorFilterInput">Mapped By</label>
             <select id="creatorFilterInput" class="text-input"></select>
+            <div class="filter-heading">
+              <span>Categories</span>
+              <div class="filter-heading-actions">
+                <button id="filterAllBtn" class="quiet-action" type="button">Show all</button>
+                <button id="filterNoneBtn" class="quiet-action" type="button">Hide all</button>
+              </div>
+            </div>
             <div id="categoryFilters" class="filter-list" aria-label="Category filters"></div>
             <div id="featureList" class="feature-list"></div>
           </section>
@@ -182,48 +192,63 @@
       </div>
     </dialog>
 
-    <dialog id="helpDialog" class="field-note workflow-dialog">
+    <dialog id="helpDialog" class="field-note workflow-dialog help-dialog">
       <div class="field-note-inner">
         <button id="helpCloseBtn" class="field-note-close" type="button" aria-label="Close atlas instructions">&times;</button>
         <p class="field-note-kicker">Atlas Instructions</p>
         <h2>Using the Field Atlas</h2>
+        <p class="help-intro">Choose what you need to do, then follow the short steps. Your atlas saves automatically in this browser.</p>
         <div class="help-grid">
           <section class="help-step">
-            <h3>Add Entries</h3>
+            <div class="help-step-heading">
+              <span class="help-step-number" aria-hidden="true">1</span>
+              <h3>Add Entries</h3>
+            </div>
             <ol>
-              <li>Choose Mark, Trail, or Range.</li>
+              <li>Choose <strong>Mark</strong>, <strong>Trail</strong>, or <strong>Range</strong>.</li>
               <li>Place or draw on the map.</li>
               <li>Fill in title, category, confidence, and notes.</li>
-              <li>Use the map checkmark to keep it.</li>
+              <li>Use the <strong>checkmark beside the entry</strong> to keep it.</li>
             </ol>
           </section>
           <section class="help-step">
-            <h3>Find Entries</h3>
+            <div class="help-step-heading">
+              <span class="help-step-number" aria-hidden="true">2</span>
+              <h3>Find Entries</h3>
+            </div>
             <ol>
-              <li>Use Search, Mapped By, and category filters.</li>
-              <li>Click an entry in the Atlas list to zoom to it.</li>
-              <li>Press Escape to clear active filters.</li>
+              <li>Use <strong>Search</strong>, <strong>Mapped By</strong>, and the category filters.</li>
+              <li>Select an entry in the <strong>Atlas list</strong> to zoom to it.</li>
+              <li>Hold <kbd>Ctrl</kbd>, <kbd>Cmd</kbd>, or <kbd>Shift</kbd> while selecting to choose several entries.</li>
+              <li>Press <kbd>Esc</kbd> to clear active filters.</li>
             </ol>
           </section>
           <section class="help-step">
-            <h3>Share Entries</h3>
+            <div class="help-step-heading">
+              <span class="help-step-number" aria-hidden="true">3</span>
+              <h3>Share Entries</h3>
+            </div>
             <ol>
-              <li>Share Atlas creates a code containing the entries you choose.</li>
-              <li>Receive Atlas imports a code from another Ranger.</li>
-              <li>Choose Receive GUILD Atlas to pull the current official map from the server.</li>
-              <li>Choose Receive SKYRIM Locations to add vanilla map markers as reference points.</li>
-              <li>Save Image downloads a PNG of the current visible map.</li>
+              <li><strong>Share Atlas</strong> creates a code for the entries you choose, or a ready-to-post <strong>Field Report</strong>.</li>
+              <li><strong>Receive Atlas</strong> imports a code from another Ranger.</li>
+              <li><strong>Receive GUILD Atlas</strong> refreshes the official shared entries.</li>
+              <li><strong>Receive SKYRIM Locations</strong> adds vanilla map markers as reference points.</li>
+              <li><strong>Save Image</strong> downloads the current visible map as a PNG.</li>
             </ol>
           </section>
           <section class="help-step">
-            <h3>Clean Up</h3>
+            <div class="help-step-heading">
+              <span class="help-step-number" aria-hidden="true">4</span>
+              <h3>Clean Up</h3>
+            </div>
             <ol>
-              <li>Undo reverses recent changes.</li>
-              <li>Scrape Clean lets you remove custom entries, Skyrim reference locations, or everything on the map.</li>
-              <li>Use Undo if you scrape the wrong set.</li>
+              <li><strong>Undo</strong> reverses your most recent change.</li>
+              <li><strong>Scrape Clean</strong> removes chosen categories from custom entries, Skyrim references, or the entire map.</li>
+              <li>Use <strong>Undo</strong> immediately if you remove the wrong set.</li>
             </ol>
           </section>
         </div>
+        <p class="help-note"><strong>Map crowded?</strong> Zoom in for full Skyrim reference symbols, or use the category filters to narrow the view.</p>
       </div>
     </dialog>
 

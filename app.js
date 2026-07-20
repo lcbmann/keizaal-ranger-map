@@ -189,6 +189,9 @@
     creatorInput: document.getElementById("creatorInput"),
     searchInput: document.getElementById("searchInput"),
     creatorFilterInput: document.getElementById("creatorFilterInput"),
+    atlasCount: document.getElementById("atlasCount"),
+    filterAllBtn: document.getElementById("filterAllBtn"),
+    filterNoneBtn: document.getElementById("filterNoneBtn"),
     categoryFilters: document.getElementById("categoryFilters"),
     featureList: document.getElementById("featureList"),
     statusBar: document.getElementById("statusBar"),
@@ -225,6 +228,7 @@
     renderFilters();
     renderAll();
     bindEvents();
+    updateMapDensity();
     syncViewInputsFromState();
     [0, 100, 500, 1500, 3000].forEach((delay) => window.setTimeout(clearRestoredSearchInput, delay));
     setStatus("Ready");
@@ -318,6 +322,8 @@
       state.creatorFilter = event.target.value;
       renderAll();
     });
+    elements.filterAllBtn.addEventListener("click", () => setCategoryFilters(true));
+    elements.filterNoneBtn.addEventListener("click", () => setCategoryFilters(false));
 
     [elements.titleInput, elements.categoryInput, elements.confidenceInput, elements.rangeColorInput, elements.notesInput].forEach((element) => {
       element.addEventListener("input", syncDraftFromEditor);
@@ -344,6 +350,7 @@
         map.dragging.enable();
       }
     });
+    map.on("zoomend", updateMapDensity);
     map.on("dblclick", () => {
       if (state.mode === "route" || state.mode === "range") {
         finishDrawing();
@@ -981,6 +988,7 @@
   function renderFeatureList() {
     const features = getVisibleFeatures();
     elements.featureList.innerHTML = "";
+    elements.atlasCount.textContent = features.length === state.features.length ? `${features.length} entries` : `${features.length} of ${state.features.length}`;
 
     if (!features.length) {
       const empty = document.createElement("p");
@@ -1019,6 +1027,24 @@
         });
         elements.featureList.appendChild(button);
       });
+  }
+
+  function setCategoryFilters(visible) {
+    categories.forEach((category) => {
+      state.filters[category.id] = visible;
+    });
+    saveState();
+    renderFilters();
+    renderAll();
+    setStatus(visible ? "All categories shown" : "All categories hidden");
+  }
+
+  function updateMapDensity() {
+    const container = map.getContainer();
+    const zoom = map.getZoom();
+    container.classList.toggle("map-density-overview", zoom <= -1.5);
+    container.classList.toggle("map-density-mid", zoom > -1.5 && zoom < 0);
+    container.classList.toggle("map-density-detail", zoom >= 0);
   }
 
   function renderEditor() {
