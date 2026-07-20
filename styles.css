@@ -823,6 +823,68 @@ textarea {
   background: rgba(213, 190, 143, 0.5);
 }
 
+.additional-categories-field {
+  min-width: 0;
+  margin: 12px 0 0;
+  padding: 8px;
+  border: 1px solid rgba(72, 45, 17, 0.3);
+  border-radius: 3px;
+  background: rgba(255, 246, 222, 0.3);
+}
+
+.additional-categories-field legend {
+  padding: 0 5px;
+  color: #694c2f;
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.additional-categories-field:disabled {
+  opacity: 0.56;
+}
+
+.additional-categories-input {
+  max-height: 132px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px;
+  overflow-y: auto;
+  padding-right: 3px;
+}
+
+.additional-category-option {
+  min-width: 0;
+  min-height: 30px;
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
+  padding: 5px 6px;
+  border: 1px solid rgba(72, 45, 17, 0.2);
+  border-radius: 3px;
+  background: rgba(255, 246, 222, 0.4);
+  cursor: pointer;
+  font-size: 0.78rem;
+  line-height: 1.15;
+}
+
+.additional-category-option:hover {
+  border-color: rgba(33, 79, 50, 0.42);
+  background: rgba(255, 246, 222, 0.66);
+}
+
+.additional-category-option input {
+  margin: 0;
+  accent-color: var(--green);
+}
+
+.additional-category-option span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 .textarea {
   min-height: 112px;
   resize: vertical;

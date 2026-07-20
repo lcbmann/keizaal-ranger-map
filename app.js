@@ -200,6 +200,8 @@
     featureId: document.getElementById("featureId"),
     titleInput: document.getElementById("titleInput"),
     categoryInput: document.getElementById("categoryInput"),
+    additionalCategoriesField: document.getElementById("additionalCategoriesField"),
+    additionalCategoriesInput: document.getElementById("additionalCategoriesInput"),
     confidenceInput: document.getElementById("confidenceInput"),
     rangeColorField: document.getElementById("rangeColorField"),
     rangeColorInput: document.getElementById("rangeColorInput"),
@@ -325,10 +327,16 @@
     elements.filterAllBtn.addEventListener("click", () => setCategoryFilters(true));
     elements.filterNoneBtn.addEventListener("click", () => setCategoryFilters(false));
 
-    [elements.titleInput, elements.categoryInput, elements.confidenceInput, elements.rangeColorInput, elements.notesInput].forEach((element) => {
+    [elements.titleInput, elements.confidenceInput, elements.rangeColorInput, elements.notesInput].forEach((element) => {
       element.addEventListener("input", syncDraftFromEditor);
       element.addEventListener("change", syncDraftFromEditor);
     });
+    elements.categoryInput.addEventListener("change", () => {
+      const additionalCategories = getAdditionalCategoryIds();
+      renderAdditionalCategoryInputs(additionalCategories, false);
+      syncDraftFromEditor();
+    });
+    elements.additionalCategoriesInput.addEventListener("change", syncDraftFromEditor);
 
     elements.editorForm.addEventListener("submit", (event) => {
       event.preventDefault();
@@ -620,6 +628,7 @@
       id: crypto.randomUUID ? crypto.randomUUID() : `feature-${Date.now()}-${Math.random().toString(16).slice(2)}`,
       type: input.type,
       category: input.category,
+      categories: [input.category],
       title: input.title,
       confidence: "scouted",
       creator,
@@ -637,6 +646,7 @@
       id,
       type: "marker",
       category,
+      categories: [category],
       title,
       confidence: "confirmed",
       notes: city ? "Hold capital marked on the printed atlas." : "Town marked on the printed atlas.",
@@ -650,6 +660,7 @@
   function cloneFeature(feature) {
     return {
       ...feature,
+      categories: getFeatureCategories(feature),
       points: feature.points.map((point) => ({ ...point })),
     };
   }
@@ -861,7 +872,7 @@
       feature.updatedAt = new Date().toISOString();
       pushUndo("mark save");
       state.features.push(feature);
-      state.filters[feature.category] = true;
+      showFeatureCategories(feature);
       saveState();
       cancelDrawing(false, false);
       renderAll();
@@ -887,7 +898,7 @@
 
     pushUndo(`${isRange ? "range" : "trail"} save`);
     state.features.push(feature);
-    state.filters[feature.category] = true;
+    showFeatureCategories(feature);
     saveState();
     cancelDrawing(false, false);
     renderAll();
@@ -1010,7 +1021,7 @@
           <strong>${escapeHtml(feature.title || category.label)}</strong>
           <span class="feature-meta">
             <i class="swatch" style="background:${category.color}" aria-hidden="true"></i>
-            ${escapeHtml(category.label)}
+            ${escapeHtml(getFeatureCategoryLabel(feature))}
             ${isGuildFeature(feature) ? '<span class="source-badge">Guild</span>' : isCanonFeature(feature) ? '<span class="source-badge">Skyrim</span>' : ""}
             <span>${escapeHtml(getFeatureFreshnessLabel(feature))}</span>
           </span>
@@ -1039,6 +1050,13 @@
     setStatus(visible ? "All categories shown" : "All categories hidden");
   }
 
+  function showFeatureCategories(feature) {
+    getFeatureCategories(feature).forEach((categoryId) => {
+      state.filters[categoryId] = true;
+    });
+    renderFilters();
+  }
+
   function updateMapDensity() {
     const container = map.getContainer();
     const zoom = map.getZoom();
@@ -1061,6 +1079,7 @@
     elements.featureId.value = feature ? feature.id : "";
     elements.titleInput.value = feature ? feature.title : "";
     elements.categoryInput.value = feature ? feature.category : "landmark";
+    renderAdditionalCategoryInputs(feature ? getFeatureCategories(feature).slice(1) : [], disabled);
     elements.confidenceInput.value = feature ? feature.confidence : "scouted";
     const showRangeColor = Boolean(feature && feature.type === "range");
     elements.rangeColorField.hidden = !showRangeColor;
@@ -1076,6 +1095,7 @@
     [
       elements.titleInput,
       elements.categoryInput,
+      elements.additionalCategoriesField,
       elements.confidenceInput,
       elements.rangeColorInput,
       elements.notesInput,
@@ -1084,6 +1104,33 @@
     ].forEach((element) => {
       element.disabled = disabled;
     });
+  }
+
+  function renderAdditionalCategoryInputs(selectedCategoryIds, disabled) {
+    const primaryCategory = elements.categoryInput.value || "landmark";
+    const selected = new Set(selectedCategoryIds);
+    elements.additionalCategoriesInput.innerHTML = "";
+
+    categories
+      .filter((category) => category.id !== primaryCategory)
+      .forEach((category) => {
+        const label = document.createElement("label");
+        label.className = "additional-category-option";
+        label.innerHTML = `
+          <input type="checkbox" value="${escapeHtml(category.id)}"${selected.has(category.id) ? " checked" : ""} />
+          <i class="swatch" style="background:${category.color}" aria-hidden="true"></i>
+          <span>${escapeHtml(category.label)}</span>
+        `;
+        elements.additionalCategoriesInput.appendChild(label);
+      });
+
+    elements.additionalCategoriesField.disabled = disabled;
+  }
+
+  function getAdditionalCategoryIds() {
+    return Array.from(elements.additionalCategoriesInput.querySelectorAll('input[type="checkbox"]:checked')).map(
+      (input) => input.value,
+    );
   }
 
   function selectFeature(id, additive = false) {
@@ -1135,6 +1182,7 @@
 
     pushUndo(`${feature.title} edit`);
     applyEditorValues(feature);
+    showFeatureCategories(feature);
     stampFeatureUpdate(feature);
     feature.updatedAt = new Date().toISOString();
 
@@ -1488,7 +1536,7 @@
             <span class="share-entry-title">${escapeHtml(feature.title || category.label)}</span>
             <span class="share-entry-meta">
               <i class="swatch" style="background:${category.color}" aria-hidden="true"></i>
-              ${escapeHtml(category.label)}
+              ${escapeHtml(getFeatureCategoryLabel(feature))}
               ${isGuildFeature(feature) ? '<span class="source-badge">Guild</span>' : isCanonFeature(feature) ? '<span class="source-badge">Skyrim</span>' : ""}
               ${feature.creator ? `<span>Mapped by ${escapeHtml(feature.creator)}</span>` : ""}
             </span>
@@ -1623,7 +1671,7 @@
 
   function summarizeAtlasFeatures(features) {
     const typeCounts = countBy(features, (feature) => feature.type);
-    const categoryCounts = countBy(features, (feature) => (categoryById[feature.category] || categoryById.landmark).label);
+    const categoryCounts = countFeatureCategories(features);
     const confidenceCounts = countBy(features, (feature) => titleCase(feature.confidence || "scouted"));
     const creators = Array.from(new Set(features.map((feature) => feature.creator).filter(Boolean))).sort((a, b) => a.localeCompare(b));
 
@@ -1644,7 +1692,17 @@
     const title = feature.title || category.label;
     const confidence = feature.confidence ? `, ${feature.confidence}` : "";
     const creator = feature.creator ? `, by ${feature.creator}` : "";
-    return `${category.label}: ${title} (${featureTypeLabel(feature.type)}${confidence}${creator})`;
+    return `${getFeatureCategoryLabel(feature)}: ${title} (${featureTypeLabel(feature.type)}${confidence}${creator})`;
+  }
+
+  function countFeatureCategories(features) {
+    return features.reduce((counts, feature) => {
+      getFeatureCategories(feature).forEach((categoryId) => {
+        const label = (categoryById[categoryId] || categoryById.landmark).label;
+        counts[label] = (counts[label] || 0) + 1;
+      });
+      return counts;
+    }, {});
   }
 
   function featureTypeLabel(type) {
@@ -1737,7 +1795,7 @@
             <span class="share-entry-title">${escapeHtml(feature.title || category.label)}</span>
             <span class="share-entry-meta">
               <i class="swatch" style="background:${category.color}" aria-hidden="true"></i>
-              ${escapeHtml(category.label)}
+              ${escapeHtml(getFeatureCategoryLabel(feature))}
               ${isGuildFeature(feature) ? '<span class="source-badge">Guild</span>' : ""}
               ${feature.creator ? `<span>Mapped by ${escapeHtml(feature.creator)}</span>` : ""}
             </span>
@@ -2208,7 +2266,9 @@
   function renderClearCategories() {
     const clearFeatures = getClearEligibleFeatures();
     const countsByCategory = clearFeatures.reduce((counts, feature) => {
-      counts[feature.category] = (counts[feature.category] || 0) + 1;
+      getFeatureCategories(feature).forEach((categoryId) => {
+        counts[categoryId] = (counts[categoryId] || 0) + 1;
+      });
       return counts;
     }, {});
     elements.clearCategoryList.innerHTML = "";
@@ -2232,13 +2292,17 @@
   function clearAtlas() {
     const selectedCategories = getSelectedClearCategories();
     const clearScope = getClearScope();
-    const featuresToRemove = state.features.filter((feature) => shouldClearFeature(feature, clearScope) && selectedCategories.has(feature.category));
+    const featuresToRemove = state.features.filter(
+      (feature) => shouldClearFeature(feature, clearScope) && featureHasAnyCategory(feature, selectedCategories),
+    );
     if (!featuresToRemove.length) {
       return;
     }
 
     pushUndo(`scrape ${clearScope} categories`);
-    state.features = state.features.filter((feature) => !(shouldClearFeature(feature, clearScope) && selectedCategories.has(feature.category)));
+    state.features = state.features.filter(
+      (feature) => !(shouldClearFeature(feature, clearScope) && featureHasAnyCategory(feature, selectedCategories)),
+    );
     state.selectedId = null;
     state.selectedIds = [];
     saveState();
@@ -2263,7 +2327,9 @@
   function updateClearDialogState() {
     const selectedCategories = getSelectedClearCategories();
     const clearScope = getClearScope();
-    const selectedFeatures = state.features.filter((feature) => shouldClearFeature(feature, clearScope) && selectedCategories.has(feature.category));
+    const selectedFeatures = state.features.filter(
+      (feature) => shouldClearFeature(feature, clearScope) && featureHasAnyCategory(feature, selectedCategories),
+    );
     const eligibleFeatures = getClearEligibleFeatures(clearScope);
     const categoryCount = selectedCategories.size;
     const scopeLabel = getClearScopeLabel(clearScope);
@@ -2505,6 +2571,9 @@
       feature.creator || "",
       feature.updatedBy || "",
       feature.type === "range" ? normalizeHexColor(feature.color) : "",
+      getFeatureCategories(feature)
+        .slice(1)
+        .map((categoryId) => categoryCodes[categoryId] || categoryId),
     ];
   }
 
@@ -2528,10 +2597,15 @@
   }
 
   function decodeCompactFeature(value) {
+    const primaryCategory = categoryIdsByCode[value[2]] || value[2];
+    const additionalCategories = Array.isArray(value[12])
+      ? value[12].map((categoryId) => categoryIdsByCode[categoryId] || categoryId)
+      : [];
     return {
       id: decodeFeatureId(value[0]),
       type: typesByCode[value[1]] || value[1],
-      category: categoryIdsByCode[value[2]] || value[2],
+      category: primaryCategory,
+      categories: [primaryCategory, ...additionalCategories],
       title: value[3] || "Untitled",
       confidence: confidencesByCode[value[4]] || value[4] || "scouted",
       notes: value[5] || "",
@@ -2581,7 +2655,8 @@
   function getVisibleFeatures() {
     return state.features.filter((feature) => {
       const forcedVisible = isFeatureSelected(feature.id);
-      const categoryVisible = forcedVisible || state.filters[feature.category] !== false;
+      const featureCategories = getFeatureCategories(feature);
+      const categoryVisible = forcedVisible || featureCategories.some((categoryId) => state.filters[categoryId] !== false);
       if (!categoryVisible) {
         return false;
       }
@@ -2594,7 +2669,10 @@
         return true;
       }
 
-      const haystack = [feature.title, feature.category, feature.confidence, feature.creator, feature.notes]
+      const categorySearchText = featureCategories
+        .map((categoryId) => `${categoryId} ${(categoryById[categoryId] || categoryById.landmark).label}`)
+        .join(" ");
+      const haystack = [feature.title, categorySearchText, feature.confidence, feature.creator, feature.notes]
         .join(" ")
         .toLowerCase();
       return haystack.includes(state.search);
@@ -2638,6 +2716,7 @@
   function applyEditorValues(feature) {
     feature.title = elements.titleInput.value.trim() || "Untitled";
     feature.category = elements.categoryInput.value;
+    feature.categories = [feature.category, ...getAdditionalCategoryIds()];
     feature.confidence = elements.confidenceInput.value;
     if (feature.type === "range") {
       feature.color = normalizeHexColor(elements.rangeColorInput.value) || categoryById.range.color;
@@ -2784,11 +2863,13 @@
 
     return features.map((feature) => {
       const { ranger, timer, ...rest } = feature;
-      const category = categoryById[rest.category] ? rest.category : categoryAliases[rest.category] || "landmark";
+      const category = normalizeCategoryId(rest.category);
+      const featureCategories = normalizeFeatureCategoryIds(rest.categories, category);
       const source = rest.source === "guild" ? "guild" : rest.source === "canon" ? "canon" : rest.id && rest.id.startsWith("default-") ? "default" : "personal";
       return {
         ...rest,
         category,
+        categories: featureCategories,
         creator: normalizeCreatorName(rest.creator || ""),
         updatedBy: normalizeCreatorName(rest.updatedBy || ""),
         color: rest.type === "range" ? normalizeHexColor(rest.color) : "",
@@ -2801,6 +2882,30 @@
         ),
       };
     });
+  }
+
+  function normalizeCategoryId(categoryId) {
+    return categoryById[categoryId] ? categoryId : categoryAliases[categoryId] || "landmark";
+  }
+
+  function normalizeFeatureCategoryIds(categoryIds, primaryCategory) {
+    const primary = normalizeCategoryId(primaryCategory);
+    const candidates = Array.isArray(categoryIds) ? categoryIds : [];
+    return Array.from(new Set([primary, ...candidates.map(normalizeCategoryId)]));
+  }
+
+  function getFeatureCategories(feature) {
+    return normalizeFeatureCategoryIds(feature && feature.categories, feature && feature.category);
+  }
+
+  function getFeatureCategoryLabel(feature) {
+    return getFeatureCategories(feature)
+      .map((categoryId) => (categoryById[categoryId] || categoryById.landmark).label)
+      .join(" + ");
+  }
+
+  function featureHasAnyCategory(feature, categoryIds) {
+    return getFeatureCategories(feature).some((categoryId) => categoryIds.has(categoryId));
   }
 
   function isValidFeature(feature) {
@@ -2847,7 +2952,8 @@
 
   function getFeatureTooltip(feature, category) {
     const title = escapeHtml(feature.title || category.label);
-    return [title, getAttributionHtml(feature), `<span class="tooltip-meta">${escapeHtml(getFeatureFreshnessLabel(feature))}</span>`]
+    const categoryLabel = escapeHtml(getFeatureCategoryLabel(feature));
+    return [title, `<span class="tooltip-meta">${categoryLabel}</span>`, getAttributionHtml(feature), `<span class="tooltip-meta">${escapeHtml(getFeatureFreshnessLabel(feature))}</span>`]
       .filter(Boolean)
       .join("<br>");
   }
