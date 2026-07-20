@@ -143,6 +143,8 @@
     receiveDialog: document.getElementById("receiveDialog"),
     receiveCodeInput: document.getElementById("receiveCodeInput"),
     receivePreview: document.getElementById("receivePreview"),
+    receiveActions: document.getElementById("receiveActions"),
+    receiveActionHelp: document.getElementById("receiveActionHelp"),
     receiveStatus: document.getElementById("receiveStatus"),
     receiveGuildBtn: document.getElementById("receiveGuildBtn"),
     receiveSkyrimBtn: document.getElementById("receiveSkyrimBtn"),
@@ -290,7 +292,7 @@
     elements.receiveCodeInput.addEventListener("input", resetReceivePreview);
     elements.receiveGuildBtn.addEventListener("click", reviewGuildAtlasCode);
     elements.receiveSkyrimBtn.addEventListener("click", reviewSkyrimAtlasCode);
-    elements.receiveReviewBtn.addEventListener("click", reviewReceiveCode);
+    elements.receiveReviewBtn.addEventListener("click", () => reviewReceiveCode());
     elements.receiveMergeBtn.addEventListener("click", () => receiveShareCode(false));
     elements.receiveReplaceBtn.addEventListener("click", () => receiveShareCode(true));
     closeDialogOnBackdrop(elements.receiveDialog);
@@ -2007,7 +2009,7 @@
 
   function summarizeIncomingFeatures(features) {
     const existingIds = new Set(state.features.map((feature) => feature.id));
-    const customCount = state.features.filter((feature) => !isDefaultFeature(feature) && !isCanonFeature(feature)).length;
+    const customCount = state.features.filter(isPersonalFeature).length;
     const uniqueCreators = Array.from(new Set(features.map((feature) => feature.creator).filter(Boolean))).sort((a, b) => a.localeCompare(b));
     const typeCounts = features.reduce(
       (counts, feature) => {
@@ -2036,18 +2038,25 @@
     const creatorText = summary.uniqueCreators.length
       ? summary.uniqueCreators.slice(0, 4).join(", ") + (summary.uniqueCreators.length > 4 ? `, and ${summary.uniqueCreators.length - 4} more` : "")
       : "Unsigned";
+    const sourceLabel = summary.isGuildCode ? "Official GUILD Atlas" : summary.isSkyrimCode ? "Skyrim Locations" : "Shared Atlas Code";
+    const sourceNote = summary.isGuildCode
+      ? "Official entries will be refreshed. Personal notes and Skyrim references will stay."
+      : summary.isSkyrimCode
+        ? "Skyrim reference markers will be refreshed. Ranger and GUILD entries will stay."
+        : "Adding keeps your current entries. Replacing removes your personal entries first.";
     return `
-      <strong>${summary.features.length} ${summary.isGuildCode ? "official Guild" : summary.isSkyrimCode ? "Skyrim reference" : "received"} entries</strong>
-      <span>${escapeHtml(typeText)}</span>
-      <span>${escapeHtml(summary.newCount)} new, ${escapeHtml(summary.duplicateCount)} already on your atlas</span>
-      <span>Mapped by: ${escapeHtml(creatorText)}</span>
-      ${
-        summary.isGuildCode
-          ? "<span>Loading will refresh official Guild entries and leave personal notes alone.</span>"
-          : summary.isSkyrimCode
-            ? "<span>Loading will refresh vanilla Skyrim reference locations and leave Ranger notes alone.</span>"
-          : `<span>Replace would remove ${escapeHtml(summary.customCount)} current custom ${summary.customCount === 1 ? "entry" : "entries"} first.</span>`
-      }
+      <div class="receive-preview-heading">
+        <span>Preview ready</span>
+        <strong>${escapeHtml(sourceLabel)}</strong>
+      </div>
+      <div class="receive-preview-facts">
+        <span><strong>${summary.features.length}</strong> total</span>
+        <span><strong>${summary.newCount}</strong> new</span>
+        <span><strong>${summary.duplicateCount}</strong> already present</span>
+      </div>
+      <span class="receive-preview-detail">${escapeHtml(typeText)}</span>
+      <span class="receive-preview-detail">Mapped by: ${escapeHtml(creatorText)}</span>
+      <p>${escapeHtml(sourceNote)}</p>
     `;
   }
 
@@ -2056,7 +2065,6 @@
     elements.receiveStatus.textContent = "";
     resetReceivePreview();
     elements.receiveDialog.showModal();
-    window.setTimeout(() => elements.receiveCodeInput.focus(), 0);
   }
 
   function closeReceiveDialog() {
@@ -2068,27 +2076,28 @@
     state.pendingReceive = null;
     elements.receivePreview.hidden = true;
     elements.receivePreview.innerHTML = "";
-    elements.receiveMergeBtn.textContent = "Merge Entries";
+    elements.receiveActions.hidden = true;
+    elements.receiveActionHelp.textContent = "";
+    elements.receiveMergeBtn.textContent = "Add to My Atlas";
     elements.receiveReplaceBtn.hidden = false;
+    elements.receiveReplaceBtn.textContent = "Replace My Entries";
     elements.receiveMergeBtn.disabled = true;
     elements.receiveReplaceBtn.disabled = true;
     elements.receiveStatus.textContent = "";
   }
 
   function reviewGuildAtlasCode() {
-    elements.receiveCodeInput.value = GUILD_ATLAS_CODE;
     resetReceivePreview();
-    reviewReceiveCode();
+    reviewReceiveCode(GUILD_ATLAS_CODE);
   }
 
   function reviewSkyrimAtlasCode() {
-    elements.receiveCodeInput.value = SKYRIM_ATLAS_CODE;
     resetReceivePreview();
-    reviewReceiveCode();
+    reviewReceiveCode(SKYRIM_ATLAS_CODE);
   }
 
-  async function reviewReceiveCode() {
-    const code = elements.receiveCodeInput.value.trim();
+  async function reviewReceiveCode(sourceCode = "") {
+    const code = sourceCode || elements.receiveCodeInput.value.trim();
     if (!code) {
       elements.receiveStatus.textContent = "Paste a share code first.";
       return;
@@ -2124,15 +2133,17 @@
       state.pendingReceive = { features: nextFeatures, isGuildCode, isSkyrimCode, summary };
       elements.receivePreview.hidden = false;
       elements.receivePreview.innerHTML = renderReceivePreview(summary);
-      elements.receiveMergeBtn.textContent = isGuildCode ? "Receive GUILD Atlas" : isSkyrimCode ? "Receive SKYRIM Locations" : "Merge Entries";
+      elements.receiveActions.hidden = false;
+      elements.receiveMergeBtn.textContent = isGuildCode ? "Update Official Entries" : isSkyrimCode ? "Refresh Skyrim References" : "Add to My Atlas";
       elements.receiveReplaceBtn.hidden = isGuildCode || isSkyrimCode;
       elements.receiveMergeBtn.disabled = false;
       elements.receiveReplaceBtn.disabled = isGuildCode || isSkyrimCode;
-      elements.receiveStatus.textContent = isGuildCode
-        ? "Review the official entries, then receive them into your atlas."
+      elements.receiveActionHelp.textContent = isGuildCode
+        ? "This updates only entries from the official GUILD Atlas. Your own entries stay."
         : isSkyrimCode
-          ? "Review the vanilla Skyrim locations, then receive them as reference points."
-        : "Review the entries, then merge or replace.";
+          ? "This refreshes Skyrim reference markers without changing Ranger entries."
+          : `Add keeps your current entries. Replace removes your ${summary.customCount} personal ${summary.customCount === 1 ? "entry" : "entries"} first.`;
+      elements.receiveStatus.textContent = "";
     } catch (error) {
       console.error(error);
       resetReceivePreview();
