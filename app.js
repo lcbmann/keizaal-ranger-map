@@ -205,6 +205,7 @@
     categoryInput: document.getElementById("categoryInput"),
     confidenceInput: document.getElementById("confidenceInput"),
     rangeColorField: document.getElementById("rangeColorField"),
+    rangeColorLabel: document.getElementById("rangeColorLabel"),
     rangeColorInput: document.getElementById("rangeColorInput"),
     creatorMeta: document.getElementById("creatorMeta"),
     notesInput: document.getElementById("notesInput"),
@@ -710,31 +711,100 @@
     });
     layer.on("click", (event) => selectFeature(feature.id, isAdditiveSelectionEvent(event.originalEvent)));
     layer.bindTooltip(getFeatureTooltip(feature, category));
-    return layer;
+    const symbol = createGeometrySymbolLayer(feature, getPolygonCentroid(feature.points), selected);
+    return L.layerGroup([layer, symbol]);
   }
 
   function createRouteLayer(latLngs, category, selected, feature) {
+    const routeColor = getFeatureColor(feature, category);
     const underlay = L.polyline(latLngs, {
-      color: "#efe3c2",
-      weight: selected ? 10 : 8,
-      opacity: 0.55,
+      color: "#f5e8c9",
+      weight: selected ? 13 : 11,
+      opacity: 0.72,
       lineCap: "round",
       lineJoin: "round",
     });
     const ink = L.polyline(latLngs, {
-      color: category.color,
-      weight: selected ? 4 : 3,
-      opacity: selected ? 0.96 : 0.84,
-      dashArray: "18 16 4 16",
+      color: routeColor,
+      weight: selected ? 5 : 4,
+      opacity: selected ? 0.98 : 0.92,
+      dashArray: "24 12 5 12",
       lineCap: "round",
       lineJoin: "round",
     });
-    const group = L.layerGroup([underlay, ink]);
     [underlay, ink].forEach((layer) => {
       layer.on("click", (event) => selectFeature(feature.id, isAdditiveSelectionEvent(event.originalEvent)));
       layer.bindTooltip(getFeatureTooltip(feature, category));
     });
+    const symbol = createGeometrySymbolLayer(feature, getLineMidpoint(feature.points), selected);
+    const group = L.layerGroup([underlay, ink, symbol]);
     return group;
+  }
+
+  function createGeometrySymbolLayer(feature, point, selected) {
+    const isRange = feature.type === "range";
+    const category = categoryById[feature.category] || categoryById[isRange ? "range" : "route"];
+    const color = getFeatureColor(feature, category);
+    const symbol = L.marker([point.y, point.x], {
+      interactive: feature.id !== "draft",
+      zIndexOffset: selected ? 700 : 420,
+      icon: L.divIcon({
+        className: "",
+        html: `<div class="geometry-symbol geometry-symbol-${isRange ? "range" : "route"}${selected ? " is-selected" : ""}" style="--geometry-color:${color}">${getCategoryIcon(isRange ? "range" : "route")}</div>`,
+        iconSize: [38, 38],
+        iconAnchor: [19, 19],
+      }),
+    });
+    if (feature.id !== "draft") {
+      symbol.on("click", (event) => selectFeature(feature.id, isAdditiveSelectionEvent(event.originalEvent)));
+    }
+    symbol.bindTooltip(getFeatureTooltip(feature, category));
+    return symbol;
+  }
+
+  function getLineMidpoint(points) {
+    if (points.length < 2) {
+      return points[0] || { x: 0, y: 0 };
+    }
+
+    let totalLength = 0;
+    for (let index = 1; index < points.length; index += 1) {
+      totalLength += Math.hypot(points[index].x - points[index - 1].x, points[index].y - points[index - 1].y);
+    }
+
+    let distance = totalLength / 2;
+    for (let index = 1; index < points.length; index += 1) {
+      const start = points[index - 1];
+      const end = points[index];
+      const segmentLength = Math.hypot(end.x - start.x, end.y - start.y);
+      if (distance <= segmentLength) {
+        const ratio = segmentLength ? distance / segmentLength : 0;
+        return { x: start.x + (end.x - start.x) * ratio, y: start.y + (end.y - start.y) * ratio };
+      }
+      distance -= segmentLength;
+    }
+    return points[points.length - 1];
+  }
+
+  function getPolygonCentroid(points) {
+    let areaTwice = 0;
+    let centroidX = 0;
+    let centroidY = 0;
+    points.forEach((point, index) => {
+      const next = points[(index + 1) % points.length];
+      const cross = point.x * next.y - next.x * point.y;
+      areaTwice += cross;
+      centroidX += (point.x + next.x) * cross;
+      centroidY += (point.y + next.y) * cross;
+    });
+
+    if (Math.abs(areaTwice) < 0.001) {
+      return points.reduce(
+        (center, point) => ({ x: center.x + point.x / points.length, y: center.y + point.y / points.length }),
+        { x: 0, y: 0 },
+      );
+    }
+    return { x: centroidX / (3 * areaTwice), y: centroidY / (3 * areaTwice) };
   }
 
   function renderDraft() {
@@ -782,22 +852,29 @@
     addDraftMapControls(state.drawPoints[state.drawPoints.length - 1]);
 
     if (state.drawPoints.length > 1) {
+      const draftGeometry = {
+        id: "draft",
+        title: state.mode === "range" ? "Draft range" : "Draft trail",
+        type: state.mode === "range" ? "range" : "route",
+        category: state.mode === "range" ? "range" : "route",
+        color: category.color,
+        points: state.drawPoints,
+      };
       const layer =
         state.mode === "range"
-          ? L.polygon(latLngs, {
-              color: category.color,
-              weight: 2.5,
-              fillColor: category.color,
-              fillOpacity: 0.14,
-              dashArray: "8 10",
-              lineCap: "round",
-              lineJoin: "round",
-            })
-          : createRouteLayer(latLngs, category, true, {
-              id: "draft",
-              title: "Draft trail",
-              category: "route",
-            });
+          ? L.layerGroup([
+              L.polygon(latLngs, {
+                color: category.color,
+                weight: 2.5,
+                fillColor: category.color,
+                fillOpacity: 0.14,
+                dashArray: "8 10",
+                lineCap: "round",
+                lineJoin: "round",
+              }),
+              createGeometrySymbolLayer(draftGeometry, getPolygonCentroid(state.drawPoints), true),
+            ])
+          : createRouteLayer(latLngs, category, true, draftGeometry);
       layer.addTo(draftLayer);
       state.draftLayer = layer;
     }
@@ -1069,8 +1146,9 @@
     elements.titleInput.value = feature ? feature.title : "";
     renderCategoryInputs(feature ? getFeatureCategories(feature) : ["landmark"], disabled);
     elements.confidenceInput.value = feature ? feature.confidence : "scouted";
-    const showRangeColor = Boolean(feature && feature.type === "range");
-    elements.rangeColorField.hidden = !showRangeColor;
+    const showGeometryColor = Boolean(feature && (feature.type === "range" || feature.type === "route"));
+    elements.rangeColorField.hidden = !showGeometryColor;
+    elements.rangeColorLabel.textContent = feature && feature.type === "route" ? "Trail Color" : "Range Color";
     elements.rangeColorInput.value = feature ? getFeatureColor(feature, categoryById[feature.category] || categoryById.range) : categoryById.range.color;
     elements.creatorMeta.innerHTML = feature ? getAttributionHtml(feature) : "";
     elements.creatorMeta.hidden = !feature || !elements.creatorMeta.innerHTML;
@@ -1350,6 +1428,7 @@
     ctx.lineWidth = (isFeatureSelected(feature.id) ? 4 : 2.5) * scale;
     ctx.lineJoin = "round";
     ctx.stroke();
+    drawExportGeometrySymbol(ctx, feature, mapPointToExport(getPolygonCentroid(feature.points), bounds, width, height), scale);
     ctx.restore();
   }
 
@@ -1361,19 +1440,68 @@
 
     ctx.save();
     drawExportPath(ctx, points);
-    ctx.strokeStyle = "#efe3c2";
-    ctx.globalAlpha = 0.55;
-    ctx.lineWidth = (isFeatureSelected(feature.id) ? 10 : 8) * scale;
+    ctx.strokeStyle = "#f5e8c9";
+    ctx.globalAlpha = 0.72;
+    ctx.lineWidth = (isFeatureSelected(feature.id) ? 13 : 11) * scale;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
     ctx.stroke();
 
     drawExportPath(ctx, points);
-    ctx.strokeStyle = category.color;
-    ctx.globalAlpha = isFeatureSelected(feature.id) ? 0.96 : 0.84;
-    ctx.lineWidth = (isFeatureSelected(feature.id) ? 4 : 3) * scale;
-    ctx.setLineDash([18 * scale, 16 * scale, 4 * scale, 16 * scale]);
+    ctx.strokeStyle = getFeatureColor(feature, category);
+    ctx.globalAlpha = isFeatureSelected(feature.id) ? 0.98 : 0.92;
+    ctx.lineWidth = (isFeatureSelected(feature.id) ? 5 : 4) * scale;
+    ctx.setLineDash([24 * scale, 12 * scale, 5 * scale, 12 * scale]);
     ctx.stroke();
+    drawExportGeometrySymbol(ctx, feature, mapPointToExport(getLineMidpoint(feature.points), bounds, width, height), scale);
+    ctx.restore();
+  }
+
+  function drawExportGeometrySymbol(ctx, feature, point, scale) {
+    const category = categoryById[feature.category] || categoryById[feature.type === "range" ? "range" : "route"];
+    const color = getFeatureColor(feature, category);
+    const radius = 13 * scale;
+    ctx.save();
+    ctx.globalAlpha = 1;
+    ctx.setLineDash([]);
+    ctx.shadowColor = "rgba(24, 15, 7, 0.34)";
+    ctx.shadowBlur = 5 * scale;
+    ctx.shadowOffsetY = 2 * scale;
+    ctx.beginPath();
+    ctx.arc(point.x, point.y, radius, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(248, 238, 210, 0.94)";
+    ctx.fill();
+    ctx.shadowColor = "transparent";
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2 * scale;
+    ctx.stroke();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2.2 * scale;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+
+    if (feature.type === "range") {
+      ctx.beginPath();
+      for (let index = 0; index < 6; index += 1) {
+        const angle = -Math.PI / 2 + (index * Math.PI) / 3;
+        const x = point.x + Math.cos(angle) * 6 * scale;
+        const y = point.y + Math.sin(angle) * 6 * scale;
+        index === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.stroke();
+      ctx.strokeRect(point.x - 2.5 * scale, point.y - 2 * scale, 5 * scale, 4 * scale);
+    } else {
+      ctx.beginPath();
+      ctx.moveTo(point.x - 6 * scale, point.y + 5 * scale);
+      ctx.bezierCurveTo(point.x - 2 * scale, point.y - 6 * scale, point.x + 2 * scale, point.y + 6 * scale, point.x + 6 * scale, point.y - 5 * scale);
+      ctx.stroke();
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(point.x - 6 * scale, point.y + 5 * scale, 1.8 * scale, 0, Math.PI * 2);
+      ctx.arc(point.x + 6 * scale, point.y - 5 * scale, 1.8 * scale, 0, Math.PI * 2);
+      ctx.fill();
+    }
     ctx.restore();
   }
 
@@ -2614,7 +2742,7 @@
       encodeDate(feature.updatedAt),
       feature.creator || "",
       feature.updatedBy || "",
-      feature.type === "range" ? normalizeHexColor(feature.color) : "",
+      feature.type === "range" || feature.type === "route" ? normalizeHexColor(feature.color) : "",
       getFeatureCategories(feature)
         .slice(1)
         .map((categoryId) => categoryCodes[categoryId] || categoryId),
@@ -2769,8 +2897,8 @@
       "landmark";
     feature.categories = [feature.category, ...selectedCategories.filter((categoryId) => categoryId !== feature.category)];
     feature.confidence = elements.confidenceInput.value;
-    if (feature.type === "range") {
-      feature.color = normalizeHexColor(elements.rangeColorInput.value) || categoryById.range.color;
+    if (feature.type === "range" || feature.type === "route") {
+      feature.color = normalizeHexColor(elements.rangeColorInput.value) || (categoryById[feature.category] || categoryById.range).color;
     } else {
       delete feature.color;
     }
@@ -2923,7 +3051,7 @@
         categories: featureCategories,
         creator: normalizeCreatorName(rest.creator || ""),
         updatedBy: normalizeCreatorName(rest.updatedBy || ""),
-        color: rest.type === "range" ? normalizeHexColor(rest.color) : "",
+        color: rest.type === "range" || rest.type === "route" ? normalizeHexColor(rest.color) : "",
         source,
         points: rest.points.map((point) =>
         clampPoint({
@@ -3016,7 +3144,7 @@
   }
 
   function getFeatureColor(feature, category) {
-    if (feature.type === "range") {
+    if (feature.type === "range" || feature.type === "route") {
       return normalizeHexColor(feature.color) || category.color;
     }
     return category.color;

@@ -1272,6 +1272,41 @@ textarea {
   overflow-wrap: anywhere;
 }
 
+.geometry-symbol {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--geometry-color);
+  border-radius: 50%;
+  color: var(--geometry-color);
+  background: rgba(248, 238, 210, 0.94);
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 250, 231, 0.65),
+    0 2px 7px rgba(31, 19, 7, 0.38);
+  transition: transform 140ms ease, filter 140ms ease;
+}
+
+.geometry-symbol-range {
+  border-radius: 7px;
+}
+
+.geometry-symbol.is-selected {
+  outline: 3px solid rgba(255, 237, 183, 0.76);
+  outline-offset: 2px;
+  filter: brightness(1.04);
+}
+
+.geometry-symbol svg {
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.1;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .poi-marker {
   position: relative;
   display: grid;
