@@ -86,6 +86,7 @@
   const state = {
     features: [],
     filters: Object.fromEntries(categories.map((category) => [category.id, true])),
+    showLabels: false,
     search: "",
     creatorFilter: "",
     selectedId: null,
@@ -130,6 +131,7 @@
   ]);
 
   const featureLayer = L.layerGroup().addTo(map);
+  const labelLayer = L.layerGroup().addTo(map);
   const draftLayer = L.layerGroup().addTo(map);
 
   const elements = {
@@ -140,6 +142,7 @@
     helpBtn: document.getElementById("helpBtn"),
     helpDialog: document.getElementById("helpDialog"),
     helpCloseBtn: document.getElementById("helpCloseBtn"),
+    showLabelsInput: document.getElementById("showLabelsInput"),
     receiveDialog: document.getElementById("receiveDialog"),
     receiveCodeInput: document.getElementById("receiveCodeInput"),
     receivePreview: document.getElementById("receivePreview"),
@@ -259,6 +262,13 @@
     elements.helpBtn.addEventListener("click", () => elements.helpDialog.showModal());
     elements.helpCloseBtn.addEventListener("click", () => elements.helpDialog.close());
     closeDialogOnBackdrop(elements.helpDialog);
+    elements.showLabelsInput.addEventListener("change", (event) => {
+      state.showLabels = event.target.checked;
+      saveState();
+      renderAll();
+      renderDraft();
+      setStatus(state.showLabels ? "Location names shown" : "Location names hidden");
+    });
 
     elements.undoBtn.addEventListener("click", undoLastAction);
     elements.guildAdminBtn.addEventListener("click", openGuildPublishDialog);
@@ -412,6 +422,8 @@
           state.filters[category.id] = saved.filters[category.id] !== false;
         });
       }
+      state.showLabels = saved.showLabels === true;
+      elements.showLabelsInput.checked = state.showLabels;
       state.creatorName = normalizeCreatorName(saved.creatorName || "");
       elements.creatorInput.value = state.creatorName;
       syncViewInputsFromState();
@@ -434,6 +446,7 @@
       savedAt: new Date().toISOString(),
       defaultsVersion: DEFAULT_FEATURES_VERSION,
       filters: state.filters,
+      showLabels: state.showLabels,
       creatorName: state.creatorName,
       features: state.features,
     };
@@ -658,6 +671,7 @@
   function renderAll() {
     renderCreatorFilter();
     featureLayer.clearLayers();
+    labelLayer.clearLayers();
 
     getVisibleFeatures()
       .slice()
@@ -667,10 +681,35 @@
         if (layer) {
           featureLayer.addLayer(layer);
         }
+        if (state.showLabels) {
+          labelLayer.addLayer(createFeatureLabelLayer(feature));
+        }
       });
 
     renderFeatureList();
     renderEditor();
+  }
+
+  function createFeatureLabelLayer(feature) {
+    const category = categoryById[feature.category] || categoryById.landmark;
+    const point = feature.type === "marker"
+      ? feature.points[0]
+      : feature.type === "range"
+        ? getPolygonCentroid(feature.points)
+        : getLineMidpoint(feature.points);
+    const title = truncate(feature.title || category.label, 60);
+    const sourceClass = isCanonFeature(feature) ? " is-canon" : isGuildFeature(feature) ? " is-guild" : "";
+    return L.marker([point.y, point.x], {
+      interactive: false,
+      keyboard: false,
+      zIndexOffset: 1200,
+      icon: L.divIcon({
+        className: "",
+        html: `<div class="map-location-label${sourceClass}">${escapeHtml(title)}</div>`,
+        iconSize: [1, 1],
+        iconAnchor: [0, 0],
+      }),
+    });
   }
 
   function createLayer(feature) {
@@ -829,6 +868,9 @@
           iconAnchor: [16, 32],
         }),
       }).addTo(draftLayer);
+      if (state.showLabels) {
+        createFeatureLabelLayer(draft).addTo(draftLayer);
+      }
       addDraftMapControls(point);
       state.draftLayer = draftLayer;
       return;
@@ -873,8 +915,12 @@
                 lineJoin: "round",
               }),
               createGeometrySymbolLayer(draftGeometry, getPolygonCentroid(state.drawPoints), true),
+              ...(state.showLabels ? [createFeatureLabelLayer(draftGeometry)] : []),
             ])
-          : createRouteLayer(latLngs, category, true, draftGeometry);
+          : L.layerGroup([
+              createRouteLayer(latLngs, category, true, draftGeometry),
+              ...(state.showLabels ? [createFeatureLabelLayer(draftGeometry)] : []),
+            ]);
       layer.addTo(draftLayer);
       state.draftLayer = layer;
     }
@@ -1428,7 +1474,11 @@
     ctx.lineWidth = (isFeatureSelected(feature.id) ? 4 : 2.5) * scale;
     ctx.lineJoin = "round";
     ctx.stroke();
-    drawExportGeometrySymbol(ctx, feature, mapPointToExport(getPolygonCentroid(feature.points), bounds, width, height), scale);
+    const labelPoint = mapPointToExport(getPolygonCentroid(feature.points), bounds, width, height);
+    drawExportGeometrySymbol(ctx, feature, labelPoint, scale);
+    if (state.showLabels) {
+      drawExportLabel(ctx, feature.title || category.label, labelPoint.x, labelPoint.y - 18 * scale, scale);
+    }
     ctx.restore();
   }
 
@@ -1453,7 +1503,11 @@
     ctx.lineWidth = (isFeatureSelected(feature.id) ? 5 : 4) * scale;
     ctx.setLineDash([24 * scale, 12 * scale, 5 * scale, 12 * scale]);
     ctx.stroke();
-    drawExportGeometrySymbol(ctx, feature, mapPointToExport(getLineMidpoint(feature.points), bounds, width, height), scale);
+    const labelPoint = mapPointToExport(getLineMidpoint(feature.points), bounds, width, height);
+    drawExportGeometrySymbol(ctx, feature, labelPoint, scale);
+    if (state.showLabels) {
+      drawExportLabel(ctx, feature.title || category.label, labelPoint.x, labelPoint.y - 18 * scale, scale);
+    }
     ctx.restore();
   }
 
@@ -1509,8 +1563,6 @@
     const point = mapPointToExport(feature.points[0], bounds, width, height);
     const selected = isFeatureSelected(feature.id);
     const radius = (isDefaultFeature(feature) ? 6 : selected ? 11 : 9) * scale;
-    const labelVisible = (!isDefaultFeature(feature) && !isCanonFeature(feature)) || selected || map.getZoom() >= -0.75;
-
     ctx.save();
     ctx.shadowColor = "rgba(24, 15, 7, 0.34)";
     ctx.shadowBlur = 5 * scale;
@@ -1549,8 +1601,8 @@
     ctx.fillStyle = "rgba(255, 246, 222, 0.76)";
     ctx.fill();
 
-    if (labelVisible) {
-      drawExportLabel(ctx, feature.title || category.label, point.x + radius + 5 * scale, point.y, scale);
+    if (state.showLabels) {
+      drawExportLabel(ctx, feature.title || category.label, point.x, point.y - radius - 4 * scale, scale);
     }
     ctx.restore();
   }
@@ -1576,16 +1628,17 @@
     const metrics = ctx.measureText(label);
     const width = metrics.width + paddingX * 2;
     const height = fontSize + paddingY * 2;
-    const labelY = y - height / 2;
+    const labelX = Math.max(4 * scale, Math.min(x - width / 2, ctx.canvas.width - width - 4 * scale));
+    const labelY = Math.max(4 * scale, y - height);
 
     ctx.fillStyle = "rgba(246, 235, 208, 0.86)";
     ctx.strokeStyle = "rgba(72, 45, 17, 0.42)";
     ctx.lineWidth = 1 * scale;
-    drawRoundedRectPath(ctx, x, labelY, width, height, 3 * scale);
+    drawRoundedRectPath(ctx, labelX, labelY, width, height, 3 * scale);
     ctx.fill();
     ctx.stroke();
     ctx.fillStyle = "#24190f";
-    ctx.fillText(label, x + paddingX, labelY + paddingY + fontSize * 0.78);
+    ctx.fillText(label, labelX + paddingX, labelY + paddingY + fontSize * 0.78);
   }
 
   function drawRoundedRectPath(ctx, x, y, width, height, radius) {

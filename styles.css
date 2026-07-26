@@ -425,6 +425,60 @@ textarea {
   font-size: 0.86rem;
 }
 
+.help-display-settings {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-top: 10px;
+  padding: 12px 14px;
+  border: 1px solid rgba(72, 45, 17, 0.25);
+  border-radius: 3px;
+  background: rgba(255, 246, 222, 0.48);
+}
+
+.help-display-kicker {
+  margin: 0 0 3px;
+  color: #6b5135;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.help-display-settings h3 {
+  margin: 0;
+  color: #3b2816;
+  font-size: 0.92rem;
+}
+
+.help-display-settings p:last-child {
+  max-width: 48ch;
+  margin: 4px 0 0;
+  color: #493520;
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.setting-toggle {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 8px;
+  color: #244d33;
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.setting-toggle input {
+  width: 17px;
+  height: 17px;
+  accent-color: #2b5c3e;
+}
+
 .workflow-dialog.help-dialog {
   width: min(700px, calc(100vw - 32px));
 }
@@ -1425,6 +1479,43 @@ textarea {
 .poi-marker.is-selected {
   outline: 3px solid rgba(255, 237, 183, 0.68);
   outline-offset: 2px;
+}
+
+.map-location-label {
+  position: relative;
+  display: table;
+  width: max-content;
+  max-width: 190px;
+  overflow: hidden;
+  padding: 3px 7px;
+  border: 1px solid rgba(72, 45, 17, 0.48);
+  border-radius: 3px;
+  color: #24190f;
+  background: rgba(246, 235, 208, 0.9);
+  box-shadow: 0 3px 9px rgba(24, 15, 7, 0.28);
+  font: 700 12px/1.15 Georgia, "Times New Roman", serif;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transform: translate(-50%, calc(-100% - 8px));
+}
+
+.map-location-label::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -5px;
+  width: 8px;
+  height: 8px;
+  border-right: 1px solid rgba(72, 45, 17, 0.48);
+  border-bottom: 1px solid rgba(72, 45, 17, 0.48);
+  background: rgba(246, 235, 208, 0.9);
+  transform: translateX(-50%) rotate(45deg);
+  z-index: -1;
+}
+
+.map-location-label.is-canon {
+  opacity: 0.78;
 }
 
 .poi-marker.is-draft {
