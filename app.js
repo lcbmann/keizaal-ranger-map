@@ -401,7 +401,22 @@
       setStatus(state.showLabels ? "Location names shown" : "Location names hidden");
     });
     elements.livePositionInput.addEventListener("change", (event) => {
-      state.livePositionEnabled = event.target.checked;
+      const enabled = event.target.checked;
+      if (enabled && !getCurrentCreatorName()) {
+        event.target.checked = false;
+        setStatus("Enter your Ranger name before connecting to Skyrim");
+        elements.creatorInput.focus();
+        return;
+      }
+      if (enabled && !isSupabaseConfigured()) {
+        event.target.checked = false;
+        setStatus("Supabase is not configured, so live position cannot be shared");
+        return;
+      }
+
+      state.livePositionEnabled = enabled;
+      state.sharePositionEnabled = enabled;
+      elements.sharePositionInput.checked = enabled;
       saveState();
       if (state.livePositionEnabled) {
         startLivePositionPolling();
@@ -409,11 +424,7 @@
       } else {
         state.followLivePosition = false;
         elements.followLivePositionInput.checked = false;
-        if (state.sharePositionEnabled) {
-          state.sharePositionEnabled = false;
-          elements.sharePositionInput.checked = false;
-          void removeSharedLivePosition();
-        }
+        void removeSharedLivePosition();
         stopLivePositionPolling();
         setStatus("Live position hidden");
       }
@@ -509,10 +520,24 @@
         setStatus("Trailmark visit recording stopped because Signed As is empty");
       }
       if (!state.creatorName && state.sharePositionEnabled) {
+        state.livePositionEnabled = false;
         state.sharePositionEnabled = false;
+        elements.livePositionInput.checked = false;
         elements.sharePositionInput.checked = false;
         void removeSharedLivePosition();
+        stopLivePositionPolling();
         setStatus("Position sharing stopped because Signed As is empty");
+      }
+      if (
+        state.creatorName
+        && !state.livePositionEnabled
+        && isSupabaseConfigured()
+      ) {
+        state.livePositionEnabled = true;
+        state.sharePositionEnabled = true;
+        elements.livePositionInput.checked = true;
+        elements.sharePositionInput.checked = true;
+        startLivePositionPolling();
       }
       saveState();
       updateTrailmarkVisitControls();
@@ -646,7 +671,15 @@
       elements.followLivePositionInput.checked = state.followLivePosition;
       state.creatorName = normalizeCreatorName(saved.creatorName || "");
       elements.creatorInput.value = state.creatorName;
-      state.sharePositionEnabled = saved.sharePositionEnabled === true && Boolean(state.creatorName);
+      state.sharePositionEnabled = Boolean(state.creatorName)
+        && isSupabaseConfigured()
+        && state.livePositionEnabled;
+      if (state.livePositionEnabled && !state.sharePositionEnabled) {
+        state.livePositionEnabled = false;
+        elements.livePositionInput.checked = false;
+        shouldSave = true;
+      }
+      state.sharePositionEnabled = state.livePositionEnabled;
       elements.sharePositionInput.checked = state.sharePositionEnabled;
       state.trailmarkVisitsEnabled = saved.trailmarkVisitsEnabled === true && Boolean(state.creatorName);
       elements.trailmarkVisitsInput.checked = state.trailmarkVisitsEnabled;
@@ -929,6 +962,7 @@
 
   function handleSharePositionToggle(event) {
     const enabled = event.target.checked;
+    const wasLivePositionEnabled = state.livePositionEnabled;
     if (enabled && !getCurrentCreatorName()) {
       event.target.checked = false;
       elements.creatorInput.focus();
@@ -944,13 +978,14 @@
     }
 
     state.sharePositionEnabled = enabled;
-    if (enabled && !state.livePositionEnabled) {
-      state.livePositionEnabled = true;
-      elements.livePositionInput.checked = true;
+    state.livePositionEnabled = enabled;
+    elements.livePositionInput.checked = enabled;
+    if (enabled && !wasLivePositionEnabled) {
       startLivePositionPolling();
     }
     if (!enabled) {
       void removeSharedLivePosition();
+      stopLivePositionPolling();
     }
     saveState();
     updateSharePositionControls();
@@ -991,6 +1026,7 @@
       state.sharePositionInFlight ||
       !point ||
       point.stale ||
+      !getCurrentCreatorName() ||
       Date.now() - state.lastSharedPositionAt < LIVE_POSITION_SHARE_INTERVAL_MS
     ) {
       return;
@@ -1163,6 +1199,10 @@
 
     state.trailmarkVisitsEnabled = enabled;
     state.trailmarkVisitCandidate = null;
+    if (enabled) {
+      state.sharePositionEnabled = true;
+      elements.sharePositionInput.checked = true;
+    }
     if (enabled && !state.livePositionEnabled) {
       state.livePositionEnabled = true;
       elements.livePositionInput.checked = true;
