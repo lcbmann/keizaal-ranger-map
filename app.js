@@ -219,7 +219,6 @@
     trailmarkArrivalTitle: document.getElementById("trailmarkArrivalTitle"),
     trailmarkArrivalText: document.getElementById("trailmarkArrivalText"),
     trailmarkArrivalVisitors: document.getElementById("trailmarkArrivalVisitors"),
-    trailmarkDiscordOpenLink: document.getElementById("trailmarkDiscordOpenLink"),
     trailmarkArrivalLinkBtn: document.getElementById("trailmarkArrivalLinkBtn"),
     receiveDialog: document.getElementById("receiveDialog"),
     receiveCodeInput: document.getElementById("receiveCodeInput"),
@@ -1531,9 +1530,8 @@
     elements.trailmarkArrival.dataset.featureId = feature.id;
     elements.trailmarkArrivalTitle.textContent = feature.title;
     elements.trailmarkArrivalText.textContent = result.discord_linked
-      ? "Visit recorded. Wayfinder is opening the matching Discord channel."
-      : "Visit recorded. Link Discord to open this Trailmark's private channel when you arrive.";
-    elements.trailmarkDiscordOpenLink.hidden = true;
+      ? "Visit recorded. Use the Trailmark panel in Discord to open the matching channel."
+      : "Visit recorded. Link Discord if you want Wayfinder to prepare this Trailmark through the Discord panel.";
     elements.trailmarkArrivalLinkBtn.hidden = Boolean(result.discord_linked);
     elements.trailmarkArrival.hidden = false;
     renderTrailmarkArrivalVisitors(feature.id);
@@ -1578,11 +1576,7 @@
         device_token: deviceToken,
       });
       if (request && request.status === "granted") {
-        elements.trailmarkArrivalText.textContent = "Wayfinder opened this Trailmark channel temporarily.";
-        if (request.discord_guild_id && request.discord_channel_id) {
-          elements.trailmarkDiscordOpenLink.href = `https://discord.com/channels/${encodeURIComponent(request.discord_guild_id)}/${encodeURIComponent(request.discord_channel_id)}`;
-          elements.trailmarkDiscordOpenLink.hidden = false;
-        }
+        elements.trailmarkArrivalText.textContent = "Wayfinder prepared access. Open this Trailmark through the Trailmark panel in Discord.";
         return;
       }
       if (request && request.status === "failed") {
