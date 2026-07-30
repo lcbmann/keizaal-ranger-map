@@ -104,6 +104,12 @@
               <span>Live position</span>
             </label>
             <small id="livePositionStatus" class="live-position-status" aria-live="polite">Off</small>
+            <label class="trailmark-visit-toggle share-position-toggle" for="sharePositionInput">
+              <span>Share position</span>
+              <input id="sharePositionInput" type="checkbox" />
+              <span class="toggle-switch" aria-hidden="true"></span>
+            </label>
+            <small id="sharePositionStatus" class="live-position-status share-position-status" aria-live="polite">Off</small>
           </div>
           <div class="tool-rail-section trailmark-visit-controls">
             <label class="trailmark-visit-toggle" for="trailmarkVisitsInput">
@@ -171,6 +177,7 @@
                 <div class="section-heading-row">
                   <h3>Recent Trailmark visits</h3>
                   <div class="filter-heading-actions">
+                    <button id="trailmarkDropBtn" class="quiet-action" type="button">Leave Drop</button>
                     <button id="copyTrailmarkIdBtn" class="quiet-action" type="button">Copy ID</button>
                     <button id="refreshTrailmarkVisitsBtn" class="quiet-action" type="button">Refresh</button>
                   </div>
@@ -259,6 +266,7 @@
               <li>Place or draw on the map.</li>
               <li>Select every category that fits the entry, then fill in confidence and notes.</li>
               <li>Use the <strong>checkmark beside the entry</strong> to keep it.</li>
+              <li>In <strong>Select</strong>, drag a personal or Guild marker to correct its position. Printed and Skyrim reference markers stay locked.</li>
             </ol>
           </section>
           <section class="help-step">
@@ -305,7 +313,9 @@
               <li>Enter your Ranger name under <strong>Signed As</strong>.</li>
               <li>Enable <strong>Live position</strong> and <strong>Record visits</strong>.</li>
               <li>Use <strong>Link Discord</strong> once if you want nearby Trailmark channels to open automatically.</li>
+              <li>The desktop Ranger Atlas integration must be installed before <strong>Live position</strong> can connect.</li>
               <li>Remain within roughly <strong>75 metres</strong> of an official Guild Trailmark for 12 seconds to record your visit.</li>
+              <li>After a recorded visit, select that Trailmark and use <strong>Leave Drop</strong> to post into its Discord channel.</li>
             </ol>
           </section>
         </div>
@@ -313,7 +323,7 @@
           <div>
             <p class="help-display-kicker">Display</p>
             <h3 id="display-settings-title">Map display</h3>
-            <p>Show names above visible entries with the setting here. Use the moon or sun at the top right to change the interface theme. With the Ranger Atlas integration installed, switch on <strong>Live position</strong> in the left tool rail to show your local in-game location. <strong>Record visits</strong> shares only your entered name, the official Trailmark, and the time you reached it; your coordinates and route remain local. Visible labels and the live marker are included in <strong>Save Image</strong>.</p>
+            <p>Show names above visible entries with the setting here. Use the moon or sun at the top right to change the interface theme. With the Ranger Atlas integration installed, switch on <strong>Live position</strong> to show your local in-game location. <strong>Share position</strong> separately opts your latest point into Marshal Overwatch; it expires when updates stop. <strong>Record visits</strong> shares only your entered name, the official Trailmark, and the time you reached it. Visible labels and the live marker are included in <strong>Save Image</strong>.</p>
           </div>
           <label class="setting-toggle">
             <input id="showLabelsInput" type="checkbox" />
@@ -430,7 +440,7 @@
           <button id="guildSelectNoneBtn" class="button secondary" type="button">Select None</button>
         </div>
         <div id="guildEntryList" class="share-entry-list" aria-label="Entries to publish"></div>
-        <label class="field-label" for="guildPassphraseInput">Senior Ranger Passphrase</label>
+        <label class="field-label" for="guildPassphraseInput">Marshal Passphrase</label>
         <input id="guildPassphraseInput" class="text-input" type="password" autocomplete="current-password" />
         <p id="guildPublishStatus" class="dialog-status" aria-live="polite"></p>
         <div class="dialog-actions">
@@ -443,6 +453,34 @@
           <p>Recover every unique entry ever retained from an uploaded share code or Guild Atlas publication. Recovered entries are added to this browser only.</p>
           <button id="guildRecoverAllBtn" class="button secondary" type="button">Recover All Archived Entries</button>
         </section>
+        <section class="admin-recovery overwatch-admin">
+          <h3>Overwatch</h3>
+          <p>View Rangers who have explicitly enabled Share position. Only their latest point is retained, and stale positions disappear automatically.</p>
+          <label class="field-label" for="overwatchPassphraseInput">Overwatch Passphrase</label>
+          <input id="overwatchPassphraseInput" class="text-input" type="password" autocomplete="off" />
+          <div class="dialog-actions">
+            <button id="overwatchToggleBtn" class="button secondary" type="button">Open Overwatch</button>
+          </div>
+          <p id="overwatchStatus" class="dialog-status" aria-live="polite"></p>
+        </section>
+      </div>
+    </dialog>
+
+    <dialog id="trailmarkDropDialog" class="field-note workflow-dialog trailmark-drop-dialog">
+      <div class="field-note-inner">
+        <button id="trailmarkDropCloseBtn" class="field-note-close" type="button" aria-label="Close Trailmark drop">&times;</button>
+        <p class="field-note-kicker">Trailmark Field Drop</p>
+        <h2 id="trailmarkDropTitle">Leave a Drop</h2>
+        <p class="dialog-help">Wayfinder will post this message into the private Trailmark channel under your linked Discord identity. You must have recorded a visit here within the last 30 minutes.</p>
+        <form id="trailmarkDropForm">
+          <label class="field-label" for="trailmarkDropMessageInput">Message</label>
+          <textarea id="trailmarkDropMessageInput" class="text-input textarea" maxlength="1800" rows="7" placeholder="What should the next Ranger find here?"></textarea>
+          <p id="trailmarkDropStatus" class="dialog-status" aria-live="polite"></p>
+          <div class="dialog-actions">
+            <button id="trailmarkDropSubmitBtn" class="button primary" type="submit">Send to Trailmark</button>
+            <button id="trailmarkDropCancelBtn" class="button secondary" type="button">Cancel</button>
+          </div>
+        </form>
       </div>
     </dialog>
 

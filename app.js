@@ -25,8 +25,13 @@
   const TRAILMARK_VISIT_RADIUS = 96;
   const TRAILMARK_VISIT_DWELL_MS = 12000;
   const TRAILMARK_VISIT_COOLDOWN_MS = 30 * 60 * 1000;
+  const TRAILMARK_VISIT_FAILURE_RETRY_MS = 60 * 1000;
   const TRAILMARK_ACCESS_POLL_MS = 4000;
   const TRAILMARK_ACCESS_POLL_LIMIT = 30;
+  const LIVE_POSITION_SHARE_INTERVAL_MS = 10 * 1000;
+  const OVERWATCH_POLL_MS = 5 * 1000;
+  const TRAILMARK_DROP_POLL_MS = 4 * 1000;
+  const TRAILMARK_DROP_POLL_LIMIT = 30;
 
   const categories = [
     { id: "city", label: "City", color: "#2f5878", icon: "city" },
@@ -107,14 +112,23 @@
     livePositionEnabled: false,
     livePositionConnection: "off",
     livePositionPoint: null,
+    livePositionHeading: 0,
     livePositionSnapshot: null,
+    sharePositionEnabled: false,
+    sharePositionInFlight: false,
+    lastSharedPositionAt: 0,
     trailmarkVisitsEnabled: false,
     trailmarkVisitCandidate: null,
     trailmarkVisitInFlight: false,
     trailmarkVisitCooldowns: {},
+    trailmarkVisitRetryAfter: {},
     trailmarkVisitsByFeature: new Map(),
     trailmarkVisitsLoading: new Set(),
+    trailmarkVisitErrors: new Map(),
     discordLink: null,
+    overwatchEnabled: false,
+    overwatchPassphrase: "",
+    overwatchPositions: [],
     pendingReceive: null,
     draftFeature: null,
     drawPoints: [],
@@ -156,6 +170,7 @@
   const labelLayer = L.layerGroup().addTo(map);
   const draftLayer = L.layerGroup().addTo(map);
   const livePositionLayer = L.layerGroup().addTo(map);
+  const overwatchPositionLayer = L.layerGroup().addTo(map);
 
   const elements = {
     toolButtons: Array.from(document.querySelectorAll(".tool-button")),
@@ -169,6 +184,8 @@
     showLabelsInput: document.getElementById("showLabelsInput"),
     livePositionInput: document.getElementById("livePositionInput"),
     livePositionStatus: document.getElementById("livePositionStatus"),
+    sharePositionInput: document.getElementById("sharePositionInput"),
+    sharePositionStatus: document.getElementById("sharePositionStatus"),
     trailmarkVisitsInput: document.getElementById("trailmarkVisitsInput"),
     trailmarkVisitsStatus: document.getElementById("trailmarkVisitsStatus"),
     discordLinkBtn: document.getElementById("discordLinkBtn"),
@@ -215,6 +232,9 @@
     guildPublishSummary: document.getElementById("guildPublishSummary"),
     guildEntryList: document.getElementById("guildEntryList"),
     guildPassphraseInput: document.getElementById("guildPassphraseInput"),
+    overwatchPassphraseInput: document.getElementById("overwatchPassphraseInput"),
+    overwatchToggleBtn: document.getElementById("overwatchToggleBtn"),
+    overwatchStatus: document.getElementById("overwatchStatus"),
     guildPublishStatus: document.getElementById("guildPublishStatus"),
     guildPublishConfirmBtn: document.getElementById("guildPublishConfirmBtn"),
     guildRecoverAllBtn: document.getElementById("guildRecoverAllBtn"),
@@ -261,6 +281,15 @@
     trailmarkPresenceList: document.getElementById("trailmarkPresenceList"),
     copyTrailmarkIdBtn: document.getElementById("copyTrailmarkIdBtn"),
     refreshTrailmarkVisitsBtn: document.getElementById("refreshTrailmarkVisitsBtn"),
+    trailmarkDropBtn: document.getElementById("trailmarkDropBtn"),
+    trailmarkDropDialog: document.getElementById("trailmarkDropDialog"),
+    trailmarkDropCloseBtn: document.getElementById("trailmarkDropCloseBtn"),
+    trailmarkDropCancelBtn: document.getElementById("trailmarkDropCancelBtn"),
+    trailmarkDropForm: document.getElementById("trailmarkDropForm"),
+    trailmarkDropTitle: document.getElementById("trailmarkDropTitle"),
+    trailmarkDropMessageInput: document.getElementById("trailmarkDropMessageInput"),
+    trailmarkDropStatus: document.getElementById("trailmarkDropStatus"),
+    trailmarkDropSubmitBtn: document.getElementById("trailmarkDropSubmitBtn"),
     notesInput: document.getElementById("notesInput"),
     saveFeatureBtn: document.getElementById("saveFeatureBtn"),
     deleteFeatureBtn: document.getElementById("deleteFeatureBtn"),
@@ -272,6 +301,8 @@
   let livePositionPollTimer = null;
   let livePositionRequest = null;
   let trailmarkAccessPollTimer = null;
+  let overwatchPollTimer = null;
+  let trailmarkDropPollTimer = null;
 
   init();
 
@@ -287,6 +318,7 @@
     [0, 100, 500, 1500, 3000].forEach((delay) => window.setTimeout(clearRestoredSearchInput, delay));
     setStatus("Ready");
     updateTrailmarkVisitControls();
+    updateSharePositionControls();
     if (isSupabaseConfigured()) {
       void refreshDiscordLink();
     }
@@ -343,11 +375,18 @@
         startLivePositionPolling();
         setStatus("Connecting to the local Ranger Atlas integration");
       } else {
+        if (state.sharePositionEnabled) {
+          state.sharePositionEnabled = false;
+          elements.sharePositionInput.checked = false;
+          void removeSharedLivePosition();
+        }
         stopLivePositionPolling();
         setStatus("Live position hidden");
       }
       updateTrailmarkVisitControls();
+      updateSharePositionControls();
     });
+    elements.sharePositionInput.addEventListener("change", handleSharePositionToggle);
     elements.trailmarkVisitsInput.addEventListener("change", handleTrailmarkVisitsToggle);
     elements.discordLinkBtn.addEventListener("click", openDiscordLinkDialog);
     elements.discordLinkCloseBtn.addEventListener("click", closeDiscordLinkDialog);
@@ -364,6 +403,15 @@
         void refreshTrailmarkVisits(feature, true);
       }
     });
+    elements.trailmarkDropBtn.addEventListener("click", openTrailmarkDropDialog);
+    elements.trailmarkDropCloseBtn.addEventListener("click", closeTrailmarkDropDialog);
+    elements.trailmarkDropCancelBtn.addEventListener("click", closeTrailmarkDropDialog);
+    elements.trailmarkDropForm.addEventListener("submit", submitTrailmarkDrop);
+    elements.trailmarkDropDialog.addEventListener("close", () => {
+      window.clearTimeout(trailmarkDropPollTimer);
+      trailmarkDropPollTimer = null;
+    });
+    closeDialogOnBackdrop(elements.trailmarkDropDialog);
 
     elements.undoBtn.addEventListener("click", undoLastAction);
     elements.guildAdminBtn.addEventListener("click", openGuildPublishDialog);
@@ -374,6 +422,7 @@
     elements.guildSelectAllBtn.addEventListener("click", () => setGuildEntryChecks(true));
     elements.guildSelectNoneBtn.addEventListener("click", () => setGuildEntryChecks(false));
     elements.guildEntryList.addEventListener("change", updateGuildPublishDialogState);
+    elements.overwatchToggleBtn.addEventListener("click", toggleOverwatch);
     closeDialogOnBackdrop(elements.guildPublishDialog);
     elements.exportBtn.addEventListener("click", openShareDialog);
     elements.exportMapBtn.addEventListener("click", exportVisibleMap);
@@ -412,8 +461,15 @@
         elements.trailmarkVisitsInput.checked = false;
         setStatus("Trailmark visit recording stopped because Signed As is empty");
       }
+      if (!state.creatorName && state.sharePositionEnabled) {
+        state.sharePositionEnabled = false;
+        elements.sharePositionInput.checked = false;
+        void removeSharedLivePosition();
+        setStatus("Position sharing stopped because Signed As is empty");
+      }
       saveState();
       updateTrailmarkVisitControls();
+      updateSharePositionControls();
     });
 
     elements.searchInput.addEventListener("input", (event) => {
@@ -533,6 +589,8 @@
       elements.livePositionInput.checked = state.livePositionEnabled;
       state.creatorName = normalizeCreatorName(saved.creatorName || "");
       elements.creatorInput.value = state.creatorName;
+      state.sharePositionEnabled = saved.sharePositionEnabled === true && Boolean(state.creatorName);
+      elements.sharePositionInput.checked = state.sharePositionEnabled;
       state.trailmarkVisitsEnabled = saved.trailmarkVisitsEnabled === true && Boolean(state.creatorName);
       elements.trailmarkVisitsInput.checked = state.trailmarkVisitsEnabled;
       if (saved.trailmarkVisitCooldowns && typeof saved.trailmarkVisitCooldowns === "object") {
@@ -566,6 +624,7 @@
       showLabels: state.showLabels,
       darkMode: state.darkMode,
       livePositionEnabled: state.livePositionEnabled,
+      sharePositionEnabled: state.sharePositionEnabled,
       trailmarkVisitsEnabled: state.trailmarkVisitsEnabled,
       trailmarkVisitCooldowns: state.trailmarkVisitCooldowns,
       creatorName: state.creatorName,
@@ -676,12 +735,23 @@
       Number(snapshot.worldspace_form_id) === SKYRIM_WORLDSPACE_FORM_ID &&
       snapshot.interior !== true
     ) {
+      const nextPoint = worldPositionToAtlasPoint(Number(snapshot.x), Number(snapshot.y));
+      const previousPoint = state.livePositionPoint;
+      if (previousPoint && !previousPoint.stale) {
+        const deltaX = nextPoint.x - previousPoint.x;
+        const deltaY = nextPoint.y - previousPoint.y;
+        if (Math.hypot(deltaX, deltaY) >= 0.75) {
+          state.livePositionHeading = (Math.atan2(deltaX, deltaY) * 180) / Math.PI;
+        }
+      }
       state.livePositionPoint = {
-        ...worldPositionToAtlasPoint(Number(snapshot.x), Number(snapshot.y)),
+        ...nextPoint,
+        heading: state.livePositionHeading,
         stale: false,
       };
       updateLivePositionStatus("Linked to Skyrim", "linked");
       evaluateTrailmarkProximity(state.livePositionPoint);
+      void shareLivePosition(state.livePositionPoint);
     } else if (state.livePositionPoint) {
       state.livePositionPoint = { ...state.livePositionPoint, stale: true };
       updateLivePositionStatus("Last outdoor position", "linked");
@@ -694,6 +764,7 @@
     }
 
     renderLivePosition();
+    updateSharePositionControls();
     if (!wasLinked) {
       setStatus("Live position linked to Skyrim");
     }
@@ -706,6 +777,7 @@
     state.livePositionPoint = { ...state.livePositionPoint, stale: true };
     state.trailmarkVisitCandidate = null;
     updateTrailmarkVisitControls();
+    updateSharePositionControls();
     renderLivePosition();
   }
 
@@ -749,9 +821,15 @@
       zIndexOffset: 2600,
       icon: L.divIcon({
         className: "",
-        html: `<div class="live-position-marker${point.stale ? " is-stale" : ""}"></div>`,
-        iconSize: [26, 26],
-        iconAnchor: [13, 13],
+        html: `
+          <div class="live-position-marker${point.stale ? " is-stale" : ""}" style="--heading:${Number(point.heading) || 0}deg">
+            <svg class="live-position-arrow" viewBox="0 0 32 32" aria-hidden="true">
+              <path d="M16 2 27 28 16 21 5 28Z" />
+            </svg>
+          </div>
+        `,
+        iconSize: [34, 34],
+        iconAnchor: [17, 17],
       }),
     });
     marker.bindTooltip(point.stale ? "Last known outdoor position" : "Your live position", {
@@ -759,6 +837,221 @@
       offset: [0, -12],
     });
     livePositionLayer.addLayer(marker);
+  }
+
+  function handleSharePositionToggle(event) {
+    const enabled = event.target.checked;
+    if (enabled && !getCurrentCreatorName()) {
+      event.target.checked = false;
+      elements.creatorInput.focus();
+      setStatus("Enter your Ranger name before sharing your position");
+      updateSharePositionControls();
+      return;
+    }
+    if (enabled && !isSupabaseConfigured()) {
+      event.target.checked = false;
+      setStatus("Supabase is not configured, so your position cannot be shared");
+      updateSharePositionControls();
+      return;
+    }
+
+    state.sharePositionEnabled = enabled;
+    if (enabled && !state.livePositionEnabled) {
+      state.livePositionEnabled = true;
+      elements.livePositionInput.checked = true;
+      startLivePositionPolling();
+    }
+    if (!enabled) {
+      void removeSharedLivePosition();
+    }
+    saveState();
+    updateSharePositionControls();
+    setStatus(enabled ? "Position sharing enabled" : "Position sharing disabled");
+  }
+
+  function updateSharePositionControls() {
+    elements.sharePositionInput.checked = state.sharePositionEnabled;
+    if (!state.sharePositionEnabled) {
+      updateSharePositionStatus("Off", "off");
+      return;
+    }
+    if (!getCurrentCreatorName()) {
+      updateSharePositionStatus("Name required", "unavailable");
+      return;
+    }
+    if (!state.livePositionEnabled) {
+      updateSharePositionStatus("Live position required", "unavailable");
+      return;
+    }
+    if (state.livePositionConnection !== "linked" || !state.livePositionPoint || state.livePositionPoint.stale) {
+      updateSharePositionStatus("Waiting for Skyrim", "connecting");
+      return;
+    }
+    updateSharePositionStatus(state.sharePositionInFlight ? "Sharing..." : "Visible to Overwatch", "linked");
+  }
+
+  function updateSharePositionStatus(text, status) {
+    elements.sharePositionStatus.textContent = text;
+    elements.sharePositionStatus.removeAttribute("title");
+    elements.sharePositionStatus.classList.toggle("is-linked", status === "linked");
+    elements.sharePositionStatus.classList.toggle("is-unavailable", status === "unavailable");
+  }
+
+  async function shareLivePosition(point) {
+    if (
+      !state.sharePositionEnabled ||
+      state.sharePositionInFlight ||
+      !point ||
+      point.stale ||
+      Date.now() - state.lastSharedPositionAt < LIVE_POSITION_SHARE_INTERVAL_MS
+    ) {
+      return;
+    }
+
+    state.sharePositionInFlight = true;
+    updateSharePositionControls();
+    try {
+      await callSupabaseRpc("upsert_atlas_live_position", {
+        device_token_input: getOrCreateDiscordDeviceToken(),
+        ranger_name_input: getCurrentCreatorName(),
+        atlas_x_input: point.x,
+        atlas_y_input: point.y,
+        heading_degrees_input: Number(point.heading) || 0,
+      });
+      state.lastSharedPositionAt = Date.now();
+      updateSharePositionStatus("Visible to Overwatch", "linked");
+    } catch (error) {
+      const message = getReadableError(error, "Position could not be shared");
+      updateSharePositionStatus("Share failed", "unavailable");
+      elements.sharePositionStatus.title = message;
+      setStatus(message);
+    } finally {
+      state.sharePositionInFlight = false;
+    }
+  }
+
+  async function removeSharedLivePosition() {
+    state.lastSharedPositionAt = 0;
+    const deviceToken = getStoredDiscordDeviceToken();
+    if (!deviceToken || !isSupabaseConfigured()) {
+      updateSharePositionControls();
+      return;
+    }
+    try {
+      await callSupabaseRpc("remove_atlas_live_position", {
+        device_token_input: deviceToken,
+      });
+    } catch (error) {
+      console.warn("Could not remove shared live position", error);
+    }
+    updateSharePositionControls();
+  }
+
+  async function toggleOverwatch() {
+    if (state.overwatchEnabled) {
+      stopOverwatch();
+      return;
+    }
+
+    const passphrase = elements.overwatchPassphraseInput.value.trim();
+    if (!passphrase) {
+      elements.overwatchStatus.textContent = "Enter the Overwatch passphrase.";
+      return;
+    }
+    if (!isSupabaseConfigured()) {
+      elements.overwatchStatus.textContent = "Supabase is not configured.";
+      return;
+    }
+
+    elements.overwatchToggleBtn.disabled = true;
+    elements.overwatchStatus.textContent = "Opening Overwatch...";
+    state.overwatchPassphrase = passphrase;
+    try {
+      await refreshOverwatchPositions();
+      state.overwatchEnabled = true;
+      elements.overwatchToggleBtn.textContent = "Close Overwatch";
+      elements.overwatchToggleBtn.disabled = false;
+      elements.overwatchStatus.textContent = `${state.overwatchPositions.length} active ${state.overwatchPositions.length === 1 ? "Ranger" : "Rangers"} shown.`;
+      elements.guildPublishDialog.close();
+      overwatchPollTimer = window.setTimeout(pollOverwatchPositions, OVERWATCH_POLL_MS);
+      setStatus("Overwatch enabled");
+    } catch (error) {
+      state.overwatchPassphrase = "";
+      elements.overwatchToggleBtn.disabled = false;
+      elements.overwatchStatus.textContent = getReadableError(error, "Overwatch could not be opened.");
+    }
+  }
+
+  function stopOverwatch() {
+    window.clearTimeout(overwatchPollTimer);
+    overwatchPollTimer = null;
+    state.overwatchEnabled = false;
+    state.overwatchPassphrase = "";
+    state.overwatchPositions = [];
+    elements.overwatchPassphraseInput.value = "";
+    elements.overwatchToggleBtn.textContent = "Open Overwatch";
+    elements.overwatchStatus.textContent = "Overwatch closed.";
+    overwatchPositionLayer.clearLayers();
+    setStatus("Overwatch disabled");
+  }
+
+  async function pollOverwatchPositions() {
+    if (!state.overwatchEnabled) {
+      return;
+    }
+    try {
+      await refreshOverwatchPositions();
+    } catch (error) {
+      elements.overwatchStatus.textContent = getReadableError(error, "Overwatch refresh failed.");
+    } finally {
+      if (state.overwatchEnabled) {
+        overwatchPollTimer = window.setTimeout(pollOverwatchPositions, OVERWATCH_POLL_MS);
+      }
+    }
+  }
+
+  async function refreshOverwatchPositions() {
+    const positions = await callSupabaseRpc("get_atlas_live_positions", {
+      overwatch_passphrase: state.overwatchPassphrase,
+    });
+    state.overwatchPositions = Array.isArray(positions) ? positions : [];
+    renderOverwatchPositions();
+  }
+
+  function renderOverwatchPositions() {
+    overwatchPositionLayer.clearLayers();
+    state.overwatchPositions.forEach((position) => {
+      const x = Number(position.atlas_x);
+      const y = Number(position.atlas_y);
+      if (!Number.isFinite(x) || !Number.isFinite(y)) {
+        return;
+      }
+      const name = normalizeCreatorName(position.ranger_name) || "Unknown Ranger";
+      const marker = L.marker([y, x], {
+        interactive: true,
+        keyboard: false,
+        zIndexOffset: 2550,
+        icon: L.divIcon({
+          className: "",
+          html: `
+            <div class="overwatch-position-marker" style="--heading:${Number(position.heading_degrees) || 0}deg">
+              <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 2 27 28 16 21 5 28Z" /></svg>
+            </div>
+            <span class="overwatch-position-label">${escapeHtml(name)}</span>
+          `,
+          iconSize: [1, 1],
+          iconAnchor: [0, 0],
+        }),
+      });
+      marker.bindTooltip(`${escapeHtml(name)} · ${escapeHtml(formatRelativeTime(position.updated_at))}`, {
+        direction: "top",
+        offset: [0, -18],
+      });
+      overwatchPositionLayer.addLayer(marker);
+    });
+    if (state.overwatchEnabled) {
+      elements.overwatchStatus.textContent = `${state.overwatchPositions.length} active ${state.overwatchPositions.length === 1 ? "Ranger" : "Rangers"} shown.`;
+    }
   }
 
   function handleTrailmarkVisitsToggle(event) {
@@ -825,6 +1118,7 @@
 
   function updateTrailmarkVisitStatus(text, status) {
     elements.trailmarkVisitsStatus.textContent = text;
+    elements.trailmarkVisitsStatus.removeAttribute("title");
     elements.trailmarkVisitsStatus.classList.toggle("is-linked", status === "linked");
     elements.trailmarkVisitsStatus.classList.toggle("is-unavailable", status === "unavailable");
   }
@@ -864,6 +1158,18 @@
       return;
     }
 
+    const retryAfter = Number(state.trailmarkVisitRetryAfter[nearest.feature.id] || 0);
+    if (Date.now() < retryAfter) {
+      const retrySeconds = Math.ceil((retryAfter - Date.now()) / 1000);
+      state.trailmarkVisitCandidate = null;
+      updateTrailmarkVisitStatus(`Retry available in ${retrySeconds}s`, "unavailable");
+      const lastError = state.trailmarkVisitErrors.get(nearest.feature.id);
+      if (lastError) {
+        elements.trailmarkVisitsStatus.title = lastError;
+      }
+      return;
+    }
+
     if (!state.trailmarkVisitCandidate || state.trailmarkVisitCandidate.featureId !== nearest.feature.id) {
       state.trailmarkVisitCandidate = {
         featureId: nearest.feature.id,
@@ -895,6 +1201,8 @@
         device_token: getStoredDiscordDeviceToken(),
       });
       state.trailmarkVisitCooldowns[feature.id] = Date.now();
+      delete state.trailmarkVisitRetryAfter[feature.id];
+      state.trailmarkVisitErrors.delete(feature.id);
       saveState();
       showTrailmarkArrival(feature, result || {});
       await refreshTrailmarkVisits(feature, true);
@@ -905,8 +1213,12 @@
       setStatus(`Recorded your visit to ${feature.title}`);
     } catch (error) {
       console.error("Could not record Trailmark visit", error);
-      updateTrailmarkVisitStatus("Visit could not be shared", "unavailable");
-      setStatus(getReadableError(error, "Could not record this Trailmark visit"));
+      const message = getReadableError(error, "Could not record this Trailmark visit");
+      state.trailmarkVisitRetryAfter[feature.id] = Date.now() + TRAILMARK_VISIT_FAILURE_RETRY_MS;
+      state.trailmarkVisitErrors.set(feature.id, message);
+      updateTrailmarkVisitStatus("Visit failed; retry in 60s", "unavailable");
+      elements.trailmarkVisitsStatus.title = message;
+      setStatus(message);
     } finally {
       state.trailmarkVisitInFlight = false;
     }
@@ -953,9 +1265,14 @@
       const visits = await callSupabaseRpc("get_recent_atlas_trailmark_visits", {
         atlas_location_id_input: feature.id,
       });
+      state.trailmarkVisitErrors.delete(feature.id);
       state.trailmarkVisitsByFeature.set(feature.id, Array.isArray(visits) ? visits : []);
     } catch (error) {
       console.error("Could not load recent Trailmark visits", error);
+      state.trailmarkVisitErrors.set(
+        feature.id,
+        getReadableError(error, "Recent Trailmark visits could not be loaded."),
+      );
       state.trailmarkVisitsByFeature.set(feature.id, null);
     } finally {
       state.trailmarkVisitsLoading.delete(feature.id);
@@ -971,10 +1288,21 @@
     elements.trailmarkPresencePanel.hidden = !visible;
     if (!visible) {
       elements.trailmarkPresenceList.innerHTML = "";
+      elements.trailmarkDropBtn.disabled = true;
       return;
     }
 
     elements.trailmarkPresenceList.innerHTML = "";
+    const recentVisit = Number(state.trailmarkVisitCooldowns[feature.id] || 0);
+    const canLeaveDrop =
+      Boolean(state.discordLink) &&
+      Date.now() - recentVisit < TRAILMARK_VISIT_COOLDOWN_MS;
+    elements.trailmarkDropBtn.disabled = !canLeaveDrop;
+    elements.trailmarkDropBtn.title = !state.discordLink
+      ? "Link Discord before leaving a drop"
+      : canLeaveDrop
+        ? "Post a field drop to this Trailmark's Discord channel"
+        : "Record a visit here before leaving a drop";
     if (state.trailmarkVisitsLoading.has(feature.id)) {
       elements.trailmarkPresenceStatus.textContent = "Checking the latest field record...";
       return;
@@ -982,7 +1310,9 @@
 
     const visits = state.trailmarkVisitsByFeature.get(feature.id);
     if (visits === null) {
-      elements.trailmarkPresenceStatus.textContent = "Recent visits could not be loaded.";
+      const message = state.trailmarkVisitErrors.get(feature.id) || "Recent visits could not be loaded.";
+      elements.trailmarkPresenceStatus.textContent = message;
+      elements.trailmarkPresenceStatus.title = message;
       return;
     }
     if (!Array.isArray(visits)) {
@@ -1003,6 +1333,115 @@
       `;
       elements.trailmarkPresenceList.appendChild(item);
     });
+  }
+
+  function openTrailmarkDropDialog() {
+    const feature = getSelectedFeature();
+    if (!isOfficialTrailmark(feature)) {
+      setStatus("Select an official Trailmark first");
+      return;
+    }
+    if (!state.discordLink) {
+      setStatus("Link Discord before leaving a Trailmark drop");
+      openDiscordLinkDialog();
+      return;
+    }
+    const recentVisit = Number(state.trailmarkVisitCooldowns[feature.id] || 0);
+    if (Date.now() - recentVisit >= TRAILMARK_VISIT_COOLDOWN_MS) {
+      setStatus(`Record a visit to ${feature.title} before leaving a drop`);
+      return;
+    }
+
+    window.clearTimeout(trailmarkDropPollTimer);
+    trailmarkDropPollTimer = null;
+    elements.trailmarkDropDialog.dataset.featureId = feature.id;
+    elements.trailmarkDropTitle.textContent = `Leave a Drop at ${feature.title}`;
+    elements.trailmarkDropMessageInput.value = "";
+    elements.trailmarkDropStatus.textContent = "";
+    elements.trailmarkDropSubmitBtn.disabled = false;
+    elements.trailmarkDropDialog.showModal();
+    window.setTimeout(() => elements.trailmarkDropMessageInput.focus(), 0);
+  }
+
+  function closeTrailmarkDropDialog() {
+    window.clearTimeout(trailmarkDropPollTimer);
+    trailmarkDropPollTimer = null;
+    elements.trailmarkDropDialog.close();
+    elements.trailmarkDropDialog.dataset.featureId = "";
+  }
+
+  async function submitTrailmarkDrop(event) {
+    event.preventDefault();
+    const featureId = elements.trailmarkDropDialog.dataset.featureId;
+    const feature = state.features.find((candidate) => candidate.id === featureId);
+    const message = elements.trailmarkDropMessageInput.value.trim();
+    const deviceToken = getStoredDiscordDeviceToken();
+    if (!isOfficialTrailmark(feature)) {
+      elements.trailmarkDropStatus.textContent = "This Trailmark is no longer available.";
+      return;
+    }
+    if (!message) {
+      elements.trailmarkDropStatus.textContent = "Write a message before sending the drop.";
+      return;
+    }
+    if (!deviceToken || !state.discordLink) {
+      elements.trailmarkDropStatus.textContent = "Link Discord before leaving a drop.";
+      return;
+    }
+
+    elements.trailmarkDropSubmitBtn.disabled = true;
+    elements.trailmarkDropStatus.textContent = "Sending to Wayfinder...";
+    try {
+      const result = await callSupabaseRpc("submit_atlas_trailmark_drop", {
+        device_token_input: deviceToken,
+        atlas_location_id_input: feature.id,
+        message_input: message,
+      });
+      if (!result || !result.drop_id) {
+        throw new Error("Wayfinder did not return a drop receipt");
+      }
+      pollTrailmarkDrop(result.drop_id, deviceToken, 0);
+    } catch (error) {
+      elements.trailmarkDropSubmitBtn.disabled = false;
+      elements.trailmarkDropStatus.textContent = getReadableError(error, "The Trailmark drop could not be sent.");
+    }
+  }
+
+  async function pollTrailmarkDrop(dropId, deviceToken, attempt) {
+    if (!elements.trailmarkDropDialog.open) {
+      return;
+    }
+    if (attempt >= TRAILMARK_DROP_POLL_LIMIT) {
+      elements.trailmarkDropSubmitBtn.disabled = false;
+      elements.trailmarkDropStatus.textContent =
+        "Wayfinder has not confirmed the post yet. Check the Trailmark channel before sending again.";
+      return;
+    }
+
+    try {
+      const result = await callSupabaseRpc("get_atlas_trailmark_drop", {
+        drop_id_input: dropId,
+        device_token_input: deviceToken,
+      });
+      if (result && result.status === "posted") {
+        elements.trailmarkDropStatus.textContent = "Drop posted to the Trailmark channel.";
+        setStatus("Trailmark field drop posted through Wayfinder");
+        return;
+      }
+      if (result && result.status === "failed") {
+        elements.trailmarkDropSubmitBtn.disabled = false;
+        elements.trailmarkDropStatus.textContent =
+          result.error_message || "Wayfinder could not post this drop.";
+        return;
+      }
+    } catch (error) {
+      console.warn("Could not check Trailmark drop status", error);
+    }
+
+    trailmarkDropPollTimer = window.setTimeout(
+      () => pollTrailmarkDrop(dropId, deviceToken, attempt + 1),
+      TRAILMARK_DROP_POLL_MS,
+    );
   }
 
   function showTrailmarkArrival(feature, result) {
@@ -1105,6 +1544,10 @@
       elements.discordLinkStatus.textContent = "";
     }
     updateTrailmarkVisitControls();
+    const selectedFeature = getSelectedFeature();
+    if (isOfficialTrailmark(selectedFeature)) {
+      renderTrailmarkPresence(selectedFeature);
+    }
   }
 
   async function claimDiscordLink(event) {
@@ -1466,16 +1909,39 @@
     if (feature.type === "marker") {
       const point = feature.points[0];
       const mixed = getFeatureCategories(feature).length > 1;
+      const draggable = canRepositionMarker(feature);
       const marker = L.marker([point.y, point.x], {
+        draggable,
         zIndexOffset: getFeatureZIndexOffset(feature, selected),
         icon: L.divIcon({
           className: "",
-          html: `<div class="poi-marker marker-${escapeHtml(feature.category)}${mixed ? " is-mixed" : ""}${isGuildFeature(feature) ? " is-guild" : ""}${isCanonFeature(feature) ? " is-canon" : ""}${selected ? " is-selected" : ""}" style="${getFeatureMarkerStyle(feature)}">${getFeatureMarkerIcon(feature)}</div>`,
+          html: `<div class="poi-marker marker-${escapeHtml(feature.category)}${mixed ? " is-mixed" : ""}${isGuildFeature(feature) ? " is-guild" : ""}${isCanonFeature(feature) ? " is-canon" : ""}${selected ? " is-selected" : ""}${draggable ? " is-draggable" : ""}" style="${getFeatureMarkerStyle(feature)}">${getFeatureMarkerIcon(feature)}</div>`,
           iconSize: [32, 32],
           iconAnchor: [16, 32],
         }),
       });
       marker.on("click", (event) => selectFeature(feature.id, isAdditiveSelectionEvent(event.originalEvent)));
+      if (draggable) {
+        marker.on("dragstart", () => {
+          pushUndo(`${feature.title} move`);
+          marker.closeTooltip();
+        });
+        marker.on("dragend", (event) => {
+          feature.points = [clampPoint(event.target.getLatLng())];
+          stampFeatureUpdate(feature);
+          feature.updatedAt = new Date().toISOString();
+          state.selectedId = feature.id;
+          state.selectedIds = [feature.id];
+          lastDragEndedAt = Date.now();
+          saveState();
+          renderAll();
+          setStatus(
+            isGuildFeature(feature)
+              ? `Moved ${feature.title}. Publish the Guild Atlas to share the new position`
+              : `Moved ${feature.title}. The new position is saved in this browser`,
+          );
+        });
+      }
       marker.bindTooltip(getFeatureTooltip(feature, category), { direction: "top", offset: [0, -24] });
       return marker;
     }
@@ -1525,6 +1991,10 @@
     const symbol = createGeometrySymbolLayer(feature, getLineMidpoint(feature.points), selected);
     const group = L.layerGroup([underlay, ink, symbol]);
     return group;
+  }
+
+  function canRepositionMarker(feature) {
+    return state.mode === "select" && feature.type === "marker" && !isDefaultFeature(feature) && !isCanonFeature(feature);
   }
 
   function createGeometrySymbolLayer(feature, point, selected) {
@@ -2389,27 +2859,27 @@
     }
 
     const point = mapPointToExport(livePoint, bounds, width, height);
-    const radius = 11 * scale;
+    const radius = 13 * scale;
     ctx.save();
     ctx.globalAlpha = livePoint.stale ? 0.68 : 1;
     ctx.shadowColor = "rgba(24, 15, 7, 0.42)";
     ctx.shadowBlur = 6 * scale;
     ctx.shadowOffsetY = 2 * scale;
+    ctx.translate(point.x, point.y);
+    ctx.rotate(((Number(livePoint.heading) || 0) * Math.PI) / 180);
     ctx.beginPath();
-    ctx.arc(point.x, point.y, radius, 0, Math.PI * 2);
-    ctx.fillStyle = "#246746";
+    ctx.moveTo(0, -radius);
+    ctx.lineTo(radius * 0.72, radius);
+    ctx.lineTo(0, radius * 0.48);
+    ctx.lineTo(-radius * 0.72, radius);
+    ctx.closePath();
+    ctx.fillStyle = "#f7edcf";
     ctx.fill();
     ctx.shadowColor = "transparent";
-    ctx.strokeStyle = "#f7edcf";
-    ctx.lineWidth = 3 * scale;
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(point.x - 6 * scale, point.y);
-    ctx.lineTo(point.x + 6 * scale, point.y);
-    ctx.moveTo(point.x, point.y - 6 * scale);
-    ctx.lineTo(point.x, point.y + 6 * scale);
+    ctx.strokeStyle = "#1c2d22";
     ctx.lineWidth = 2 * scale;
     ctx.stroke();
+    ctx.restore();
     if (state.showLabels) {
       drawExportLabel(
         ctx,
@@ -2419,7 +2889,6 @@
         scale,
       );
     }
-    ctx.restore();
   }
 
   function drawExportPath(ctx, points) {
@@ -2849,7 +3318,7 @@
     const passphrase = elements.guildPassphraseInput.value.trim();
     const publishFeatures = getSelectedGuildPublishFeatures();
     if (!passphrase) {
-      elements.guildPublishStatus.textContent = "Enter the senior ranger passphrase.";
+      elements.guildPublishStatus.textContent = "Enter the Marshal passphrase.";
       return;
     }
     if (!publishFeatures.length) {
@@ -2891,7 +3360,7 @@
   async function recoverAllAtlasEntries() {
     const passphrase = elements.guildPassphraseInput.value.trim();
     if (!passphrase) {
-      elements.guildPublishStatus.textContent = "Enter the senior ranger passphrase.";
+      elements.guildPublishStatus.textContent = "Enter the Marshal passphrase.";
       return;
     }
     if (!isSupabaseConfigured()) {
