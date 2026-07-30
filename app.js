@@ -1995,6 +1995,13 @@
       return;
     }
 
+    if (state.mode === "select") {
+      if (state.selectedId || state.selectedIds.length) {
+        selectFeature(null);
+      }
+      return;
+    }
+
     const point = clampPoint(event.latlng);
 
     if (state.mode === "marker") {
