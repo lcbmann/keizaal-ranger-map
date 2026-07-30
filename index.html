@@ -117,18 +117,12 @@
           </div>
           <div class="tool-rail-section field-workspace-controls">
             <p class="tool-rail-label">Game Link</p>
-            <label class="live-position-toggle" for="livePositionInput">
-              <input id="livePositionInput" type="checkbox" />
-              <span class="live-position-toggle-icon" aria-hidden="true"></span>
+            <label class="trailmark-visit-toggle live-position-toggle" for="livePositionInput">
               <span>Live position</span>
-            </label>
-            <small id="livePositionStatus" class="live-position-status" aria-live="polite">Off</small>
-            <label class="trailmark-visit-toggle share-position-toggle" for="sharePositionInput">
-              <span>Share with map staff</span>
-              <input id="sharePositionInput" type="checkbox" />
+              <input id="livePositionInput" type="checkbox" />
               <span class="toggle-switch" aria-hidden="true"></span>
             </label>
-            <small id="sharePositionStatus" class="live-position-status share-position-status" aria-live="polite">Follows Live position</small>
+            <small id="livePositionStatus" class="live-position-status" aria-live="polite">Off</small>
           </div>
           <div class="tool-rail-section trailmark-visit-controls field-workspace-controls">
             <p class="tool-rail-label">Trailmarks</p>
@@ -393,7 +387,7 @@
           <div>
             <p class="help-display-kicker">Display</p>
             <h3 id="display-settings-title">Map display</h3>
-            <p>Show names above visible entries with the setting here. Use the moon or sun at the top right to change the interface theme. With the desktop Ranger Atlas integration installed, switch on <strong>Live position</strong> to show your local in-game location and share it with authorized map staff. The shared point expires automatically when updates stop. <strong>Record visits</strong> separately shares only your entered name, the official Trailmark, and the time you reached it. Visible labels and the live marker are included in <strong>Save Map</strong>.</p>
+            <p>Show names above visible entries with the setting here. Use the moon or sun at the top right to change the interface theme. With the desktop Ranger Atlas integration installed, switch on <strong>Live position</strong> to show your local in-game location and power automatic Trailmark visits. <strong>Record visits</strong> shares your entered name, the official Trailmark, and the time you reached it. Visible labels and the live marker are included in <strong>Save Map</strong>.</p>
           </div>
           <label class="setting-toggle">
             <input id="showLabelsInput" type="checkbox" />
@@ -510,8 +504,10 @@
           <button id="guildSelectNoneBtn" class="button secondary" type="button">Select None</button>
         </div>
         <div id="guildEntryList" class="share-entry-list" aria-label="Entries to publish"></div>
-        <label class="field-label" for="guildPassphraseInput">Marshal Passphrase</label>
-        <input id="guildPassphraseInput" class="text-input" type="password" autocomplete="current-password" />
+        <form id="guildPassphraseForm" class="admin-password-form">
+          <label class="field-label" for="guildPassphraseInput">Marshal Passphrase</label>
+          <input id="guildPassphraseInput" class="text-input" type="password" autocomplete="current-password" />
+        </form>
         <p id="guildPublishStatus" class="dialog-status" aria-live="polite"></p>
         <div class="dialog-actions">
           <button id="guildPublishConfirmBtn" class="button primary" type="button">Publish Guild Atlas</button>
@@ -525,9 +521,11 @@
         </section>
         <section class="admin-recovery overwatch-admin">
           <h3>Overwatch</h3>
-          <p>View Rangers who have explicitly enabled Share position. Only their latest point is retained, and stale positions disappear automatically.</p>
-          <label class="field-label" for="overwatchPassphraseInput">Overwatch Passphrase</label>
-          <input id="overwatchPassphraseInput" class="text-input" type="password" autocomplete="off" />
+          <p>View currently active live-position links. Only the latest point is retained, and stale positions disappear automatically.</p>
+          <form id="overwatchPassphraseForm" class="admin-password-form">
+            <label class="field-label" for="overwatchPassphraseInput">Overwatch Passphrase</label>
+            <input id="overwatchPassphraseInput" class="text-input" type="password" autocomplete="off" />
+          </form>
           <div class="dialog-actions">
             <button id="overwatchToggleBtn" class="button secondary" type="button">Open Overwatch</button>
           </div>

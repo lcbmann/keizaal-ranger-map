@@ -1008,70 +1008,12 @@ html[data-workspace="edit"] .field-workspace-controls {
 }
 
 .live-position-toggle {
-  display: grid;
-  grid-template-columns: 18px minmax(0, 1fr);
-  align-items: center;
-  gap: 7px;
-  color: #3f2c19;
-  font-size: 0.78rem;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.live-position-toggle input {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.live-position-toggle-icon {
-  position: relative;
-  width: 18px;
-  height: 18px;
-  border: 2px solid #765c36;
-  border-radius: 50%;
-  background: rgba(255, 246, 222, 0.46);
-}
-
-.live-position-toggle-icon::before,
-.live-position-toggle-icon::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  background: #765c36;
-  transform: translate(-50%, -50%);
-}
-
-.live-position-toggle-icon::before {
-  width: 12px;
-  height: 2px;
-}
-
-.live-position-toggle-icon::after {
-  width: 2px;
-  height: 12px;
-}
-
-.live-position-toggle input:checked + .live-position-toggle-icon {
-  border-color: #234f37;
-  background: #2f6847;
-  box-shadow: 0 0 0 2px rgba(255, 246, 222, 0.52);
-}
-
-.live-position-toggle input:checked + .live-position-toggle-icon::before,
-.live-position-toggle input:checked + .live-position-toggle-icon::after {
-  background: #f7edcf;
-}
-
-.live-position-toggle input:focus-visible + .live-position-toggle-icon {
-  outline: 2px solid #244f37;
-  outline-offset: 3px;
+  margin-bottom: 0;
 }
 
 .live-position-status {
   display: block;
-  margin: 5px 0 0 25px;
+  margin: 5px 0 0;
   color: #72583a;
   font-size: 0.68rem;
   line-height: 1.25;
@@ -1146,16 +1088,6 @@ html[data-workspace="edit"] .field-workspace-controls {
 }
 
 .trailmark-visit-controls .live-position-status {
-  margin-left: 0;
-}
-
-.share-position-toggle {
-  margin-top: 11px;
-  font-size: 0.72rem;
-  white-space: nowrap;
-}
-
-.share-position-status {
   margin-left: 0;
 }
 

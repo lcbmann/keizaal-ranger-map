@@ -211,8 +211,6 @@
     showLabelsInput: document.getElementById("showLabelsInput"),
     livePositionInput: document.getElementById("livePositionInput"),
     livePositionStatus: document.getElementById("livePositionStatus"),
-    sharePositionInput: document.getElementById("sharePositionInput"),
-    sharePositionStatus: document.getElementById("sharePositionStatus"),
     trailmarkVisitsInput: document.getElementById("trailmarkVisitsInput"),
     trailmarkVisitsStatus: document.getElementById("trailmarkVisitsStatus"),
     discordLinkBtn: document.getElementById("discordLinkBtn"),
@@ -257,7 +255,9 @@
     guildPublishDialog: document.getElementById("guildPublishDialog"),
     guildPublishSummary: document.getElementById("guildPublishSummary"),
     guildEntryList: document.getElementById("guildEntryList"),
+    guildPassphraseForm: document.getElementById("guildPassphraseForm"),
     guildPassphraseInput: document.getElementById("guildPassphraseInput"),
+    overwatchPassphraseForm: document.getElementById("overwatchPassphraseForm"),
     overwatchPassphraseInput: document.getElementById("overwatchPassphraseInput"),
     overwatchToggleBtn: document.getElementById("overwatchToggleBtn"),
     overwatchStatus: document.getElementById("overwatchStatus"),
@@ -432,7 +432,6 @@
 
       state.livePositionEnabled = enabled;
       state.sharePositionEnabled = enabled;
-      elements.sharePositionInput.checked = enabled;
       saveState();
       if (state.livePositionEnabled) {
         startLivePositionPolling();
@@ -455,7 +454,6 @@
       }
       setStatus(state.followLivePosition ? "Following live position" : "Live position follow paused");
     });
-    elements.sharePositionInput.addEventListener("change", handleSharePositionToggle);
     elements.trailmarkVisitsInput.addEventListener("change", handleTrailmarkVisitsToggle);
     elements.discordLinkBtn.addEventListener("click", openDiscordLinkDialog);
     elements.discordLinkCloseBtn.addEventListener("click", closeDiscordLinkDialog);
@@ -483,6 +481,8 @@
 
     elements.undoBtn.addEventListener("click", undoLastAction);
     elements.guildAdminBtn.addEventListener("click", openGuildPublishDialog);
+    elements.guildPassphraseForm.addEventListener("submit", (event) => event.preventDefault());
+    elements.overwatchPassphraseForm.addEventListener("submit", (event) => event.preventDefault());
     elements.guildPublishConfirmBtn.addEventListener("click", publishGuildAtlas);
     elements.guildRecoverAllBtn.addEventListener("click", recoverAllAtlasEntries);
     elements.guildPublishCancelBtn.addEventListener("click", () => closeGuildPublishDialog());
@@ -535,14 +535,13 @@
         elements.trailmarkVisitsInput.checked = false;
         setStatus("Trailmark visit recording stopped because Signed As is empty");
       }
-      if (!state.creatorName && state.sharePositionEnabled) {
+      if (!state.creatorName && state.livePositionEnabled) {
         state.livePositionEnabled = false;
         state.sharePositionEnabled = false;
         elements.livePositionInput.checked = false;
-        elements.sharePositionInput.checked = false;
         void removeSharedLivePosition();
         stopLivePositionPolling();
-        setStatus("Position sharing stopped because Signed As is empty");
+        setStatus("Live position stopped because Signed As is empty");
       }
       if (
         state.creatorName
@@ -552,7 +551,6 @@
         state.livePositionEnabled = true;
         state.sharePositionEnabled = true;
         elements.livePositionInput.checked = true;
-        elements.sharePositionInput.checked = true;
         startLivePositionPolling();
       }
       saveState();
@@ -698,7 +696,6 @@
         shouldSave = true;
       }
       state.sharePositionEnabled = state.livePositionEnabled;
-      elements.sharePositionInput.checked = state.sharePositionEnabled;
       state.trailmarkVisitsEnabled = saved.trailmarkVisitsEnabled === true && Boolean(state.creatorName);
       elements.trailmarkVisitsInput.checked = state.trailmarkVisitsEnabled;
       if (saved.trailmarkVisitCooldowns && typeof saved.trailmarkVisitCooldowns === "object") {
@@ -982,64 +979,12 @@
     });
   }
 
-  function handleSharePositionToggle(event) {
-    const enabled = event.target.checked;
-    const wasLivePositionEnabled = state.livePositionEnabled;
-    if (enabled && !getCurrentCreatorName()) {
-      event.target.checked = false;
-      elements.creatorInput.focus();
-      setStatus("Enter your Ranger name before sharing your position");
-      updateSharePositionControls();
-      return;
-    }
-    if (enabled && !isSupabaseConfigured()) {
-      event.target.checked = false;
-      setStatus("Supabase is not configured, so your position cannot be shared");
-      updateSharePositionControls();
-      return;
-    }
-
-    state.sharePositionEnabled = enabled;
-    state.livePositionEnabled = enabled;
-    elements.livePositionInput.checked = enabled;
-    if (enabled && !wasLivePositionEnabled) {
-      startLivePositionPolling();
-    }
-    if (!enabled) {
-      void removeSharedLivePosition();
-      stopLivePositionPolling();
-    }
-    saveState();
-    updateSharePositionControls();
-    setStatus(enabled ? "Position sharing enabled" : "Position sharing disabled");
-  }
-
   function updateSharePositionControls() {
-    elements.sharePositionInput.checked = state.sharePositionEnabled;
-    if (!state.sharePositionEnabled) {
-      updateSharePositionStatus("Off", "off");
-      return;
-    }
-    if (!getCurrentCreatorName()) {
-      updateSharePositionStatus("Name required", "unavailable");
-      return;
-    }
-    if (!state.livePositionEnabled) {
-      updateSharePositionStatus("Live position required", "unavailable");
-      return;
-    }
-    if (state.livePositionConnection !== "linked" || !state.livePositionPoint || state.livePositionPoint.stale) {
-      updateSharePositionStatus("Waiting for Skyrim", "connecting");
-      return;
-    }
-    updateSharePositionStatus(state.sharePositionInFlight ? "Sharing..." : "Position shared", "linked");
-  }
-
-  function updateSharePositionStatus(text, status) {
-    elements.sharePositionStatus.textContent = text;
-    elements.sharePositionStatus.removeAttribute("title");
-    elements.sharePositionStatus.classList.toggle("is-linked", status === "linked");
-    elements.sharePositionStatus.classList.toggle("is-unavailable", status === "unavailable");
+    // Live position and private position sync are one setting. Keep the
+    // internal flag aligned without exposing the staff-sharing mechanism.
+    state.sharePositionEnabled = Boolean(
+      state.livePositionEnabled && getCurrentCreatorName() && isSupabaseConfigured(),
+    );
   }
 
   async function shareLivePosition(point) {
@@ -1055,7 +1000,6 @@
     }
 
     state.sharePositionInFlight = true;
-    updateSharePositionControls();
     try {
       await callSupabaseRpc("upsert_atlas_live_position", {
         device_token_input: getOrCreateDiscordDeviceToken(),
@@ -1065,11 +1009,8 @@
         heading_degrees_input: Number(point.heading) || 0,
       });
       state.lastSharedPositionAt = Date.now();
-      updateSharePositionStatus("Position shared", "linked");
     } catch (error) {
       const message = getReadableError(error, "Position could not be shared");
-      updateSharePositionStatus("Share failed", "unavailable");
-      elements.sharePositionStatus.title = message;
       setStatus(message);
     } finally {
       state.sharePositionInFlight = false;
@@ -1223,7 +1164,6 @@
     state.trailmarkVisitCandidate = null;
     if (enabled) {
       state.sharePositionEnabled = true;
-      elements.sharePositionInput.checked = true;
     }
     if (enabled && !state.livePositionEnabled) {
       state.livePositionEnabled = true;
@@ -2243,7 +2183,7 @@
       const draggable = canRepositionMarker(feature);
       const marker = L.marker([point.y, point.x], {
         draggable,
-        pane: isOfficialTrailmark(feature) ? "trailmark-pane" : undefined,
+        pane: isOfficialTrailmark(feature) ? "trailmark-pane" : "markerPane",
         zIndexOffset: getFeatureZIndexOffset(feature, selected),
         icon: L.divIcon({
           className: "",
