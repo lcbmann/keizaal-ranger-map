@@ -928,57 +928,18 @@ textarea {
   height: 12px;
 }
 
-.trailmark-visit-toggle-icon {
-  position: relative;
-  width: 18px;
-  height: 18px;
-  border: 2px solid #765c36;
-  border-radius: 50%;
-  background: rgba(255, 246, 222, 0.46);
-}
-
-.trailmark-visit-toggle-icon::before {
-  content: "";
-  position: absolute;
-  left: 4px;
-  top: 3px;
-  width: 7px;
-  height: 5px;
-  border: 2px solid #765c36;
-  border-left: 0;
-  transform: skewY(-8deg);
-}
-
-.trailmark-visit-toggle-icon::after {
-  content: "";
-  position: absolute;
-  left: 5px;
-  top: 9px;
-  width: 2px;
-  height: 6px;
-  background: #765c36;
-}
-
-.live-position-toggle input:checked + .live-position-toggle-icon,
-.live-position-toggle input:checked + .trailmark-visit-toggle-icon {
+.live-position-toggle input:checked + .live-position-toggle-icon {
   border-color: #234f37;
   background: #2f6847;
   box-shadow: 0 0 0 2px rgba(255, 246, 222, 0.52);
 }
 
 .live-position-toggle input:checked + .live-position-toggle-icon::before,
-.live-position-toggle input:checked + .live-position-toggle-icon::after,
-.live-position-toggle input:checked + .trailmark-visit-toggle-icon::before {
-  border-color: #f7edcf;
+.live-position-toggle input:checked + .live-position-toggle-icon::after {
   background: #f7edcf;
 }
 
-.live-position-toggle input:checked + .trailmark-visit-toggle-icon::after {
-  background: #f7edcf;
-}
-
-.live-position-toggle input:focus-visible + .live-position-toggle-icon,
-.live-position-toggle input:focus-visible + .trailmark-visit-toggle-icon {
+.live-position-toggle input:focus-visible + .live-position-toggle-icon {
   outline: 2px solid #244f37;
   outline-offset: 3px;
 }
@@ -1001,6 +962,66 @@ textarea {
 
 .trailmark-visit-controls {
   display: grid;
+}
+
+.trailmark-visit-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: #3f2c19;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.trailmark-visit-toggle input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.toggle-switch {
+  position: relative;
+  width: 34px;
+  height: 19px;
+  flex: 0 0 auto;
+  border: 1px solid #72583a;
+  border-radius: 10px;
+  background: rgba(93, 73, 45, 0.42);
+  box-shadow: inset 0 1px 3px rgba(50, 31, 12, 0.24);
+  transition: background 120ms ease, border-color 120ms ease;
+}
+
+.toggle-switch::after {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 2px;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #f7edcf;
+  box-shadow: 0 1px 3px rgba(38, 24, 10, 0.38);
+  transition: transform 120ms ease;
+}
+
+.trailmark-visit-toggle input:checked + .toggle-switch {
+  border-color: #1f4f35;
+  background: #2f6847;
+}
+
+.trailmark-visit-toggle input:checked + .toggle-switch::after {
+  transform: translateX(15px);
+}
+
+.trailmark-visit-toggle input:focus-visible + .toggle-switch {
+  outline: 2px solid #244f37;
+  outline-offset: 3px;
+}
+
+.trailmark-visit-controls .live-position-status {
+  margin-left: 0;
 }
 
 .rail-link-button {
@@ -2165,7 +2186,7 @@ textarea {
     column-gap: 8px;
   }
 
-  .trailmark-visit-controls .live-position-toggle,
+  .trailmark-visit-controls .trailmark-visit-toggle,
   .trailmark-visit-controls .live-position-status {
     grid-column: 1;
   }
