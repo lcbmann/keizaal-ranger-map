@@ -29,6 +29,8 @@
   const TRAILMARK_VISIT_HEARTBEAT_MS = 20 * 1000;
   const TRAILMARK_ACCESS_POLL_MS = 4000;
   const TRAILMARK_ACCESS_POLL_LIMIT = 30;
+  const GUILD_ATLAS_REFRESH_MS = 5 * 60 * 1000;
+  const GUILD_ATLAS_CHECK_COOLDOWN_MS = 30 * 1000;
   const LIVE_POSITION_SHARE_INTERVAL_MS = 10 * 1000;
   const OVERWATCH_POLL_MS = 5 * 1000;
   const TRAILMARK_DROP_POLL_MS = 4 * 1000;
@@ -123,7 +125,10 @@
     sharePositionEnabled: false,
     sharePositionInFlight: false,
     lastSharedPositionAt: 0,
+    guildAtlasUpdatedAt: "",
+    guildAtlasLocalChanges: false,
     trailmarkVisitsEnabled: false,
+    nearbyTrailmarkId: null,
     trailmarkVisitCandidate: null,
     trailmarkVisitInFlight: false,
     trailmarkVisitActive: null,
@@ -175,8 +180,10 @@
     [MAP_HEIGHT + 240, MAP_WIDTH + 240],
   ]);
 
+  map.createPane("trailmark-pane");
+  map.getPane("trailmark-pane").style.zIndex = "720";
   map.createPane("live-position-pane");
-  map.getPane("live-position-pane").style.zIndex = "710";
+  map.getPane("live-position-pane").style.zIndex = "730";
 
   const featureLayer = L.layerGroup().addTo(map);
   const labelLayer = L.layerGroup().addTo(map);
@@ -325,6 +332,9 @@
   let livePositionRequest = null;
   let livePositionMarker = null;
   let trailmarkAccessPollTimer = null;
+  let guildAtlasRefreshTimer = null;
+  let guildAtlasRefreshInFlight = false;
+  let guildAtlasLastCheckedAt = 0;
   let overwatchPollTimer = null;
   let trailmarkDropPollTimer = null;
 
@@ -346,7 +356,13 @@
     updateSharePositionControls();
     if (isSupabaseConfigured()) {
       void refreshDiscordLink();
+      void refreshOfficialGuildAtlas();
+      guildAtlasRefreshTimer = window.setInterval(
+        () => void refreshOfficialGuildAtlas(),
+        GUILD_ATLAS_REFRESH_MS,
+      );
     }
+    window.addEventListener("focus", () => void refreshOfficialGuildAtlas());
     if (state.livePositionEnabled) {
       startLivePositionPolling();
     }
@@ -671,6 +687,8 @@
       elements.followLivePositionInput.checked = state.followLivePosition;
       state.creatorName = normalizeCreatorName(saved.creatorName || "");
       elements.creatorInput.value = state.creatorName;
+      state.guildAtlasUpdatedAt = typeof saved.guildAtlasUpdatedAt === "string" ? saved.guildAtlasUpdatedAt : "";
+      state.guildAtlasLocalChanges = saved.guildAtlasLocalChanges === true;
       state.sharePositionEnabled = Boolean(state.creatorName)
         && isSupabaseConfigured()
         && state.livePositionEnabled;
@@ -716,6 +734,8 @@
       livePositionEnabled: state.livePositionEnabled,
       followLivePosition: state.followLivePosition,
       sharePositionEnabled: state.sharePositionEnabled,
+      guildAtlasUpdatedAt: state.guildAtlasUpdatedAt,
+      guildAtlasLocalChanges: state.guildAtlasLocalChanges,
       trailmarkVisitsEnabled: state.trailmarkVisitsEnabled,
       trailmarkVisitCooldowns: state.trailmarkVisitCooldowns,
       creatorName: state.creatorName,
@@ -914,7 +934,9 @@
     const point = state.livePositionPoint;
     if (!livePositionMarker) {
       livePositionMarker = L.marker([point.y, point.x], {
-        interactive: true,
+        // Keep the player arrow visible above Trailmarks without blocking
+        // clicks on the Trailmark underneath it.
+        interactive: false,
         keyboard: false,
         pane: "live-position-pane",
         zIndexOffset: 100000,
@@ -1256,6 +1278,10 @@
   function evaluateTrailmarkProximity(point) {
     if (!state.trailmarkVisitsEnabled || !getCurrentCreatorName() || !point || point.stale) {
       void leaveTrailmarkVisit();
+      if (state.nearbyTrailmarkId) {
+        state.nearbyTrailmarkId = null;
+        renderAll();
+      }
       state.trailmarkVisitCandidate = null;
       updateTrailmarkVisitControls();
       return;
@@ -1270,11 +1296,23 @@
       .filter((candidate) => candidate.distance <= TRAILMARK_VISIT_RADIUS)
       .sort((left, right) => left.distance - right.distance)[0];
 
+    const nearbyChanged = state.nearbyTrailmarkId !== (nearest?.feature.id || null);
+    state.nearbyTrailmarkId = nearest?.feature.id || null;
+
     if (!nearest) {
+      if (nearbyChanged) {
+        renderAll();
+      }
       void leaveTrailmarkVisit();
       state.trailmarkVisitCandidate = null;
       updateTrailmarkVisitStatus("Watching Trailmarks", "linked");
       return;
+    }
+
+    if (state.workspaceMode === "field" && !getSelectedFeature()) {
+      selectFeature(nearest.feature.id);
+    } else if (nearbyChanged) {
+      renderAll();
     }
 
     if (state.trailmarkVisitActive && state.trailmarkVisitActive.featureId !== nearest.feature.id) {
@@ -2205,10 +2243,11 @@
       const draggable = canRepositionMarker(feature);
       const marker = L.marker([point.y, point.x], {
         draggable,
+        pane: isOfficialTrailmark(feature) ? "trailmark-pane" : undefined,
         zIndexOffset: getFeatureZIndexOffset(feature, selected),
         icon: L.divIcon({
           className: "",
-          html: `<div class="poi-marker marker-${escapeHtml(feature.category)}${mixed ? " is-mixed" : ""}${isGuildFeature(feature) ? " is-guild" : ""}${isCanonFeature(feature) ? " is-canon" : ""}${isOfficialTrailmark(feature) ? " is-trailmark" : ""}${selected ? " is-selected" : ""}${draggable ? " is-draggable" : ""}" style="${getFeatureMarkerStyle(feature)}">${getFeatureMarkerIcon(feature)}</div>`,
+          html: `<div class="poi-marker marker-${escapeHtml(feature.category)}${mixed ? " is-mixed" : ""}${isGuildFeature(feature) ? " is-guild" : ""}${isCanonFeature(feature) ? " is-canon" : ""}${isOfficialTrailmark(feature) ? " is-trailmark" : ""}${state.nearbyTrailmarkId === feature.id ? " is-nearby" : ""}${selected ? " is-selected" : ""}${draggable ? " is-draggable" : ""}" style="${getFeatureMarkerStyle(feature)}">${getFeatureMarkerIcon(feature)}</div>`,
           iconSize: [32, 32],
           iconAnchor: [16, 32],
         }),
@@ -2866,6 +2905,9 @@
     }
     stampFeatureUpdate(feature);
     feature.updatedAt = new Date().toISOString();
+    if (isGuildFeature(feature)) {
+      state.guildAtlasLocalChanges = true;
+    }
     state.movingFeatureId = null;
     state.movingOriginalPoint = null;
     saveState();
@@ -3008,7 +3050,9 @@
     showFeatureCategories(feature);
     stampFeatureUpdate(feature);
     feature.updatedAt = new Date().toISOString();
-
+    if (isGuildFeature(feature)) {
+      state.guildAtlasLocalChanges = true;
+    }
     saveState();
     renderAll();
     setStatus("Saved");
@@ -3054,6 +3098,9 @@
 
     const selectedIds = new Set(deletableFeatures.map((feature) => feature.id));
     pushUndo(selectedCount === 1 ? `${deletableFeatures[0].title} delete` : `${selectedCount} entries delete`);
+    if (deletableFeatures.some(isGuildFeature)) {
+      state.guildAtlasLocalChanges = true;
+    }
     state.features = state.features.filter((item) => !selectedIds.has(item.id));
     if (draftId && selectedFeatures.some((feature) => feature.id === draftId)) {
       cancelDrawing(false, false);
@@ -3807,6 +3854,8 @@
       const guildFeatures = markFeaturesAsGuild(publishFeatures);
       pushUndo("guild atlas publish");
       state.features = replaceGuildFeatures(state.features, guildFeatures);
+      state.guildAtlasUpdatedAt = typeof result.updated_at === "string" ? result.updated_at : state.guildAtlasUpdatedAt;
+      state.guildAtlasLocalChanges = false;
       state.selectedId = null;
       state.selectedIds = [];
       saveState();
@@ -3884,6 +3933,46 @@
       throw new Error("Guild Atlas not found");
     }
     return atlas;
+  }
+
+  async function refreshOfficialGuildAtlas({ force = false } = {}) {
+    if (!isSupabaseConfigured() || guildAtlasRefreshInFlight) {
+      return;
+    }
+    if (!force && Date.now() - guildAtlasLastCheckedAt < GUILD_ATLAS_CHECK_COOLDOWN_MS) {
+      return;
+    }
+
+    guildAtlasLastCheckedAt = Date.now();
+    guildAtlasRefreshInFlight = true;
+    try {
+      const guildAtlas = await fetchGuildAtlas(GUILD_ATLAS_CODE);
+      const remoteUpdatedAt = typeof guildAtlas.updated_at === "string" ? guildAtlas.updated_at : "";
+      if (!force && remoteUpdatedAt && remoteUpdatedAt === state.guildAtlasUpdatedAt) {
+        return;
+      }
+      if (!force && state.guildAtlasLocalChanges) {
+        console.warn("Official GUILD Atlas changed while local official edits are waiting to be published.");
+        return;
+      }
+
+      const guildFeatures = getGuildFeaturesFromResponse(guildAtlas);
+      state.features = replaceGuildFeatures(state.features, guildFeatures);
+      state.guildAtlasUpdatedAt = remoteUpdatedAt;
+      state.guildAtlasLocalChanges = false;
+      if (state.selectedId && !state.features.some((feature) => feature.id === state.selectedId)) {
+        state.selectedId = null;
+        state.selectedIds = [];
+      }
+      saveState();
+      renderAll();
+      updateMapDensity();
+      setStatus("Official GUILD Atlas updated");
+    } catch (error) {
+      console.warn("Could not refresh the official GUILD Atlas", error);
+    } finally {
+      guildAtlasRefreshInFlight = false;
+    }
   }
 
   async function fetchSkyrimAtlas() {
@@ -4092,7 +4181,13 @@
       const summary = summarizeIncomingFeatures(nextFeatures);
       summary.isGuildCode = isGuildCode;
       summary.isSkyrimCode = isSkyrimCode;
-      state.pendingReceive = { features: nextFeatures, isGuildCode, isSkyrimCode, summary };
+      state.pendingReceive = {
+        features: nextFeatures,
+        isGuildCode,
+        isSkyrimCode,
+        summary,
+        updatedAt: isGuildCode && typeof imported.updated_at === "string" ? imported.updated_at : "",
+      };
       elements.receivePreview.hidden = false;
       elements.receivePreview.innerHTML = renderReceivePreview(summary);
       elements.receiveActions.hidden = false;
@@ -4130,6 +4225,8 @@
       pushUndo(replace ? "receive code replace" : "receive code merge");
       if (state.pendingReceive.isGuildCode) {
         state.features = replaceGuildFeatures(state.features, nextFeatures);
+        state.guildAtlasUpdatedAt = state.pendingReceive.updatedAt || state.guildAtlasUpdatedAt;
+        state.guildAtlasLocalChanges = false;
         state.selectedId = null;
         state.selectedIds = [];
         resetViewFilters();

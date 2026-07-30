@@ -2320,6 +2320,16 @@ html[data-workspace="field"] .poi-marker.is-trailmark::before {
   pointer-events: none;
 }
 
+html[data-workspace="field"] .poi-marker.is-trailmark.is-nearby {
+  outline: 3px solid rgba(255, 239, 171, 0.9);
+  outline-offset: 4px;
+  filter: brightness(1.16) saturate(1.08);
+}
+
+.live-position-marker {
+  pointer-events: none;
+}
+
 @keyframes trailmark-beacon {
   0% {
     opacity: 0.76;
