@@ -251,12 +251,13 @@
             <section id="trailmarkPresencePanel" class="trailmark-presence-panel" hidden>
               <div class="section-heading-row">
                 <h3>Recent Trailmark visits</h3>
-                <div class="filter-heading-actions">
-                  <button id="trailmarkDropBtn" class="quiet-action" type="button">Leave Drop</button>
-                  <button id="copyTrailmarkIdBtn" class="quiet-action" type="button">Copy ID</button>
-                  <button id="refreshTrailmarkVisitsBtn" class="quiet-action" type="button">Refresh</button>
-                </div>
+                <button id="refreshTrailmarkVisitsBtn" class="quiet-action" type="button">Refresh</button>
               </div>
+              <button id="trailmarkDropBtn" class="button primary trailmark-drop-action" type="button">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v16M5 9h14M7 20h10" /></svg>
+                <span>Leave Field Drop</span>
+              </button>
+              <p class="trailmark-drop-hint">Leave a note for Rangers at this Trailmark through Discord.</p>
               <p id="trailmarkPresenceStatus" class="trailmark-presence-status"></p>
               <ul id="trailmarkPresenceList" class="trailmark-presence-list"></ul>
             </section>

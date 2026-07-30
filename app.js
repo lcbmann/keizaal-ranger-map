@@ -26,6 +26,7 @@
   const TRAILMARK_VISIT_DWELL_MS = 12000;
   const TRAILMARK_VISIT_COOLDOWN_MS = 30 * 60 * 1000;
   const TRAILMARK_VISIT_FAILURE_RETRY_MS = 60 * 1000;
+  const TRAILMARK_VISIT_HEARTBEAT_MS = 20 * 1000;
   const TRAILMARK_ACCESS_POLL_MS = 4000;
   const TRAILMARK_ACCESS_POLL_LIMIT = 30;
   const LIVE_POSITION_SHARE_INTERVAL_MS = 10 * 1000;
@@ -125,6 +126,9 @@
     trailmarkVisitsEnabled: false,
     trailmarkVisitCandidate: null,
     trailmarkVisitInFlight: false,
+    trailmarkVisitActive: null,
+    trailmarkVisitLastHeartbeatAt: 0,
+    trailmarkVisitDepartureInFlight: false,
     trailmarkVisitCooldowns: {},
     trailmarkVisitRetryAfter: {},
     trailmarkVisitsByFeature: new Map(),
@@ -295,7 +299,6 @@
     trailmarkPresencePanel: document.getElementById("trailmarkPresencePanel"),
     trailmarkPresenceStatus: document.getElementById("trailmarkPresenceStatus"),
     trailmarkPresenceList: document.getElementById("trailmarkPresenceList"),
-    copyTrailmarkIdBtn: document.getElementById("copyTrailmarkIdBtn"),
     refreshTrailmarkVisitsBtn: document.getElementById("refreshTrailmarkVisitsBtn"),
     trailmarkDropBtn: document.getElementById("trailmarkDropBtn"),
     trailmarkDropDialog: document.getElementById("trailmarkDropDialog"),
@@ -435,7 +438,6 @@
     closeDialogOnBackdrop(elements.discordLinkDialog);
     elements.trailmarkArrivalCloseBtn.addEventListener("click", hideTrailmarkArrival);
     elements.trailmarkArrivalLinkBtn.addEventListener("click", openDiscordLinkDialog);
-    elements.copyTrailmarkIdBtn.addEventListener("click", copySelectedTrailmarkId);
     elements.refreshTrailmarkVisitsBtn.addEventListener("click", () => {
       const feature = getSelectedFeature();
       if (isOfficialTrailmark(feature)) {
@@ -493,10 +495,16 @@
     closeDialogOnBackdrop(elements.clearDialog);
 
     elements.creatorInput.addEventListener("input", (event) => {
+      const previousCreatorName = state.creatorName;
       state.creatorName = normalizeCreatorName(event.target.value);
+      if (previousCreatorName && previousCreatorName !== state.creatorName) {
+        state.trailmarkVisitCandidate = null;
+        void leaveTrailmarkVisit();
+      }
       if (!state.creatorName && state.trailmarkVisitsEnabled) {
         state.trailmarkVisitsEnabled = false;
         state.trailmarkVisitCandidate = null;
+        void leaveTrailmarkVisit();
         elements.trailmarkVisitsInput.checked = false;
         setStatus("Trailmark visit recording stopped because Signed As is empty");
       }
@@ -705,6 +713,7 @@
     }
     state.livePositionConnection = state.livePositionEnabled ? "connecting" : "off";
     if (clearPosition) {
+      void leaveTrailmarkVisit();
       state.livePositionPoint = null;
       state.livePositionSnapshot = null;
       state.trailmarkVisitCandidate = null;
@@ -827,6 +836,7 @@
       return;
     }
     state.livePositionPoint = { ...state.livePositionPoint, stale: true };
+    void leaveTrailmarkVisit();
     state.trailmarkVisitCandidate = null;
     updateTrailmarkVisitControls();
     updateSharePositionControls();
@@ -1159,6 +1169,7 @@
       startLivePositionPolling();
     }
     if (!enabled) {
+      void leaveTrailmarkVisit();
       hideTrailmarkArrival();
     }
     saveState();
@@ -1203,13 +1214,8 @@
   }
 
   function evaluateTrailmarkProximity(point) {
-    if (
-      !state.trailmarkVisitsEnabled ||
-      !getCurrentCreatorName() ||
-      !point ||
-      point.stale ||
-      state.trailmarkVisitInFlight
-    ) {
+    if (!state.trailmarkVisitsEnabled || !getCurrentCreatorName() || !point || point.stale) {
+      void leaveTrailmarkVisit();
       state.trailmarkVisitCandidate = null;
       updateTrailmarkVisitControls();
       return;
@@ -1225,15 +1231,45 @@
       .sort((left, right) => left.distance - right.distance)[0];
 
     if (!nearest) {
+      void leaveTrailmarkVisit();
       state.trailmarkVisitCandidate = null;
       updateTrailmarkVisitStatus("Watching Trailmarks", "linked");
       return;
     }
 
+    if (state.trailmarkVisitActive && state.trailmarkVisitActive.featureId !== nearest.feature.id) {
+      void leaveTrailmarkVisit();
+    }
+
+    if (state.trailmarkVisitActive && state.trailmarkVisitActive.featureId === nearest.feature.id) {
+      if (Date.now() - state.trailmarkVisitLastHeartbeatAt >= TRAILMARK_VISIT_HEARTBEAT_MS) {
+        void touchTrailmarkVisit(nearest.feature);
+      }
+      state.trailmarkVisitCandidate = null;
+      updateTrailmarkVisitStatus(`At ${nearest.feature.title}`, "linked");
+      return;
+    }
+
+    if (state.trailmarkVisitInFlight) {
+      state.trailmarkVisitCandidate = null;
+      return;
+    }
+
     const lastVisit = Number(state.trailmarkVisitCooldowns[nearest.feature.id] || 0);
     if (Date.now() - lastVisit < TRAILMARK_VISIT_COOLDOWN_MS) {
+      if (!state.trailmarkVisitActive) {
+        state.trailmarkVisitActive = {
+          featureId: nearest.feature.id,
+          rangerName: getCurrentCreatorName(),
+          deviceToken: getStoredDiscordDeviceToken(),
+        };
+        state.trailmarkVisitLastHeartbeatAt = 0;
+      }
+      if (Date.now() - state.trailmarkVisitLastHeartbeatAt >= TRAILMARK_VISIT_HEARTBEAT_MS) {
+        void touchTrailmarkVisit(nearest.feature);
+      }
       state.trailmarkVisitCandidate = null;
-      updateTrailmarkVisitStatus(`Recently visited ${nearest.feature.title}`, "linked");
+      updateTrailmarkVisitStatus(`At ${nearest.feature.title}`, "linked");
       return;
     }
 
@@ -1282,6 +1318,12 @@
       state.trailmarkVisitCooldowns[feature.id] = Date.now();
       delete state.trailmarkVisitRetryAfter[feature.id];
       state.trailmarkVisitErrors.delete(feature.id);
+      state.trailmarkVisitActive = {
+        featureId: feature.id,
+        rangerName: getCurrentCreatorName(),
+        deviceToken: getStoredDiscordDeviceToken(),
+      };
+      state.trailmarkVisitLastHeartbeatAt = Date.now();
       saveState();
       showTrailmarkArrival(feature, result || {});
       await refreshTrailmarkVisits(feature, true);
@@ -1303,6 +1345,49 @@
     }
   }
 
+  async function touchTrailmarkVisit(feature) {
+    const active = state.trailmarkVisitActive;
+    if (!active || active.featureId !== feature.id) {
+      return;
+    }
+    state.trailmarkVisitLastHeartbeatAt = Date.now();
+    try {
+      await callSupabaseRpc("touch_atlas_trailmark_visit", {
+        atlas_location_id_input: feature.id,
+        ranger_name_input: active.rangerName,
+        device_token_input: active.deviceToken,
+      });
+    } catch (error) {
+      console.warn("Could not update Trailmark presence", error);
+    }
+  }
+
+  async function leaveTrailmarkVisit() {
+    const active = state.trailmarkVisitActive;
+    if (!active || state.trailmarkVisitDepartureInFlight) {
+      return;
+    }
+    state.trailmarkVisitActive = null;
+    state.trailmarkVisitLastHeartbeatAt = 0;
+    state.trailmarkVisitDepartureInFlight = true;
+    try {
+      await callSupabaseRpc("leave_atlas_trailmark_visit", {
+        atlas_location_id_input: active.featureId,
+        ranger_name_input: active.rangerName,
+        device_token_input: active.deviceToken,
+      });
+      const feature = state.features.find((candidate) => candidate.id === active.featureId);
+      if (feature) {
+        state.trailmarkVisitsByFeature.delete(feature.id);
+        await refreshTrailmarkVisits(feature, true);
+      }
+    } catch (error) {
+      console.warn("Could not record Trailmark departure", error);
+    } finally {
+      state.trailmarkVisitDepartureInFlight = false;
+    }
+  }
+
   function isOfficialTrailmark(feature) {
     return Boolean(
       feature &&
@@ -1311,19 +1396,6 @@
         getFeatureCategories(feature).includes("trailmark") &&
         feature.points[0],
     );
-  }
-
-  async function copySelectedTrailmarkId() {
-    const feature = getSelectedFeature();
-    if (!isOfficialTrailmark(feature)) {
-      return;
-    }
-    try {
-      await navigator.clipboard.writeText(feature.id);
-      setStatus(`Copied Atlas location ID for ${feature.title}`);
-    } catch (error) {
-      setStatus("Could not copy the Atlas location ID");
-    }
   }
 
   async function refreshTrailmarkVisits(feature, force = false) {
@@ -1406,9 +1478,10 @@
     elements.trailmarkPresenceStatus.textContent = `${visits.length} recent ${visits.length === 1 ? "visitor" : "visitors"}.`;
     visits.forEach((visit) => {
       const item = document.createElement("li");
+      const activity = formatTrailmarkVisitActivity(visit);
       item.innerHTML = `
         <strong>${escapeHtml(normalizeCreatorName(visit.ranger_name) || "Unknown Ranger")}</strong>
-        <time datetime="${escapeHtml(visit.last_visited_at || "")}">${escapeHtml(formatRelativeTime(visit.last_visited_at))}</time>
+        <time datetime="${escapeHtml(activity.datetime)}">${escapeHtml(activity.label)}</time>
       `;
       elements.trailmarkPresenceList.appendChild(item);
     });
@@ -1552,8 +1625,31 @@
     }
     elements.trailmarkArrivalVisitors.textContent = `Recently here: ${visits
       .slice(0, 4)
-      .map((visit) => `${normalizeCreatorName(visit.ranger_name) || "Unknown Ranger"} ${formatRelativeTime(visit.last_visited_at)}`)
+      .map((visit) => {
+        const activity = formatTrailmarkVisitActivity(visit);
+        return `${normalizeCreatorName(visit.ranger_name) || "Unknown Ranger"} ${activity.label.toLowerCase()}`;
+      })
       .join(", ")}.`;
+  }
+
+  function formatTrailmarkVisitActivity(visit) {
+    if (visit && visit.is_active) {
+      return {
+        datetime: visit.last_seen_at || "",
+        label: "Here now",
+      };
+    }
+    if (visit && visit.last_left_at) {
+      return {
+        datetime: visit.last_left_at,
+        label: `Left ${formatRelativeTime(visit.last_left_at)}`,
+      };
+    }
+    const lastSeenAt = visit?.last_seen_at || visit?.last_visited_at || "";
+    return {
+      datetime: lastSeenAt,
+      label: lastSeenAt ? `Last seen ${formatRelativeTime(lastSeenAt)}` : "Visit time unavailable",
+    };
   }
 
   function hideTrailmarkArrival() {
@@ -4943,7 +5039,7 @@
       .slice(0, 2)
       .map((categoryId) => `<span>${getCategoryIcon(categoryId)}</span>`)
       .join("");
-    const remaining = featureCategories.length > 2 ? `<b>+${featureCategories.length - 2}</b>` : "";
+    const remaining = featureCategories.length > 2 ? `<b class="mixed-marker-count">+${featureCategories.length - 2}</b>` : "";
     return `<span class="mixed-marker-icons">${icons}</span>${remaining}`;
   }
 

@@ -1,0 +1,17 @@
+{
+  "name": "ranger-atlas-native-marker-test",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "webpack --mode=production"
+  },
+  "dependencies": {
+    "@skyrim-platform/skyrim-platform": "2.9.0"
+  },
+  "devDependencies": {
+    "ts-loader": "^9.5.4",
+    "typescript": "^5.9.3",
+    "webpack": "^5.101.3",
+    "webpack-cli": "^6.0.1"
+  }
+}
