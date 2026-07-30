@@ -441,6 +441,7 @@
       state.sharePositionEnabled = enabled;
       saveState();
       if (state.livePositionEnabled) {
+        renderTrailmarkVisitRadii();
         startLivePositionPolling();
         setStatus("Connecting to the local Ranger Atlas integration");
       } else {
@@ -775,6 +776,7 @@
       state.livePositionSnapshot = null;
       state.trailmarkVisitCandidate = null;
       livePositionLayer.clearLayers();
+      trailmarkRadiusLayer.clearLayers();
       livePositionMarker = null;
       updateLivePositionStatus("Off", "off");
       updateTrailmarkVisitControls();
@@ -975,8 +977,7 @@
 
   function renderTrailmarkVisitRadii() {
     trailmarkRadiusLayer.clearLayers();
-    const point = state.livePositionPoint;
-    if (!state.livePositionEnabled || !point || point.stale) {
+    if (!state.livePositionEnabled || state.workspaceMode !== "field") {
       return;
     }
 
