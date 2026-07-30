@@ -169,6 +169,8 @@ textarea {
 }
 
 .utility-actions {
+  display: flex;
+  align-items: center;
   gap: 7px;
 }
 
@@ -190,6 +192,57 @@ textarea {
 .topbar-actions {
   gap: 10px;
   justify-content: flex-end;
+}
+
+.atlas-action-cluster {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.topbar-action-button {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 10px;
+  border: 1px solid rgba(72, 45, 17, 0.42);
+  border-radius: 3px;
+  color: #3f2c19;
+  background: rgba(255, 246, 222, 0.62);
+  box-shadow: 0 2px 6px rgba(60, 35, 12, 0.1);
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.topbar-action-button:hover {
+  border-color: rgba(33, 79, 50, 0.58);
+  color: #1f4d31;
+  background: rgba(255, 249, 230, 0.9);
+}
+
+.topbar-action-button svg {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.topbar-action-button.is-danger {
+  border-color: rgba(127, 47, 36, 0.5);
+  color: #782f25;
+}
+
+.topbar-action-button.is-danger:hover {
+  border-color: #782f25;
+  color: #fff4d8;
+  background: #782f25;
 }
 
 .workspace-switch {
@@ -234,101 +287,6 @@ textarea {
 
 .workspace-switch-button.is-active small {
   color: #dfd2b3;
-}
-
-.atlas-menu {
-  position: relative;
-}
-
-.atlas-menu > summary {
-  min-height: 38px;
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 7px 13px;
-  border: 1px solid rgba(72, 45, 17, 0.42);
-  border-radius: 3px;
-  color: var(--ink);
-  background: rgba(255, 246, 222, 0.66);
-  box-shadow: 0 2px 6px rgba(60, 35, 12, 0.12);
-  cursor: pointer;
-  font-weight: 700;
-  list-style: none;
-}
-
-.atlas-menu > summary::-webkit-details-marker {
-  display: none;
-}
-
-.atlas-menu > summary::after {
-  content: "";
-  width: 6px;
-  height: 6px;
-  border-right: 1.5px solid currentColor;
-  border-bottom: 1.5px solid currentColor;
-  transform: translateY(-2px) rotate(45deg);
-}
-
-.atlas-menu[open] > summary::after {
-  transform: translateY(2px) rotate(225deg);
-}
-
-.atlas-menu-popover {
-  position: absolute;
-  right: 0;
-  top: calc(100% + 8px);
-  z-index: 2100;
-  width: 290px;
-  display: grid;
-  gap: 5px;
-  padding: 8px;
-  border: 1px solid rgba(64, 42, 19, 0.48);
-  border-radius: 5px;
-  background:
-    linear-gradient(rgba(246, 235, 208, 0.98), rgba(225, 202, 155, 0.98)),
-    var(--paper);
-  box-shadow: 0 14px 34px rgba(24, 15, 7, 0.34);
-}
-
-.atlas-menu-popover > p {
-  margin: 2px 5px 5px;
-  color: #694c2f;
-  font-size: 0.68rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-.atlas-menu-action {
-  display: grid;
-  gap: 2px;
-  padding: 9px 10px;
-  border: 1px solid transparent;
-  border-radius: 3px;
-  color: #382617;
-  background: transparent;
-  cursor: pointer;
-  text-align: left;
-}
-
-.atlas-menu-action:hover {
-  border-color: rgba(33, 79, 50, 0.3);
-  background: rgba(255, 249, 230, 0.72);
-}
-
-.atlas-menu-action strong {
-  font-size: 0.86rem;
-}
-
-.atlas-menu-action span {
-  color: #68533c;
-  font-size: 0.72rem;
-}
-
-.atlas-menu-action.is-danger {
-  margin-top: 3px;
-  border-top-color: rgba(127, 47, 36, 0.24);
-  color: #782f25;
 }
 
 .action-group {
@@ -1340,6 +1298,138 @@ html[data-workspace="edit"] .field-workspace-controls {
   box-shadow: 0 3px 10px rgba(48, 29, 12, 0.1);
 }
 
+.field-overview {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+}
+
+.field-console-heading {
+  padding-bottom: 13px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.panel-kicker {
+  margin: 0 0 4px;
+  color: #2f6548;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.field-console-heading h2 {
+  margin: 0 0 7px;
+  color: #382617;
+  font-size: 1.3rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.field-console-heading > p:last-child {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.84rem;
+  line-height: 1.4;
+}
+
+.field-console-status {
+  display: grid;
+  grid-template-columns: 12px minmax(0, 1fr);
+  gap: 9px;
+  align-items: start;
+  padding: 10px;
+  border: 1px solid rgba(47, 101, 72, 0.34);
+  border-radius: 4px;
+  background: rgba(222, 231, 197, 0.48);
+}
+
+.field-console-status-mark {
+  width: 10px;
+  height: 10px;
+  margin-top: 3px;
+  border: 2px solid #2f6548;
+  border-radius: 50%;
+  background: #8eb16f;
+  box-shadow: 0 0 0 3px rgba(47, 101, 72, 0.12);
+}
+
+.field-console-status strong,
+.field-console-card strong {
+  display: block;
+  color: #2f4f37;
+  font-size: 0.9rem;
+}
+
+.field-console-status p,
+.field-console-card p {
+  margin: 4px 0 0;
+  color: var(--ink-soft);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.field-console-card {
+  padding: 11px;
+  border: 1px solid rgba(72, 45, 17, 0.22);
+  border-radius: 4px;
+  background: rgba(255, 246, 222, 0.4);
+}
+
+.field-console-card > span {
+  display: block;
+  margin-bottom: 4px;
+  color: #725638;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.field-follow-toggle {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 8px;
+  align-items: start;
+  padding: 9px 10px;
+  border: 1px solid rgba(72, 45, 17, 0.22);
+  border-radius: 4px;
+  background: rgba(255, 246, 222, 0.26);
+  cursor: pointer;
+}
+
+.field-follow-toggle input {
+  width: 16px;
+  height: 16px;
+  margin: 2px 0 0;
+  accent-color: var(--green);
+}
+
+.field-follow-toggle strong,
+.field-follow-toggle small {
+  display: block;
+}
+
+.field-follow-toggle strong {
+  color: var(--ink);
+  font-size: 0.82rem;
+}
+
+.field-follow-toggle small {
+  margin-top: 2px;
+  color: var(--ink-soft);
+  font-size: 0.74rem;
+}
+
+.mobile-integration-note {
+  display: none;
+  margin: -4px 0 0;
+  color: var(--ink-soft);
+  font-size: 0.75rem;
+  font-style: italic;
+  line-height: 1.35;
+}
+
 .panel-tab-button {
   min-height: 34px;
   padding: 6px 8px;
@@ -2150,6 +2240,37 @@ html[data-workspace="edit"] .field-workspace-controls {
     0 3px 8px rgba(31, 19, 7, 0.36);
 }
 
+html[data-workspace="field"] .poi-marker.is-trailmark {
+  transform: scale(1.12);
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 240, 199, 0.24),
+    0 0 0 4px rgba(91, 137, 75, 0.3),
+    0 0 18px rgba(115, 164, 87, 0.5),
+    0 3px 8px rgba(31, 19, 7, 0.36);
+}
+
+html[data-workspace="field"] .poi-marker.is-trailmark::before {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  border: 1px solid rgba(143, 190, 111, 0.62);
+  border-radius: 50%;
+  animation: trailmark-beacon 2.4s ease-out infinite;
+  pointer-events: none;
+}
+
+@keyframes trailmark-beacon {
+  0% {
+    opacity: 0.76;
+    transform: scale(0.82);
+  }
+  70%,
+  100% {
+    opacity: 0;
+    transform: scale(1.35);
+  }
+}
+
 .poi-marker.is-canon {
   opacity: 0.72;
   border-color: rgba(52, 31, 12, 0.54);
@@ -2458,19 +2579,24 @@ html[data-workspace="edit"] .field-workspace-controls {
 
   .topbar-actions {
     width: 100%;
-    display: flex;
-    justify-content: flex-end;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
     gap: 8px;
   }
 
-  .atlas-menu {
-    margin-right: auto;
+  .atlas-action-cluster {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 5px;
   }
 
-  .atlas-menu-popover {
-    left: 0;
-    right: auto;
-    width: min(310px, calc(100vw - 16px));
+  .topbar-action-button {
+    min-width: 0;
+    justify-content: center;
+    padding-inline: 6px;
+    font-size: 0.7rem;
   }
 
   .identity-field,
@@ -2497,6 +2623,10 @@ html[data-workspace="edit"] .field-workspace-controls {
   .topbar-actions .utility-actions {
     display: flex;
     justify-content: flex-end;
+  }
+
+  .mobile-integration-note {
+    display: block;
   }
 
   .workspace {
@@ -2629,6 +2759,15 @@ html[data-workspace="edit"] .field-workspace-controls {
     gap: 7px;
   }
 
+  .atlas-action-cluster {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .topbar-action-button {
+    justify-content: flex-start;
+    font-size: 0.72rem;
+  }
+
   .workspace-switch-button small {
     display: none;
   }
@@ -2730,38 +2869,49 @@ html[data-theme="dark"] .workspace-switch-button.is-active small {
   color: #d8ccb5;
 }
 
-html[data-theme="dark"] .atlas-menu > summary {
-  color: #eee2ca;
-  border-color: rgba(194, 138, 24, 0.42);
+html[data-theme="dark"] .panel-tabs {
+  border-bottom-color: rgba(194, 138, 24, 0.24);
+  background: #12110e;
+}
+
+html[data-theme="dark"] .topbar-action-button {
+  color: #eee3cd;
+  border-color: rgba(194, 138, 24, 0.34);
   background: #181610;
   box-shadow: none;
 }
 
-html[data-theme="dark"] .atlas-menu-popover {
-  border-color: rgba(194, 138, 24, 0.42);
-  background: #181610;
+html[data-theme="dark"] .topbar-action-button:hover {
+  color: #fff4dc;
+  border-color: #4f8a63;
+  background: #28563b;
 }
 
-html[data-theme="dark"] .atlas-menu-popover > p {
-  color: #c28a18;
+html[data-theme="dark"] .topbar-action-button.is-danger {
+  color: #f0c2b8;
+  border-color: rgba(168, 75, 64, 0.7);
 }
 
-html[data-theme="dark"] .atlas-menu-action {
-  color: #eee2ca;
+html[data-theme="dark"] .topbar-action-button.is-danger:hover {
+  color: #fff4dc;
+  background: #722e28;
 }
 
-html[data-theme="dark"] .atlas-menu-action span {
-  color: #a99b82;
+html[data-theme="dark"] .field-console-heading h2 {
+  color: #f3ead5;
 }
 
-html[data-theme="dark"] .atlas-menu-action:hover {
-  border-color: rgba(194, 138, 24, 0.34);
-  background: #252016;
+html[data-theme="dark"] .field-console-status,
+html[data-theme="dark"] .field-console-card,
+html[data-theme="dark"] .field-follow-toggle {
+  border-color: rgba(194, 138, 24, 0.24);
+  background: #1b1812;
 }
 
-html[data-theme="dark"] .panel-tabs {
-  border-bottom-color: rgba(194, 138, 24, 0.24);
-  background: #12110e;
+html[data-theme="dark"] .field-console-status strong,
+html[data-theme="dark"] .field-console-card strong,
+html[data-theme="dark"] .field-follow-toggle strong {
+  color: #eee3cd;
 }
 
 html[data-theme="dark"] .panel-tab-button {

@@ -114,6 +114,7 @@
     movingOriginalPoint: null,
     creatorName: "",
     livePositionEnabled: false,
+    followLivePosition: false,
     livePositionConnection: "off",
     livePositionPoint: null,
     livePositionHeading: 0,
@@ -170,6 +171,9 @@
     [MAP_HEIGHT + 240, MAP_WIDTH + 240],
   ]);
 
+  map.createPane("live-position-pane");
+  map.getPane("live-position-pane").style.zIndex = "710";
+
   const featureLayer = L.layerGroup().addTo(map);
   const labelLayer = L.layerGroup().addTo(map);
   const draftLayer = L.layerGroup().addTo(map);
@@ -181,7 +185,11 @@
     workspaceModeButtons: Array.from(document.querySelectorAll("[data-workspace-mode]")),
     panelViewButtons: Array.from(document.querySelectorAll("[data-panel-view]")),
     panelPanes: Array.from(document.querySelectorAll("[data-panel-pane]")),
-    atlasMenu: document.getElementById("atlasMenu"),
+    fieldOverview: document.getElementById("fieldOverview"),
+    fieldConsoleStatus: document.getElementById("fieldConsoleStatus"),
+    fieldConsoleHint: document.getElementById("fieldConsoleHint"),
+    followLivePositionInput: document.getElementById("followLivePositionInput"),
+    fieldEditAtlasBtn: document.getElementById("fieldEditAtlasBtn"),
     aboutBtn: document.getElementById("aboutBtn"),
     aboutDialog: document.getElementById("aboutDialog"),
     aboutCloseBtn: document.getElementById("aboutCloseBtn"),
@@ -313,6 +321,7 @@
   let searchAutofillGuardUntil = Date.now() + 5000;
   let livePositionPollTimer = null;
   let livePositionRequest = null;
+  let livePositionMarker = null;
   let trailmarkAccessPollTimer = null;
   let overwatchPollTimer = null;
   let trailmarkDropPollTimer = null;
@@ -362,13 +371,9 @@
     elements.workspaceModeButtons.forEach((button) => {
       button.addEventListener("click", () => setWorkspaceMode(button.dataset.workspaceMode));
     });
+    elements.fieldEditAtlasBtn.addEventListener("click", () => setWorkspaceMode("edit"));
     elements.panelViewButtons.forEach((button) => {
       button.addEventListener("click", () => setPanelView(button.dataset.panelView));
-    });
-    elements.atlasMenu.querySelectorAll("button").forEach((button) => {
-      button.addEventListener("click", () => {
-        elements.atlasMenu.open = false;
-      });
     });
     elements.toolButtons.forEach((button) => {
       button.addEventListener("click", () => setMode(button.dataset.mode));
@@ -400,6 +405,8 @@
         startLivePositionPolling();
         setStatus("Connecting to the local Ranger Atlas integration");
       } else {
+        state.followLivePosition = false;
+        elements.followLivePositionInput.checked = false;
         if (state.sharePositionEnabled) {
           state.sharePositionEnabled = false;
           elements.sharePositionInput.checked = false;
@@ -410,6 +417,14 @@
       }
       updateTrailmarkVisitControls();
       updateSharePositionControls();
+    });
+    elements.followLivePositionInput.addEventListener("change", (event) => {
+      state.followLivePosition = event.target.checked;
+      saveState();
+      if (state.followLivePosition && state.livePositionPoint && !state.livePositionPoint.stale) {
+        centerOnLivePosition(true);
+      }
+      setStatus(state.followLivePosition ? "Following live position" : "Live position follow paused");
     });
     elements.sharePositionInput.addEventListener("change", handleSharePositionToggle);
     elements.trailmarkVisitsInput.addEventListener("change", handleTrailmarkVisitsToggle);
@@ -620,6 +635,8 @@
       }
       state.livePositionEnabled = saved.livePositionEnabled === true;
       elements.livePositionInput.checked = state.livePositionEnabled;
+      state.followLivePosition = saved.followLivePosition === true;
+      elements.followLivePositionInput.checked = state.followLivePosition;
       state.creatorName = normalizeCreatorName(saved.creatorName || "");
       elements.creatorInput.value = state.creatorName;
       state.sharePositionEnabled = saved.sharePositionEnabled === true && Boolean(state.creatorName);
@@ -657,6 +674,7 @@
       showLabels: state.showLabels,
       darkMode: state.darkMode,
       livePositionEnabled: state.livePositionEnabled,
+      followLivePosition: state.followLivePosition,
       sharePositionEnabled: state.sharePositionEnabled,
       trailmarkVisitsEnabled: state.trailmarkVisitsEnabled,
       trailmarkVisitCooldowns: state.trailmarkVisitCooldowns,
@@ -692,6 +710,7 @@
       state.livePositionSnapshot = null;
       state.trailmarkVisitCandidate = null;
       livePositionLayer.clearLayers();
+      livePositionMarker = null;
       updateLivePositionStatus("Off", "off");
       updateTrailmarkVisitControls();
     }
@@ -797,6 +816,7 @@
     }
 
     renderLivePosition();
+    centerOnLivePosition(false);
     updateSharePositionControls();
     if (!wasLinked) {
       setStatus("Live position linked to Skyrim");
@@ -839,37 +859,63 @@
     elements.livePositionStatus.textContent = text;
     elements.livePositionStatus.classList.toggle("is-linked", status === "linked");
     elements.livePositionStatus.classList.toggle("is-unavailable", status === "unavailable");
+    renderFieldOverview(getSelectedFeature());
   }
 
   function renderLivePosition() {
-    livePositionLayer.clearLayers();
     if (!state.livePositionEnabled || !state.livePositionPoint) {
+      livePositionLayer.clearLayers();
+      livePositionMarker = null;
       return;
     }
 
     const point = state.livePositionPoint;
-    const marker = L.marker([point.y, point.x], {
-      interactive: true,
-      keyboard: false,
-      zIndexOffset: 2600,
-      icon: L.divIcon({
-        className: "",
-        html: `
-          <div class="live-position-marker${point.stale ? " is-stale" : ""}" style="--heading:${Number(point.heading) || 0}deg">
-            <svg class="live-position-arrow" viewBox="0 0 32 32" aria-hidden="true">
-              <path d="M16 2 27 28 16 21 5 28Z" />
-            </svg>
-          </div>
-        `,
-        iconSize: [34, 34],
-        iconAnchor: [17, 17],
-      }),
+    if (!livePositionMarker) {
+      livePositionMarker = L.marker([point.y, point.x], {
+        interactive: true,
+        keyboard: false,
+        pane: "live-position-pane",
+        zIndexOffset: 100000,
+        icon: L.divIcon({
+          className: "",
+          html: `
+            <div class="live-position-marker" style="--heading:0deg">
+              <svg class="live-position-arrow" viewBox="0 0 32 32" aria-hidden="true">
+                <path d="M16 2 27 28 16 21 5 28Z" />
+              </svg>
+            </div>
+          `,
+          iconSize: [34, 34],
+          iconAnchor: [17, 17],
+        }),
+      }).addTo(livePositionLayer);
+      livePositionMarker.bindTooltip("", {
+        direction: "top",
+        offset: [0, -12],
+      });
+    }
+
+    livePositionMarker.setLatLng([point.y, point.x]);
+    livePositionMarker.setTooltipContent(point.stale ? "Last known outdoor position" : "Your live position");
+    const markerElement = livePositionMarker.getElement()?.querySelector(".live-position-marker");
+    if (markerElement) {
+      markerElement.classList.toggle("is-stale", point.stale);
+      markerElement.style.setProperty("--heading", `${Number(point.heading) || 0}deg`);
+    }
+  }
+
+  function centerOnLivePosition(zoomIn) {
+    if (!state.followLivePosition || !state.livePositionPoint || state.livePositionPoint.stale) {
+      return;
+    }
+    const point = state.livePositionPoint;
+    const targetZoom = zoomIn ? Math.max(map.getZoom(), 0.75) : Math.max(map.getZoom(), 0.25);
+    map.stop();
+    map.flyTo([point.y, point.x], targetZoom, {
+      animate: true,
+      duration: 0.65,
+      easeLinearity: 0.25,
     });
-    marker.bindTooltip(point.stale ? "Last known outdoor position" : "Your live position", {
-      direction: "top",
-      offset: [0, -12],
-    });
-    livePositionLayer.addLayer(marker);
   }
 
   function handleSharePositionToggle(event) {
@@ -920,7 +966,7 @@
       updateSharePositionStatus("Waiting for Skyrim", "connecting");
       return;
     }
-    updateSharePositionStatus(state.sharePositionInFlight ? "Sharing..." : "Visible to Overwatch", "linked");
+    updateSharePositionStatus(state.sharePositionInFlight ? "Sharing..." : "Position shared", "linked");
   }
 
   function updateSharePositionStatus(text, status) {
@@ -952,7 +998,7 @@
         heading_degrees_input: Number(point.heading) || 0,
       });
       state.lastSharedPositionAt = Date.now();
-      updateSharePositionStatus("Visible to Overwatch", "linked");
+      updateSharePositionStatus("Position shared", "linked");
     } catch (error) {
       const message = getReadableError(error, "Position could not be shared");
       updateSharePositionStatus("Share failed", "unavailable");
@@ -1154,6 +1200,7 @@
     elements.trailmarkVisitsStatus.removeAttribute("title");
     elements.trailmarkVisitsStatus.classList.toggle("is-linked", status === "linked");
     elements.trailmarkVisitsStatus.classList.toggle("is-unavailable", status === "unavailable");
+    renderFieldOverview(getSelectedFeature());
   }
 
   function evaluateTrailmarkProximity(point) {
@@ -1480,6 +1527,7 @@
   function showTrailmarkArrival(feature, result) {
     window.clearTimeout(trailmarkAccessPollTimer);
     trailmarkAccessPollTimer = null;
+    selectFeature(feature.id);
     elements.trailmarkArrival.dataset.featureId = feature.id;
     elements.trailmarkArrivalTitle.textContent = feature.title;
     elements.trailmarkArrivalText.textContent = result.discord_linked
@@ -1746,7 +1794,7 @@
       state.mode = "select";
       map.dragging.enable();
       map.getContainer().classList.remove("is-drawing");
-      setPanelView(state.selectedId ? "details" : "browse", false);
+      setPanelView(state.selectedId ? "details" : "field", false);
     } else {
       setPanelView(state.selectedId ? "details" : "browse", false);
     }
@@ -1768,21 +1816,36 @@
   }
 
   function setPanelView(view, announce = true) {
-    state.panelView = view === "details" ? "details" : "browse";
+    if (state.workspaceMode === "field") {
+      state.panelView = view === "details" && state.selectedId ? "details" : "field";
+    } else {
+      state.panelView = view === "details" ? "details" : "browse";
+    }
     updatePanelView();
     if (announce) {
-      setStatus(state.panelView === "details" ? "Showing selected entry" : "Browsing Atlas entries");
+      setStatus(
+        state.panelView === "details"
+          ? "Showing selected entry"
+          : state.panelView === "field"
+            ? "Field Console ready"
+            : "Browsing Atlas entries",
+      );
     }
   }
 
   function updatePanelView() {
+    const visiblePane = state.workspaceMode === "field"
+      ? state.selectedId
+        ? "details"
+        : "field"
+      : state.panelView;
     elements.panelViewButtons.forEach((button) => {
-      const active = button.dataset.panelView === state.panelView;
+      const active = button.dataset.panelView === visiblePane;
       button.classList.toggle("is-active", active);
       button.setAttribute("aria-pressed", String(active));
     });
     elements.panelPanes.forEach((pane) => {
-      pane.hidden = pane.dataset.panelPane !== state.panelView;
+      pane.hidden = pane.dataset.panelPane !== visiblePane;
     });
   }
 
@@ -2015,7 +2078,7 @@
         zIndexOffset: getFeatureZIndexOffset(feature, selected),
         icon: L.divIcon({
           className: "",
-          html: `<div class="poi-marker marker-${escapeHtml(feature.category)}${mixed ? " is-mixed" : ""}${isGuildFeature(feature) ? " is-guild" : ""}${isCanonFeature(feature) ? " is-canon" : ""}${selected ? " is-selected" : ""}${draggable ? " is-draggable" : ""}" style="${getFeatureMarkerStyle(feature)}">${getFeatureMarkerIcon(feature)}</div>`,
+          html: `<div class="poi-marker marker-${escapeHtml(feature.category)}${mixed ? " is-mixed" : ""}${isGuildFeature(feature) ? " is-guild" : ""}${isCanonFeature(feature) ? " is-canon" : ""}${isOfficialTrailmark(feature) ? " is-trailmark" : ""}${selected ? " is-selected" : ""}${draggable ? " is-draggable" : ""}" style="${getFeatureMarkerStyle(feature)}">${getFeatureMarkerIcon(feature)}</div>`,
           iconSize: [32, 32],
           iconAnchor: [16, 32],
         }),
@@ -2544,6 +2607,7 @@
     const editing = state.workspaceMode === "edit";
     const moving = Boolean(feature && state.movingFeatureId === feature.id);
 
+    renderFieldOverview(feature);
     elements.editorForm.hidden = disabled || !editing;
     elements.selectionSummary.hidden = disabled || editing;
     elements.emptySelection.hidden = Boolean(feature);
@@ -2590,6 +2654,29 @@
       element.disabled = disabled || moving;
     });
     elements.deleteFeatureBtn.disabled = selectedFeatures.length === 0 || moving;
+  }
+
+  function renderFieldOverview(feature) {
+    const fieldMode = state.workspaceMode === "field";
+    elements.fieldOverview.hidden = !fieldMode || Boolean(feature);
+    if (!fieldMode) {
+      return;
+    }
+
+    if (state.livePositionConnection === "linked") {
+      elements.fieldConsoleStatus.textContent = "Skyrim connected";
+      elements.fieldConsoleHint.textContent = state.trailmarkVisitsEnabled
+        ? "Trailmark watch is active while you travel."
+        : "Live position is active. Enable Record visits to check in at Trailmarks.";
+      return;
+    }
+    if (state.livePositionConnection === "connecting") {
+      elements.fieldConsoleStatus.textContent = "Connecting to Skyrim";
+      elements.fieldConsoleHint.textContent = "Start the Ranger Atlas integration in Skyrim, then keep this view open.";
+      return;
+    }
+    elements.fieldConsoleStatus.textContent = "Ready for the road";
+    elements.fieldConsoleHint.textContent = "Enable Live position to connect this field copy to Skyrim.";
   }
 
   function renderSelectionSummary(feature) {
@@ -2736,6 +2823,7 @@
     if (!id) {
       state.selectedIds = [];
       state.selectedId = null;
+      setPanelView(state.workspaceMode === "field" ? "field" : "browse", false);
       renderAll();
       setStatus("Selection cleared");
       return;

@@ -45,28 +45,24 @@
           </button>
         </div>
         <div class="topbar-actions">
-          <details id="atlasMenu" class="atlas-menu">
-            <summary>Atlas</summary>
-            <div class="atlas-menu-popover">
-              <p>Atlas actions</p>
-              <button id="exportBtn" class="atlas-menu-action" type="button">
-                <strong>Share Entries</strong>
-                <span>Create a code or field report</span>
-              </button>
-              <button id="importBtn" class="atlas-menu-action" type="button">
-                <strong>Receive Entries</strong>
-                <span>Add an official copy or shared code</span>
-              </button>
-              <button id="exportMapBtn" class="atlas-menu-action" type="button">
-                <strong>Save Map Image</strong>
-                <span>Download the current visible map</span>
-              </button>
-              <button id="clearBtn" class="atlas-menu-action is-danger edit-workspace-controls" type="button">
-                <strong>Scrape Entries</strong>
-                <span>Remove chosen entries from this browser</span>
-              </button>
-            </div>
-          </details>
+          <div class="atlas-action-cluster" aria-label="Atlas actions">
+            <button id="exportBtn" class="topbar-action-button" type="button" title="Create a code or field report">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5" /><path d="M5 13v5h14v-5" /></svg>
+              <span>Share Atlas</span>
+            </button>
+            <button id="importBtn" class="topbar-action-button" type="button" title="Add an official copy or shared code">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v12M7 11l5 5 5-5" /><path d="M5 13v5h14v-5" /></svg>
+              <span>Receive Atlas</span>
+            </button>
+            <button id="exportMapBtn" class="topbar-action-button" type="button" title="Download the current visible map">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="1" /><circle cx="9" cy="10" r="1.5" /><path d="m5 17 4-4 3 3 2-2 5 4" /></svg>
+              <span>Save Map</span>
+            </button>
+            <button id="clearBtn" class="topbar-action-button is-danger edit-workspace-controls" type="button" title="Remove selected categories from the map">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5" /></svg>
+              <span>Clean Up</span>
+            </button>
+          </div>
           <div class="utility-actions">
             <button id="themeToggleBtn" class="theme-button" type="button" title="Use dark mode" aria-label="Use dark mode">
               <svg class="theme-icon theme-icon-moon" viewBox="0 0 24 24" aria-hidden="true">
@@ -128,7 +124,7 @@
             </label>
             <small id="livePositionStatus" class="live-position-status" aria-live="polite">Off</small>
             <label class="trailmark-visit-toggle share-position-toggle" for="sharePositionInput">
-              <span>Share position</span>
+              <span>Share live position</span>
               <input id="sharePositionInput" type="checkbox" />
               <span class="toggle-switch" aria-hidden="true"></span>
             </label>
@@ -164,14 +160,42 @@
         </section>
 
         <aside class="panel ledger-panel">
-          <nav class="panel-tabs" aria-label="Atlas side panel">
+          <nav class="panel-tabs edit-workspace-controls" aria-label="Atlas side panel">
             <button class="panel-tab-button" type="button" data-panel-view="details">Details</button>
             <button class="panel-tab-button is-active" type="button" data-panel-view="browse">Browse Atlas</button>
           </nav>
+          <section id="fieldOverview" class="tool-section field-overview" data-panel-pane="field">
+            <div class="field-console-heading">
+              <p class="panel-kicker">Field View</p>
+              <h2>Field Console</h2>
+              <p>Keep your eyes on the road. Skyrim position, Trailmark checks, and arrival notes appear here while you travel.</p>
+            </div>
+            <div class="field-console-status">
+              <span class="field-console-status-mark" aria-hidden="true"></span>
+              <div>
+                <strong id="fieldConsoleStatus">Ready for the road</strong>
+                <p id="fieldConsoleHint">Enable Live position to connect this field copy to Skyrim.</p>
+              </div>
+            </div>
+            <div class="field-console-card">
+              <span>Trailmark watch</span>
+              <strong>Automatic arrival details</strong>
+              <p>Select a highlighted Trailmark, or enable Record visits to open its field notes when you arrive.</p>
+            </div>
+            <label class="field-follow-toggle" for="followLivePositionInput">
+              <input id="followLivePositionInput" type="checkbox" />
+              <span>
+                <strong>Follow live position</strong>
+                <small>Keep the map centered on your current location.</small>
+              </span>
+            </label>
+            <p class="mobile-integration-note">Live position and automatic visits require the desktop Skyrim link. Mobile remains useful for the map and Trailmark notes.</p>
+            <button id="fieldEditAtlasBtn" class="button secondary" type="button">Open Edit Atlas</button>
+          </section>
           <section class="tool-section inspector" data-panel-pane="details">
             <div class="section-heading-row">
               <h2>Selected</h2>
-              <button class="quiet-action" type="button" data-panel-view="browse">Browse Atlas</button>
+              <button class="quiet-action edit-workspace-controls" type="button" data-panel-view="browse">Browse Atlas</button>
             </div>
             <p id="emptySelection" class="empty-state selection-empty">Choose a mark, trail, or range from the map or ledger.</p>
             <div id="selectionSummary" class="selection-summary" hidden></div>
@@ -285,7 +309,7 @@
           threats, caches, hunting grounds, ore veins, ingredients, contacts, and reports worth passing on.
         </p>
         <p>
-          Keep entries clear, current, and useful. The Atlas menu can share selected entries,
+          Keep entries clear, current, and useful. Use the top bar to share selected entries,
           receive another field copy, or save a picture of the current view.
         </p>
         <p class="field-note-signature">Good maps save lives.<br />Ranger-Captain Lorn Valecroft</p>
@@ -333,10 +357,10 @@
               <h3>Share Entries</h3>
             </div>
             <ol>
-              <li>Open the <strong>Atlas</strong> menu at the top right.</li>
-              <li><strong>Share Entries</strong> creates a code or ready-to-post Field Report.</li>
-              <li><strong>Receive Entries</strong> reviews an official copy, Skyrim references, or another Ranger's code.</li>
-              <li><strong>Save Map Image</strong> downloads the current visible map as a PNG.</li>
+              <li>Use the top bar when you need to move atlas information between copies.</li>
+              <li><strong>Share Atlas</strong> creates a code or ready-to-post Field Report.</li>
+              <li><strong>Receive Atlas</strong> reviews an official copy, Skyrim references, or another Ranger's code.</li>
+              <li><strong>Save Map</strong> downloads the current visible map as a PNG.</li>
             </ol>
           </section>
           <section class="help-step">
@@ -346,7 +370,7 @@
             </div>
             <ol>
               <li><strong>Undo</strong> reverses your most recent change.</li>
-              <li><strong>Scrape Entries</strong> in the Atlas menu removes chosen categories from custom entries, Skyrim references, or the entire map.</li>
+              <li><strong>Clean Up</strong> removes chosen categories from custom entries, Skyrim references, or the entire map.</li>
               <li>Use <strong>Undo</strong> immediately if you remove the wrong set.</li>
             </ol>
           </section>
@@ -369,7 +393,7 @@
           <div>
             <p class="help-display-kicker">Display</p>
             <h3 id="display-settings-title">Map display</h3>
-            <p>Show names above visible entries with the setting here. Use the moon or sun at the top right to change the interface theme. With the Ranger Atlas integration installed, switch on <strong>Live position</strong> to show your local in-game location. <strong>Share position</strong> separately opts your latest point into Marshal Overwatch; it expires when updates stop. <strong>Record visits</strong> shares only your entered name, the official Trailmark, and the time you reached it. Visible labels and the live marker are included in <strong>Save Map Image</strong>.</p>
+            <p>Show names above visible entries with the setting here. Use the moon or sun at the top right to change the interface theme. With the desktop Ranger Atlas integration installed, switch on <strong>Live position</strong> to show your local in-game location. <strong>Share live position</strong> separately shares your latest point with authorized map staff; it expires when updates stop. <strong>Record visits</strong> shares only your entered name, the official Trailmark, and the time you reached it. Visible labels and the live marker are included in <strong>Save Map</strong>.</p>
           </div>
           <label class="setting-toggle">
             <input id="showLabelsInput" type="checkbox" />
