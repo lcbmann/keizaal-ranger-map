@@ -977,11 +977,11 @@
 
   function renderTrailmarkVisitRadii() {
     trailmarkRadiusLayer.clearLayers();
-    if (!state.livePositionEnabled || state.workspaceMode !== "field") {
+    if (!elements.livePositionInput.checked || state.workspaceMode !== "field") {
       return;
     }
 
-    getVisibleFeatures()
+    state.features
       .filter(isOfficialTrailmark)
       .forEach((feature) => {
         const trailmarkPoint = feature.points[0];
