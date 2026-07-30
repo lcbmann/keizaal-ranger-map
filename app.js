@@ -17,6 +17,16 @@
   const GUILD_ATLAS_CODE = "GUILD";
   const SKYRIM_ATLAS_CODE = "SKYRIM";
   const SKYRIM_ATLAS_DATA = "data/skyrim-canon-atlas.generated.json";
+  const LIVE_POSITION_URL = "http://127.0.0.1:38471/position";
+  const SKYRIM_WORLDSPACE_FORM_ID = 0x0000003c;
+  const WORLD_TO_ATLAS_X = [73.826813, 0.215295427, 4067.73578];
+  const WORLD_TO_ATLAS_Y = [-0.324059025, 74.56657, 3036.85421];
+  const DISCORD_DEVICE_TOKEN_STORAGE_KEY = "ranger-atlas-discord-device-token-v1";
+  const TRAILMARK_VISIT_RADIUS = 48;
+  const TRAILMARK_VISIT_DWELL_MS = 12000;
+  const TRAILMARK_VISIT_COOLDOWN_MS = 30 * 60 * 1000;
+  const TRAILMARK_ACCESS_POLL_MS = 4000;
+  const TRAILMARK_ACCESS_POLL_LIMIT = 30;
 
   const categories = [
     { id: "city", label: "City", color: "#2f5878", icon: "city" },
@@ -93,6 +103,17 @@
     selectedIds: [],
     mode: "select",
     creatorName: "",
+    livePositionEnabled: false,
+    livePositionConnection: "off",
+    livePositionPoint: null,
+    livePositionSnapshot: null,
+    trailmarkVisitsEnabled: false,
+    trailmarkVisitCandidate: null,
+    trailmarkVisitInFlight: false,
+    trailmarkVisitCooldowns: {},
+    trailmarkVisitsByFeature: new Map(),
+    trailmarkVisitsLoading: new Set(),
+    discordLink: null,
     pendingReceive: null,
     draftFeature: null,
     drawPoints: [],
@@ -133,6 +154,7 @@
   const featureLayer = L.layerGroup().addTo(map);
   const labelLayer = L.layerGroup().addTo(map);
   const draftLayer = L.layerGroup().addTo(map);
+  const livePositionLayer = L.layerGroup().addTo(map);
 
   const elements = {
     toolButtons: Array.from(document.querySelectorAll(".tool-button")),
@@ -143,6 +165,27 @@
     helpDialog: document.getElementById("helpDialog"),
     helpCloseBtn: document.getElementById("helpCloseBtn"),
     showLabelsInput: document.getElementById("showLabelsInput"),
+    livePositionInput: document.getElementById("livePositionInput"),
+    livePositionStatus: document.getElementById("livePositionStatus"),
+    trailmarkVisitsInput: document.getElementById("trailmarkVisitsInput"),
+    trailmarkVisitsStatus: document.getElementById("trailmarkVisitsStatus"),
+    discordLinkBtn: document.getElementById("discordLinkBtn"),
+    discordLinkDialog: document.getElementById("discordLinkDialog"),
+    discordLinkCloseBtn: document.getElementById("discordLinkCloseBtn"),
+    discordLinkCancelBtn: document.getElementById("discordLinkCancelBtn"),
+    discordLinkForm: document.getElementById("discordLinkForm"),
+    discordLinkCodeInput: document.getElementById("discordLinkCodeInput"),
+    discordLinkStatus: document.getElementById("discordLinkStatus"),
+    discordLinkSummary: document.getElementById("discordLinkSummary"),
+    discordLinkSubmitBtn: document.getElementById("discordLinkSubmitBtn"),
+    discordUnlinkBtn: document.getElementById("discordUnlinkBtn"),
+    trailmarkArrival: document.getElementById("trailmarkArrival"),
+    trailmarkArrivalCloseBtn: document.getElementById("trailmarkArrivalCloseBtn"),
+    trailmarkArrivalTitle: document.getElementById("trailmarkArrivalTitle"),
+    trailmarkArrivalText: document.getElementById("trailmarkArrivalText"),
+    trailmarkArrivalVisitors: document.getElementById("trailmarkArrivalVisitors"),
+    trailmarkDiscordOpenLink: document.getElementById("trailmarkDiscordOpenLink"),
+    trailmarkArrivalLinkBtn: document.getElementById("trailmarkArrivalLinkBtn"),
     receiveDialog: document.getElementById("receiveDialog"),
     receiveCodeInput: document.getElementById("receiveCodeInput"),
     receivePreview: document.getElementById("receivePreview"),
@@ -211,6 +254,11 @@
     rangeColorLabel: document.getElementById("rangeColorLabel"),
     rangeColorInput: document.getElementById("rangeColorInput"),
     creatorMeta: document.getElementById("creatorMeta"),
+    trailmarkPresencePanel: document.getElementById("trailmarkPresencePanel"),
+    trailmarkPresenceStatus: document.getElementById("trailmarkPresenceStatus"),
+    trailmarkPresenceList: document.getElementById("trailmarkPresenceList"),
+    copyTrailmarkIdBtn: document.getElementById("copyTrailmarkIdBtn"),
+    refreshTrailmarkVisitsBtn: document.getElementById("refreshTrailmarkVisitsBtn"),
     notesInput: document.getElementById("notesInput"),
     saveFeatureBtn: document.getElementById("saveFeatureBtn"),
     deleteFeatureBtn: document.getElementById("deleteFeatureBtn"),
@@ -219,6 +267,9 @@
   let lastDragEndedAt = 0;
   let suppressNextClickUntil = 0;
   let searchAutofillGuardUntil = Date.now() + 5000;
+  let livePositionPollTimer = null;
+  let livePositionRequest = null;
+  let trailmarkAccessPollTimer = null;
 
   init();
 
@@ -232,6 +283,13 @@
     syncViewInputsFromState();
     [0, 100, 500, 1500, 3000].forEach((delay) => window.setTimeout(clearRestoredSearchInput, delay));
     setStatus("Ready");
+    updateTrailmarkVisitControls();
+    if (isSupabaseConfigured()) {
+      void refreshDiscordLink();
+    }
+    if (state.livePositionEnabled) {
+      startLivePositionPolling();
+    }
   }
 
   function prepareSearchInputAgainstAutofill() {
@@ -268,6 +326,34 @@
       renderAll();
       renderDraft();
       setStatus(state.showLabels ? "Location names shown" : "Location names hidden");
+    });
+    elements.livePositionInput.addEventListener("change", (event) => {
+      state.livePositionEnabled = event.target.checked;
+      saveState();
+      if (state.livePositionEnabled) {
+        startLivePositionPolling();
+        setStatus("Connecting to the local Ranger Atlas integration");
+      } else {
+        stopLivePositionPolling();
+        setStatus("Live position hidden");
+      }
+      updateTrailmarkVisitControls();
+    });
+    elements.trailmarkVisitsInput.addEventListener("change", handleTrailmarkVisitsToggle);
+    elements.discordLinkBtn.addEventListener("click", openDiscordLinkDialog);
+    elements.discordLinkCloseBtn.addEventListener("click", closeDiscordLinkDialog);
+    elements.discordLinkCancelBtn.addEventListener("click", closeDiscordLinkDialog);
+    elements.discordLinkForm.addEventListener("submit", claimDiscordLink);
+    elements.discordUnlinkBtn.addEventListener("click", unlinkDiscord);
+    closeDialogOnBackdrop(elements.discordLinkDialog);
+    elements.trailmarkArrivalCloseBtn.addEventListener("click", hideTrailmarkArrival);
+    elements.trailmarkArrivalLinkBtn.addEventListener("click", openDiscordLinkDialog);
+    elements.copyTrailmarkIdBtn.addEventListener("click", copySelectedTrailmarkId);
+    elements.refreshTrailmarkVisitsBtn.addEventListener("click", () => {
+      const feature = getSelectedFeature();
+      if (isOfficialTrailmark(feature)) {
+        void refreshTrailmarkVisits(feature, true);
+      }
     });
 
     elements.undoBtn.addEventListener("click", undoLastAction);
@@ -311,7 +397,14 @@
 
     elements.creatorInput.addEventListener("input", (event) => {
       state.creatorName = normalizeCreatorName(event.target.value);
+      if (!state.creatorName && state.trailmarkVisitsEnabled) {
+        state.trailmarkVisitsEnabled = false;
+        state.trailmarkVisitCandidate = null;
+        elements.trailmarkVisitsInput.checked = false;
+        setStatus("Trailmark visit recording stopped because Signed As is empty");
+      }
       saveState();
+      updateTrailmarkVisitControls();
     });
 
     elements.searchInput.addEventListener("input", (event) => {
@@ -424,8 +517,20 @@
       }
       state.showLabels = saved.showLabels === true;
       elements.showLabelsInput.checked = state.showLabels;
+      state.livePositionEnabled = saved.livePositionEnabled === true;
+      elements.livePositionInput.checked = state.livePositionEnabled;
       state.creatorName = normalizeCreatorName(saved.creatorName || "");
       elements.creatorInput.value = state.creatorName;
+      state.trailmarkVisitsEnabled = saved.trailmarkVisitsEnabled === true && Boolean(state.creatorName);
+      elements.trailmarkVisitsInput.checked = state.trailmarkVisitsEnabled;
+      if (saved.trailmarkVisitCooldowns && typeof saved.trailmarkVisitCooldowns === "object") {
+        const oldestUsefulVisit = Date.now() - TRAILMARK_VISIT_COOLDOWN_MS;
+        state.trailmarkVisitCooldowns = Object.fromEntries(
+          Object.entries(saved.trailmarkVisitCooldowns)
+            .map(([featureId, timestamp]) => [featureId, Number(timestamp)])
+            .filter(([featureId, timestamp]) => featureId && Number.isFinite(timestamp) && timestamp > oldestUsefulVisit),
+        );
+      }
       syncViewInputsFromState();
       if (shouldSave) {
         saveState();
@@ -447,10 +552,633 @@
       defaultsVersion: DEFAULT_FEATURES_VERSION,
       filters: state.filters,
       showLabels: state.showLabels,
+      livePositionEnabled: state.livePositionEnabled,
+      trailmarkVisitsEnabled: state.trailmarkVisitsEnabled,
+      trailmarkVisitCooldowns: state.trailmarkVisitCooldowns,
       creatorName: state.creatorName,
       features: state.features,
     };
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+  }
+
+  function startLivePositionPolling() {
+    stopLivePositionPolling(false);
+    state.livePositionConnection = "connecting";
+    updateLivePositionStatus("Connecting...", "connecting");
+    pollLivePosition();
+  }
+
+  function stopLivePositionPolling(clearPosition = true) {
+    window.clearTimeout(livePositionPollTimer);
+    livePositionPollTimer = null;
+    if (livePositionRequest) {
+      livePositionRequest.abort();
+      livePositionRequest = null;
+    }
+    state.livePositionConnection = state.livePositionEnabled ? "connecting" : "off";
+    if (clearPosition) {
+      state.livePositionPoint = null;
+      state.livePositionSnapshot = null;
+      state.trailmarkVisitCandidate = null;
+      livePositionLayer.clearLayers();
+      updateLivePositionStatus("Off", "off");
+      updateTrailmarkVisitControls();
+    }
+  }
+
+  async function pollLivePosition() {
+    if (!state.livePositionEnabled) {
+      return;
+    }
+
+    const controller = new AbortController();
+    livePositionRequest = controller;
+    const timeout = window.setTimeout(() => controller.abort(), 1800);
+
+    try {
+      const response = await fetch(LIVE_POSITION_URL, {
+        cache: "no-store",
+        credentials: "omit",
+        mode: "cors",
+        signal: controller.signal,
+      });
+
+      if (response.status === 503) {
+        updateLivePositionStatus("Waiting for character", "connecting");
+      } else if (!response.ok) {
+        throw new Error(`Local bridge returned ${response.status}`);
+      } else {
+        const snapshot = await response.json();
+        if (!isValidLivePositionSnapshot(snapshot)) {
+          throw new Error("Local bridge returned an invalid position");
+        }
+        applyLivePositionSnapshot(snapshot);
+      }
+    } catch (error) {
+      if (error.name !== "AbortError" || state.livePositionEnabled) {
+        const wasLinked = state.livePositionConnection === "linked";
+        state.livePositionConnection = "unavailable";
+        updateLivePositionStatus(
+          state.livePositionPoint ? "Last position" : "Game link unavailable",
+          "unavailable",
+        );
+        markLivePositionStale();
+        if (wasLinked) {
+          setStatus("Live game link lost; showing the last outdoor position");
+        }
+      }
+    } finally {
+      window.clearTimeout(timeout);
+      if (livePositionRequest === controller) {
+        livePositionRequest = null;
+      }
+      if (state.livePositionEnabled) {
+        livePositionPollTimer = window.setTimeout(pollLivePosition, 2000);
+      }
+    }
+  }
+
+  function isValidLivePositionSnapshot(snapshot) {
+    return Boolean(
+      snapshot &&
+        Number.isFinite(Number(snapshot.x)) &&
+        Number.isFinite(Number(snapshot.y)) &&
+        Number.isFinite(Number(snapshot.worldspace_form_id)) &&
+        Number.isFinite(Number(snapshot.updated_at_unix_ms)),
+    );
+  }
+
+  function applyLivePositionSnapshot(snapshot) {
+    const wasLinked = state.livePositionConnection === "linked";
+    state.livePositionConnection = "linked";
+    state.livePositionSnapshot = snapshot;
+
+    if (
+      Number(snapshot.worldspace_form_id) === SKYRIM_WORLDSPACE_FORM_ID &&
+      snapshot.interior !== true
+    ) {
+      state.livePositionPoint = {
+        ...worldPositionToAtlasPoint(Number(snapshot.x), Number(snapshot.y)),
+        stale: false,
+      };
+      updateLivePositionStatus("Linked to Skyrim", "linked");
+      evaluateTrailmarkProximity(state.livePositionPoint);
+    } else if (state.livePositionPoint) {
+      state.livePositionPoint = { ...state.livePositionPoint, stale: true };
+      updateLivePositionStatus("Last outdoor position", "linked");
+      state.trailmarkVisitCandidate = null;
+      updateTrailmarkVisitControls();
+    } else {
+      updateLivePositionStatus("Inside another area", "linked");
+      state.trailmarkVisitCandidate = null;
+      updateTrailmarkVisitControls();
+    }
+
+    renderLivePosition();
+    if (!wasLinked) {
+      setStatus("Live position linked to Skyrim");
+    }
+  }
+
+  function markLivePositionStale() {
+    if (!state.livePositionPoint || state.livePositionPoint.stale) {
+      return;
+    }
+    state.livePositionPoint = { ...state.livePositionPoint, stale: true };
+    state.trailmarkVisitCandidate = null;
+    updateTrailmarkVisitControls();
+    renderLivePosition();
+  }
+
+  function worldPositionToAtlasPoint(worldX, worldY) {
+    const cellX = worldX / 4096;
+    const cellY = worldY / 4096;
+    return {
+      x: clampNumber(
+        WORLD_TO_ATLAS_X[0] * cellX + WORLD_TO_ATLAS_X[1] * cellY + WORLD_TO_ATLAS_X[2],
+        0,
+        MAP_WIDTH,
+      ),
+      y: clampNumber(
+        WORLD_TO_ATLAS_Y[0] * cellX + WORLD_TO_ATLAS_Y[1] * cellY + WORLD_TO_ATLAS_Y[2],
+        0,
+        MAP_HEIGHT,
+      ),
+    };
+  }
+
+  function clampNumber(value, minimum, maximum) {
+    return Math.max(minimum, Math.min(value, maximum));
+  }
+
+  function updateLivePositionStatus(text, status) {
+    elements.livePositionStatus.textContent = text;
+    elements.livePositionStatus.classList.toggle("is-linked", status === "linked");
+    elements.livePositionStatus.classList.toggle("is-unavailable", status === "unavailable");
+  }
+
+  function renderLivePosition() {
+    livePositionLayer.clearLayers();
+    if (!state.livePositionEnabled || !state.livePositionPoint) {
+      return;
+    }
+
+    const point = state.livePositionPoint;
+    const marker = L.marker([point.y, point.x], {
+      interactive: true,
+      keyboard: false,
+      zIndexOffset: 2600,
+      icon: L.divIcon({
+        className: "",
+        html: `<div class="live-position-marker${point.stale ? " is-stale" : ""}"></div>`,
+        iconSize: [26, 26],
+        iconAnchor: [13, 13],
+      }),
+    });
+    marker.bindTooltip(point.stale ? "Last known outdoor position" : "Your live position", {
+      direction: "top",
+      offset: [0, -12],
+    });
+    livePositionLayer.addLayer(marker);
+  }
+
+  function handleTrailmarkVisitsToggle(event) {
+    const enabled = event.target.checked;
+    if (enabled && !getCurrentCreatorName()) {
+      event.target.checked = false;
+      state.trailmarkVisitsEnabled = false;
+      elements.creatorInput.focus();
+      updateTrailmarkVisitStatus("Enter Signed As first", "unavailable");
+      setStatus("Enter your Ranger name before recording Trailmark visits");
+      return;
+    }
+
+    if (enabled && !isSupabaseConfigured()) {
+      event.target.checked = false;
+      state.trailmarkVisitsEnabled = false;
+      updateTrailmarkVisitStatus("Sharing unavailable", "unavailable");
+      setStatus("Supabase is not configured, so Trailmark visits cannot be shared");
+      return;
+    }
+
+    state.trailmarkVisitsEnabled = enabled;
+    state.trailmarkVisitCandidate = null;
+    if (enabled && !state.livePositionEnabled) {
+      state.livePositionEnabled = true;
+      elements.livePositionInput.checked = true;
+      startLivePositionPolling();
+    }
+    if (!enabled) {
+      hideTrailmarkArrival();
+    }
+    saveState();
+    updateTrailmarkVisitControls();
+    setStatus(enabled ? "Trailmark visit recording enabled" : "Trailmark visit recording disabled");
+  }
+
+  function updateTrailmarkVisitControls() {
+    elements.trailmarkVisitsInput.checked = state.trailmarkVisitsEnabled;
+    elements.discordLinkBtn.textContent = state.discordLink ? "Discord linked" : "Link Discord";
+    elements.discordLinkBtn.classList.toggle("is-linked", Boolean(state.discordLink));
+
+    if (!state.trailmarkVisitsEnabled) {
+      updateTrailmarkVisitStatus("Off", "off");
+      return;
+    }
+    if (!getCurrentCreatorName()) {
+      updateTrailmarkVisitStatus("Name required", "unavailable");
+      return;
+    }
+    if (!state.livePositionEnabled) {
+      updateTrailmarkVisitStatus("Live position required", "unavailable");
+      return;
+    }
+    if (state.livePositionConnection === "unavailable") {
+      updateTrailmarkVisitStatus("Game link unavailable", "unavailable");
+      return;
+    }
+    if (state.livePositionConnection !== "linked") {
+      updateTrailmarkVisitStatus("Waiting for Skyrim", "connecting");
+      return;
+    }
+    updateTrailmarkVisitStatus("Watching Trailmarks", "linked");
+  }
+
+  function updateTrailmarkVisitStatus(text, status) {
+    elements.trailmarkVisitsStatus.textContent = text;
+    elements.trailmarkVisitsStatus.classList.toggle("is-linked", status === "linked");
+    elements.trailmarkVisitsStatus.classList.toggle("is-unavailable", status === "unavailable");
+  }
+
+  function evaluateTrailmarkProximity(point) {
+    if (
+      !state.trailmarkVisitsEnabled ||
+      !getCurrentCreatorName() ||
+      !point ||
+      point.stale ||
+      state.trailmarkVisitInFlight
+    ) {
+      state.trailmarkVisitCandidate = null;
+      updateTrailmarkVisitControls();
+      return;
+    }
+
+    const nearest = state.features
+      .filter(isOfficialTrailmark)
+      .map((feature) => ({
+        feature,
+        distance: Math.hypot(feature.points[0].x - point.x, feature.points[0].y - point.y),
+      }))
+      .filter((candidate) => candidate.distance <= TRAILMARK_VISIT_RADIUS)
+      .sort((left, right) => left.distance - right.distance)[0];
+
+    if (!nearest) {
+      state.trailmarkVisitCandidate = null;
+      updateTrailmarkVisitStatus("Watching Trailmarks", "linked");
+      return;
+    }
+
+    const lastVisit = Number(state.trailmarkVisitCooldowns[nearest.feature.id] || 0);
+    if (Date.now() - lastVisit < TRAILMARK_VISIT_COOLDOWN_MS) {
+      state.trailmarkVisitCandidate = null;
+      updateTrailmarkVisitStatus(`Recently visited ${nearest.feature.title}`, "linked");
+      return;
+    }
+
+    if (!state.trailmarkVisitCandidate || state.trailmarkVisitCandidate.featureId !== nearest.feature.id) {
+      state.trailmarkVisitCandidate = {
+        featureId: nearest.feature.id,
+        enteredAt: Date.now(),
+      };
+      updateTrailmarkVisitStatus(`Near ${nearest.feature.title}`, "linked");
+      return;
+    }
+
+    const remainingSeconds = Math.ceil(
+      (TRAILMARK_VISIT_DWELL_MS - (Date.now() - state.trailmarkVisitCandidate.enteredAt)) / 1000,
+    );
+    if (remainingSeconds > 0) {
+      updateTrailmarkVisitStatus(`Checking in ${remainingSeconds}s`, "linked");
+      return;
+    }
+
+    state.trailmarkVisitCandidate = null;
+    void recordTrailmarkVisit(nearest.feature);
+  }
+
+  async function recordTrailmarkVisit(feature) {
+    state.trailmarkVisitInFlight = true;
+    updateTrailmarkVisitStatus(`Recording ${feature.title}...`, "linked");
+    try {
+      const result = await callSupabaseRpc("record_atlas_trailmark_visit", {
+        atlas_location_id: feature.id,
+        ranger_name: getCurrentCreatorName(),
+        device_token: getStoredDiscordDeviceToken(),
+      });
+      state.trailmarkVisitCooldowns[feature.id] = Date.now();
+      saveState();
+      showTrailmarkArrival(feature, result || {});
+      await refreshTrailmarkVisits(feature, true);
+      if (result && result.access_request_id) {
+        pollTrailmarkAccessRequest(feature, result.access_request_id, 0);
+      }
+      updateTrailmarkVisitStatus(`Visited ${feature.title}`, "linked");
+      setStatus(`Recorded your visit to ${feature.title}`);
+    } catch (error) {
+      console.error("Could not record Trailmark visit", error);
+      updateTrailmarkVisitStatus("Visit could not be shared", "unavailable");
+      setStatus(getReadableError(error, "Could not record this Trailmark visit"));
+    } finally {
+      state.trailmarkVisitInFlight = false;
+    }
+  }
+
+  function isOfficialTrailmark(feature) {
+    return Boolean(
+      feature &&
+        isGuildFeature(feature) &&
+        feature.type === "marker" &&
+        getFeatureCategories(feature).includes("trailmark") &&
+        feature.points[0],
+    );
+  }
+
+  async function copySelectedTrailmarkId() {
+    const feature = getSelectedFeature();
+    if (!isOfficialTrailmark(feature)) {
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(feature.id);
+      setStatus(`Copied Atlas location ID for ${feature.title}`);
+    } catch (error) {
+      setStatus("Could not copy the Atlas location ID");
+    }
+  }
+
+  async function refreshTrailmarkVisits(feature, force = false) {
+    if (!isOfficialTrailmark(feature) || !isSupabaseConfigured()) {
+      return;
+    }
+    if (!force && state.trailmarkVisitsByFeature.has(feature.id)) {
+      renderTrailmarkPresence(feature);
+      return;
+    }
+    if (state.trailmarkVisitsLoading.has(feature.id)) {
+      return;
+    }
+
+    state.trailmarkVisitsLoading.add(feature.id);
+    renderTrailmarkPresence(feature);
+    try {
+      const visits = await callSupabaseRpc("get_recent_atlas_trailmark_visits", {
+        atlas_location_id_input: feature.id,
+      });
+      state.trailmarkVisitsByFeature.set(feature.id, Array.isArray(visits) ? visits : []);
+    } catch (error) {
+      console.error("Could not load recent Trailmark visits", error);
+      state.trailmarkVisitsByFeature.set(feature.id, null);
+    } finally {
+      state.trailmarkVisitsLoading.delete(feature.id);
+      if (getSelectedFeature() && getSelectedFeature().id === feature.id) {
+        renderTrailmarkPresence(feature);
+      }
+      renderTrailmarkArrivalVisitors(feature.id);
+    }
+  }
+
+  function renderTrailmarkPresence(feature) {
+    const visible = isOfficialTrailmark(feature);
+    elements.trailmarkPresencePanel.hidden = !visible;
+    if (!visible) {
+      elements.trailmarkPresenceList.innerHTML = "";
+      return;
+    }
+
+    elements.trailmarkPresenceList.innerHTML = "";
+    if (state.trailmarkVisitsLoading.has(feature.id)) {
+      elements.trailmarkPresenceStatus.textContent = "Checking the latest field record...";
+      return;
+    }
+
+    const visits = state.trailmarkVisitsByFeature.get(feature.id);
+    if (visits === null) {
+      elements.trailmarkPresenceStatus.textContent = "Recent visits could not be loaded.";
+      return;
+    }
+    if (!Array.isArray(visits)) {
+      elements.trailmarkPresenceStatus.textContent = "Select Refresh to check recent visits.";
+      return;
+    }
+    if (!visits.length) {
+      elements.trailmarkPresenceStatus.textContent = "No recorded visits in the last 30 days.";
+      return;
+    }
+
+    elements.trailmarkPresenceStatus.textContent = `${visits.length} recent ${visits.length === 1 ? "visitor" : "visitors"}.`;
+    visits.forEach((visit) => {
+      const item = document.createElement("li");
+      item.innerHTML = `
+        <strong>${escapeHtml(normalizeCreatorName(visit.ranger_name) || "Unknown Ranger")}</strong>
+        <time datetime="${escapeHtml(visit.last_visited_at || "")}">${escapeHtml(formatRelativeTime(visit.last_visited_at))}</time>
+      `;
+      elements.trailmarkPresenceList.appendChild(item);
+    });
+  }
+
+  function showTrailmarkArrival(feature, result) {
+    window.clearTimeout(trailmarkAccessPollTimer);
+    trailmarkAccessPollTimer = null;
+    elements.trailmarkArrival.dataset.featureId = feature.id;
+    elements.trailmarkArrivalTitle.textContent = feature.title;
+    elements.trailmarkArrivalText.textContent = result.discord_linked
+      ? "Visit recorded. Wayfinder is opening the matching Discord channel."
+      : "Visit recorded. Link Discord to open this Trailmark's private channel when you arrive.";
+    elements.trailmarkDiscordOpenLink.hidden = true;
+    elements.trailmarkArrivalLinkBtn.hidden = Boolean(result.discord_linked);
+    elements.trailmarkArrival.hidden = false;
+    renderTrailmarkArrivalVisitors(feature.id);
+  }
+
+  function renderTrailmarkArrivalVisitors(featureId) {
+    if (elements.trailmarkArrival.dataset.featureId !== featureId) {
+      return;
+    }
+    const visits = state.trailmarkVisitsByFeature.get(featureId);
+    if (!Array.isArray(visits)) {
+      elements.trailmarkArrivalVisitors.textContent = "Checking recent visitors...";
+      return;
+    }
+    if (!visits.length) {
+      elements.trailmarkArrivalVisitors.textContent = "No other recent visits are recorded.";
+      return;
+    }
+    elements.trailmarkArrivalVisitors.textContent = `Recently here: ${visits
+      .slice(0, 4)
+      .map((visit) => `${normalizeCreatorName(visit.ranger_name) || "Unknown Ranger"} ${formatRelativeTime(visit.last_visited_at)}`)
+      .join(", ")}.`;
+  }
+
+  function hideTrailmarkArrival() {
+    elements.trailmarkArrival.hidden = true;
+  }
+
+  async function pollTrailmarkAccessRequest(feature, requestId, attempt) {
+    const deviceToken = getStoredDiscordDeviceToken();
+    if (!deviceToken || attempt >= TRAILMARK_ACCESS_POLL_LIMIT) {
+      if (!elements.trailmarkArrival.hidden && elements.trailmarkArrival.dataset.featureId === feature.id) {
+        elements.trailmarkArrivalText.textContent =
+          "Visit recorded. Wayfinder has not confirmed Discord access yet.";
+      }
+      return;
+    }
+
+    try {
+      const request = await callSupabaseRpc("get_atlas_trailmark_access_request", {
+        access_request_id: requestId,
+        device_token: deviceToken,
+      });
+      if (request && request.status === "granted") {
+        elements.trailmarkArrivalText.textContent = "Wayfinder opened this Trailmark channel temporarily.";
+        if (request.discord_guild_id && request.discord_channel_id) {
+          elements.trailmarkDiscordOpenLink.href = `https://discord.com/channels/${encodeURIComponent(request.discord_guild_id)}/${encodeURIComponent(request.discord_channel_id)}`;
+          elements.trailmarkDiscordOpenLink.hidden = false;
+        }
+        return;
+      }
+      if (request && request.status === "failed") {
+        elements.trailmarkArrivalText.textContent =
+          request.error_message || "Wayfinder could not open this Trailmark channel.";
+        return;
+      }
+    } catch (error) {
+      console.warn("Could not check Trailmark Discord access", error);
+    }
+
+    trailmarkAccessPollTimer = window.setTimeout(
+      () => pollTrailmarkAccessRequest(feature, requestId, attempt + 1),
+      TRAILMARK_ACCESS_POLL_MS,
+    );
+  }
+
+  function openDiscordLinkDialog() {
+    renderDiscordLinkDialog();
+    elements.discordLinkDialog.showModal();
+    if (!state.discordLink) {
+      window.setTimeout(() => elements.discordLinkCodeInput.focus(), 0);
+    }
+  }
+
+  function closeDiscordLinkDialog() {
+    elements.discordLinkDialog.close();
+  }
+
+  function renderDiscordLinkDialog() {
+    const linked = Boolean(state.discordLink);
+    elements.discordLinkSummary.hidden = !linked;
+    elements.discordLinkSummary.innerHTML = linked
+      ? `<strong>Linked to ${escapeHtml(state.discordLink.discord_display_name || "Discord")}</strong><br />Trailmark arrivals can now request temporary channel access.`
+      : "";
+    elements.discordLinkCodeInput.disabled = linked;
+    elements.discordLinkSubmitBtn.hidden = linked;
+    elements.discordUnlinkBtn.hidden = !linked;
+    if (!linked) {
+      elements.discordLinkStatus.textContent = "";
+    }
+    updateTrailmarkVisitControls();
+  }
+
+  async function claimDiscordLink(event) {
+    event.preventDefault();
+    const rangerName = getCurrentCreatorName();
+    if (!rangerName) {
+      elements.discordLinkStatus.textContent = "Enter your name under Signed As first.";
+      elements.creatorInput.focus();
+      return;
+    }
+    const linkCode = elements.discordLinkCodeInput.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+    if (!linkCode) {
+      elements.discordLinkStatus.textContent = "Enter the code given to you by /atlas link.";
+      return;
+    }
+    if (!isSupabaseConfigured()) {
+      elements.discordLinkStatus.textContent = "Atlas sharing is not configured.";
+      return;
+    }
+
+    elements.discordLinkSubmitBtn.disabled = true;
+    elements.discordLinkStatus.textContent = "Linking Discord...";
+    const deviceToken = getOrCreateDiscordDeviceToken();
+    try {
+      state.discordLink = await callSupabaseRpc("claim_atlas_discord_link", {
+        link_code: linkCode,
+        device_token: deviceToken,
+        ranger_name: rangerName,
+      });
+      elements.discordLinkCodeInput.value = "";
+      elements.discordLinkStatus.textContent = "Discord linked.";
+      renderDiscordLinkDialog();
+      setStatus(`Discord linked to ${state.discordLink.discord_display_name || "your account"}`);
+    } catch (error) {
+      elements.discordLinkStatus.textContent = getReadableError(error, "That code is invalid or expired.");
+    } finally {
+      elements.discordLinkSubmitBtn.disabled = false;
+    }
+  }
+
+  async function refreshDiscordLink() {
+    const deviceToken = getStoredDiscordDeviceToken();
+    if (!deviceToken) {
+      state.discordLink = null;
+      updateTrailmarkVisitControls();
+      return;
+    }
+    try {
+      state.discordLink = await callSupabaseRpc("get_atlas_discord_link", {
+        device_token: deviceToken,
+      });
+      if (!state.discordLink) {
+        window.localStorage.removeItem(DISCORD_DEVICE_TOKEN_STORAGE_KEY);
+      }
+    } catch (error) {
+      console.warn("Could not verify Discord link", error);
+    }
+    updateTrailmarkVisitControls();
+  }
+
+  async function unlinkDiscord() {
+    const deviceToken = getStoredDiscordDeviceToken();
+    elements.discordUnlinkBtn.disabled = true;
+    try {
+      if (deviceToken && isSupabaseConfigured()) {
+        await callSupabaseRpc("unlink_atlas_discord", { device_token: deviceToken });
+      }
+      window.localStorage.removeItem(DISCORD_DEVICE_TOKEN_STORAGE_KEY);
+      state.discordLink = null;
+      elements.discordLinkStatus.textContent = "Discord unlinked.";
+      renderDiscordLinkDialog();
+      setStatus("Discord unlinked from this browser");
+    } catch (error) {
+      elements.discordLinkStatus.textContent = getReadableError(error, "Discord could not be unlinked.");
+    } finally {
+      elements.discordUnlinkBtn.disabled = false;
+    }
+  }
+
+  function getStoredDiscordDeviceToken() {
+    return window.localStorage.getItem(DISCORD_DEVICE_TOKEN_STORAGE_KEY) || "";
+  }
+
+  function getOrCreateDiscordDeviceToken() {
+    const stored = getStoredDiscordDeviceToken();
+    if (stored) {
+      return stored;
+    }
+    const bytes = new Uint8Array(32);
+    crypto.getRandomValues(bytes);
+    const token = Array.from(bytes, (value) => value.toString(16).padStart(2, "0")).join("");
+    window.localStorage.setItem(DISCORD_DEVICE_TOKEN_STORAGE_KEY, token);
+    return token;
   }
 
   function pushUndo(label) {
@@ -1198,11 +1926,12 @@
     elements.rangeColorInput.value = feature ? getFeatureColor(feature, categoryById[feature.category] || categoryById.range) : categoryById.range.color;
     elements.creatorMeta.innerHTML = feature ? getAttributionHtml(feature) : "";
     elements.creatorMeta.hidden = !feature || !elements.creatorMeta.innerHTML;
+    renderTrailmarkPresence(feature);
     elements.notesInput.value = feature ? feature.notes : "";
 
     const isDraft = Boolean(feature && state.draftFeature && feature.id === state.draftFeature.id);
     elements.saveFeatureBtn.textContent = isDraft ? "Create Mark" : "Save";
-    elements.deleteFeatureBtn.textContent = isDraft ? "Discard" : "Delete";
+    elements.deleteFeatureBtn.textContent = selectedFeatures.length > 1 ? `Delete ${selectedFeatures.length}` : isDraft ? "Discard" : "Delete";
 
     [
       elements.titleInput,
@@ -1211,10 +1940,10 @@
       elements.rangeColorInput,
       elements.notesInput,
       elements.saveFeatureBtn,
-      elements.deleteFeatureBtn,
     ].forEach((element) => {
       element.disabled = disabled;
     });
+    elements.deleteFeatureBtn.disabled = selectedFeatures.length === 0;
   }
 
   function renderCategoryInputs(selectedCategoryIds, disabled) {
@@ -1302,6 +2031,9 @@
     }
     const feature = getSelectedFeature();
     setStatus(feature ? `Selected: ${feature.title}` : "Selection cleared");
+    if (isOfficialTrailmark(feature)) {
+      void refreshTrailmarkVisits(feature);
+    }
   }
 
   function saveSelectedFeature() {
@@ -1338,29 +2070,46 @@
   }
 
   function deleteSelectedFeature() {
-    const feature = getSelectedFeature();
-    if (!feature) {
+    const selectedFeatures = getSelectedFeatures();
+    if (!selectedFeatures.length) {
       return;
     }
 
-    if (state.draftFeature && feature.id === state.draftFeature.id) {
+    const draftId = state.draftFeature ? state.draftFeature.id : null;
+    const deletableFeatures = selectedFeatures.filter((feature) => feature.id !== draftId);
+    const hasDraftOnly = !deletableFeatures.length && draftId && selectedFeatures.some((feature) => feature.id === draftId);
+
+    if (hasDraftOnly) {
       cancelDrawing(true);
       renderAll();
       return;
     }
 
-    const confirmed = window.confirm(`Delete "${feature.title}"?`);
+    const selectedCount = deletableFeatures.length;
+    const preview = deletableFeatures
+      .slice(0, 3)
+      .map((feature) => `"${feature.title || "Untitled"}"`)
+      .join(", ");
+    const remaining = selectedCount - Math.min(selectedCount, 3);
+    const previewText = remaining > 0 ? `${preview}, and ${remaining} more` : preview;
+    const confirmed = window.confirm(
+      selectedCount === 1 ? `Delete ${previewText}?` : `Delete ${selectedCount} selected entries?\n\n${previewText}`,
+    );
     if (!confirmed) {
       return;
     }
 
-    pushUndo(`${feature.title} delete`);
-    state.features = state.features.filter((item) => item.id !== feature.id);
+    const selectedIds = new Set(deletableFeatures.map((feature) => feature.id));
+    pushUndo(selectedCount === 1 ? `${deletableFeatures[0].title} delete` : `${selectedCount} entries delete`);
+    state.features = state.features.filter((item) => !selectedIds.has(item.id));
+    if (draftId && selectedFeatures.some((feature) => feature.id === draftId)) {
+      cancelDrawing(false, false);
+    }
     state.selectedId = null;
     state.selectedIds = [];
     saveState();
     renderAll();
-    setStatus("Deleted");
+    setStatus(selectedCount === 1 ? "Deleted" : `Deleted ${selectedCount} entries`);
   }
 
   async function exportVisibleMap() {
@@ -1398,6 +2147,7 @@
     ctx.fillRect(0, 0, width, height);
     drawExportMapImage(ctx, image, bounds, width, height);
     drawExportFeatures(ctx, bounds, width, height, scale);
+    drawExportLivePosition(ctx, bounds, width, height, scale);
     drawExportFrame(ctx, width, height, scale);
     return canvas;
   }
@@ -1603,6 +2353,52 @@
 
     if (state.showLabels) {
       drawExportLabel(ctx, feature.title || category.label, point.x, point.y - radius - 4 * scale, scale);
+    }
+    ctx.restore();
+  }
+
+  function drawExportLivePosition(ctx, bounds, width, height, scale) {
+    const livePoint = state.livePositionEnabled ? state.livePositionPoint : null;
+    if (
+      !livePoint ||
+      livePoint.x < bounds.west ||
+      livePoint.x > bounds.east ||
+      livePoint.y < bounds.south ||
+      livePoint.y > bounds.north
+    ) {
+      return;
+    }
+
+    const point = mapPointToExport(livePoint, bounds, width, height);
+    const radius = 11 * scale;
+    ctx.save();
+    ctx.globalAlpha = livePoint.stale ? 0.68 : 1;
+    ctx.shadowColor = "rgba(24, 15, 7, 0.42)";
+    ctx.shadowBlur = 6 * scale;
+    ctx.shadowOffsetY = 2 * scale;
+    ctx.beginPath();
+    ctx.arc(point.x, point.y, radius, 0, Math.PI * 2);
+    ctx.fillStyle = "#246746";
+    ctx.fill();
+    ctx.shadowColor = "transparent";
+    ctx.strokeStyle = "#f7edcf";
+    ctx.lineWidth = 3 * scale;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(point.x - 6 * scale, point.y);
+    ctx.lineTo(point.x + 6 * scale, point.y);
+    ctx.moveTo(point.x, point.y - 6 * scale);
+    ctx.lineTo(point.x, point.y + 6 * scale);
+    ctx.lineWidth = 2 * scale;
+    ctx.stroke();
+    if (state.showLabels) {
+      drawExportLabel(
+        ctx,
+        livePoint.stale ? "Last outdoor position" : "Your position",
+        point.x,
+        point.y - radius - 4 * scale,
+        scale,
+      );
     }
     ctx.restore();
   }
@@ -2644,10 +3440,25 @@
     });
 
     if (!response.ok) {
-      throw new Error(`Supabase ${functionName} failed: ${response.status}`);
+      let details = "";
+      try {
+        const payload = await response.json();
+        details = payload.message || payload.error || payload.hint || "";
+      } catch (error) {
+        details = "";
+      }
+      throw new Error(details || `Supabase ${functionName} failed: ${response.status}`);
     }
 
+    if (response.status === 204) {
+      return null;
+    }
     return response.json();
+  }
+
+  function getReadableError(error, fallback) {
+    const message = error instanceof Error ? error.message.trim() : "";
+    return message && message.length <= 180 ? message : fallback;
   }
 
   function normalizeRemoteShareCode(value) {
@@ -3258,6 +4069,31 @@
     }
     const years = Math.floor(days / 365);
     return `${years} year${years === 1 ? "" : "s"} ago`;
+  }
+
+  function formatRelativeTime(value) {
+    const timestamp = Date.parse(value || "");
+    if (!Number.isFinite(timestamp)) {
+      return "at an unknown time";
+    }
+    const elapsedMs = Math.max(0, Date.now() - timestamp);
+    const minutes = Math.floor(elapsedMs / 60000);
+    if (minutes < 1) {
+      return "just now";
+    }
+    if (minutes < 60) {
+      return `${minutes}m ago`;
+    }
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) {
+      return `${hours}h ago`;
+    }
+    const days = Math.floor(hours / 24);
+    if (days < 30) {
+      return `${days}d ago`;
+    }
+    const months = Math.floor(days / 30);
+    return `${months}mo ago`;
   }
 
   function getCategoryIcon(category) {

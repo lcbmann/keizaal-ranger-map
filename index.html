@@ -89,6 +89,23 @@
             </label>
           </div>
           <div class="tool-rail-section">
+            <label class="live-position-toggle" for="livePositionInput">
+              <input id="livePositionInput" type="checkbox" />
+              <span class="live-position-toggle-icon" aria-hidden="true"></span>
+              <span>Live position</span>
+            </label>
+            <small id="livePositionStatus" class="live-position-status" aria-live="polite">Off</small>
+          </div>
+          <div class="tool-rail-section trailmark-visit-controls">
+            <label class="live-position-toggle" for="trailmarkVisitsInput">
+              <input id="trailmarkVisitsInput" type="checkbox" />
+              <span class="trailmark-visit-toggle-icon" aria-hidden="true"></span>
+              <span>Record visits</span>
+            </label>
+            <small id="trailmarkVisitsStatus" class="live-position-status" aria-live="polite">Off</small>
+            <button id="discordLinkBtn" class="rail-link-button" type="button">Link Discord</button>
+          </div>
+          <div class="tool-rail-section">
             <button id="undoBtn" class="button secondary" type="button" title="Undo last change (Ctrl+Z)" disabled>Undo</button>
           </div>
         </aside>
@@ -96,6 +113,15 @@
         <section class="map-stage" aria-label="Interactive Skyrim map">
           <div id="map"></div>
           <div id="statusBar" class="status-bar">Ready</div>
+          <section id="trailmarkArrival" class="trailmark-arrival" aria-live="polite" hidden>
+            <button id="trailmarkArrivalCloseBtn" class="trailmark-arrival-close" type="button" aria-label="Dismiss Trailmark arrival">&times;</button>
+            <p class="trailmark-arrival-kicker">Trailmark reached</p>
+            <strong id="trailmarkArrivalTitle"></strong>
+            <p id="trailmarkArrivalText"></p>
+            <div id="trailmarkArrivalVisitors" class="trailmark-arrival-visitors"></div>
+            <a id="trailmarkDiscordOpenLink" class="button primary" href="#" target="_blank" rel="noreferrer" hidden>Open in Discord</a>
+            <button id="trailmarkArrivalLinkBtn" class="button secondary" type="button" hidden>Link Discord</button>
+          </section>
         </section>
 
         <aside class="panel ledger-panel">
@@ -131,6 +157,18 @@
               </div>
 
               <p id="creatorMeta" class="creator-meta"></p>
+
+              <section id="trailmarkPresencePanel" class="trailmark-presence-panel" hidden>
+                <div class="section-heading-row">
+                  <h3>Recent Trailmark visits</h3>
+                  <div class="filter-heading-actions">
+                    <button id="copyTrailmarkIdBtn" class="quiet-action" type="button">Copy ID</button>
+                    <button id="refreshTrailmarkVisitsBtn" class="quiet-action" type="button">Refresh</button>
+                  </div>
+                </div>
+                <p id="trailmarkPresenceStatus" class="trailmark-presence-status"></p>
+                <ul id="trailmarkPresenceList" class="trailmark-presence-list"></ul>
+              </section>
 
               <label class="field-label" for="notesInput">Notes</label>
               <textarea id="notesInput" class="text-input textarea" rows="5" disabled></textarea>
@@ -223,6 +261,7 @@
               <li>Use <strong>Search</strong>, <strong>Mapped By</strong>, and the category filters.</li>
               <li>Select an entry in the <strong>Atlas list</strong> to zoom to it.</li>
               <li>Hold <kbd>Ctrl</kbd>, <kbd>Cmd</kbd>, or <kbd>Shift</kbd> while selecting to choose several entries.</li>
+              <li>With several entries selected, use <strong>Delete</strong> in the inspector to remove them together.</li>
               <li>Press <kbd>Esc</kbd> to clear active filters.</li>
             </ol>
           </section>
@@ -248,12 +287,24 @@
               <li>Use <strong>Undo</strong> immediately if you remove the wrong set.</li>
             </ol>
           </section>
+          <section class="help-step">
+            <div class="help-step-heading">
+              <span class="help-step-number" aria-hidden="true">5</span>
+              <h3>Visit Trailmarks</h3>
+            </div>
+            <ol>
+              <li>Enter your Ranger name under <strong>Signed As</strong>.</li>
+              <li>Enable <strong>Live position</strong> and <strong>Record visits</strong>.</li>
+              <li>Use <strong>Link Discord</strong> once if you want nearby Trailmark channels to open automatically.</li>
+              <li>Remain near an official Guild Trailmark briefly to record your visit.</li>
+            </ol>
+          </section>
         </div>
         <section class="help-display-settings" aria-labelledby="display-settings-title">
           <div>
             <p class="help-display-kicker">Display</p>
-            <h3 id="display-settings-title">Map labels</h3>
-            <p>Show the names of visible marks, trails, and ranges above their symbols. Labels are included in <strong>Save Image</strong>.</p>
+            <h3 id="display-settings-title">Map display</h3>
+            <p>Show names above visible entries with the setting here. With the Ranger Atlas integration installed, switch on <strong>Live position</strong> in the left tool rail to show your local in-game location. <strong>Record visits</strong> shares only your entered name, the official Trailmark, and the time you reached it; your coordinates and route remain local. Visible labels and the live marker are included in <strong>Save Image</strong>.</p>
           </div>
           <label class="setting-toggle">
             <input id="showLabelsInput" type="checkbox" />
@@ -261,6 +312,37 @@
           </label>
         </section>
         <p class="help-note"><strong>Map crowded?</strong> Zoom in for full Skyrim reference symbols, or use the category filters to narrow the view.</p>
+      </div>
+    </dialog>
+
+    <dialog id="discordLinkDialog" class="field-note workflow-dialog discord-link-dialog">
+      <div class="field-note-inner">
+        <button id="discordLinkCloseBtn" class="field-note-close" type="button" aria-label="Close Discord link">&times;</button>
+        <p class="field-note-kicker">Trailmark Access</p>
+        <h2>Link Discord</h2>
+        <p class="dialog-help">
+          Run <strong>/atlas link</strong> in the Ranger Discord, then enter the one-time code below. This only tells Wayfinder which Discord account should receive temporary Trailmark channel access.
+        </p>
+        <div id="discordLinkSummary" class="discord-link-summary" hidden></div>
+        <form id="discordLinkForm" class="discord-link-form">
+          <label class="field-label" for="discordLinkCodeInput">One-time code</label>
+          <input
+            id="discordLinkCodeInput"
+            class="text-input discord-link-code"
+            type="text"
+            maxlength="12"
+            placeholder="ABCD2345"
+            autocomplete="off"
+            autocapitalize="characters"
+            spellcheck="false"
+          />
+          <p id="discordLinkStatus" class="dialog-status" aria-live="polite"></p>
+          <div class="dialog-actions">
+            <button id="discordLinkSubmitBtn" class="button primary" type="submit">Link Discord</button>
+            <button id="discordUnlinkBtn" class="button danger" type="button" hidden>Unlink</button>
+            <button id="discordLinkCancelBtn" class="button secondary" type="button">Close</button>
+          </div>
+        </form>
       </div>
     </dialog>
 
