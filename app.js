@@ -97,6 +97,7 @@
     features: [],
     filters: Object.fromEntries(categories.map((category) => [category.id, true])),
     showLabels: false,
+    darkMode: window.matchMedia?.("(prefers-color-scheme: dark)").matches === true,
     search: "",
     creatorFilter: "",
     selectedId: null,
@@ -162,6 +163,7 @@
     aboutDialog: document.getElementById("aboutDialog"),
     aboutCloseBtn: document.getElementById("aboutCloseBtn"),
     helpBtn: document.getElementById("helpBtn"),
+    themeToggleBtn: document.getElementById("themeToggleBtn"),
     helpDialog: document.getElementById("helpDialog"),
     helpCloseBtn: document.getElementById("helpCloseBtn"),
     showLabelsInput: document.getElementById("showLabelsInput"),
@@ -276,6 +278,7 @@
   function init() {
     prepareSearchInputAgainstAutofill();
     loadState();
+    applyTheme();
     renderFilters();
     renderAll();
     bindEvents();
@@ -320,6 +323,12 @@
     elements.helpBtn.addEventListener("click", () => elements.helpDialog.showModal());
     elements.helpCloseBtn.addEventListener("click", () => elements.helpDialog.close());
     closeDialogOnBackdrop(elements.helpDialog);
+    elements.themeToggleBtn.addEventListener("click", () => {
+      state.darkMode = !state.darkMode;
+      applyTheme();
+      saveState();
+      setStatus(state.darkMode ? "Dark interface enabled" : "Parchment interface enabled");
+    });
     elements.showLabelsInput.addEventListener("change", (event) => {
       state.showLabels = event.target.checked;
       saveState();
@@ -517,6 +526,9 @@
       }
       state.showLabels = saved.showLabels === true;
       elements.showLabelsInput.checked = state.showLabels;
+      if (typeof saved.darkMode === "boolean") {
+        state.darkMode = saved.darkMode;
+      }
       state.livePositionEnabled = saved.livePositionEnabled === true;
       elements.livePositionInput.checked = state.livePositionEnabled;
       state.creatorName = normalizeCreatorName(saved.creatorName || "");
@@ -552,6 +564,7 @@
       defaultsVersion: DEFAULT_FEATURES_VERSION,
       filters: state.filters,
       showLabels: state.showLabels,
+      darkMode: state.darkMode,
       livePositionEnabled: state.livePositionEnabled,
       trailmarkVisitsEnabled: state.trailmarkVisitsEnabled,
       trailmarkVisitCooldowns: state.trailmarkVisitCooldowns,
@@ -559,6 +572,12 @@
       features: state.features,
     };
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+  }
+
+  function applyTheme() {
+    document.documentElement.dataset.theme = state.darkMode ? "dark" : "light";
+    elements.themeToggleBtn.setAttribute("aria-label", state.darkMode ? "Use parchment mode" : "Use dark mode");
+    elements.themeToggleBtn.title = state.darkMode ? "Use parchment mode" : "Use dark mode";
   }
 
   function startLivePositionPolling() {
