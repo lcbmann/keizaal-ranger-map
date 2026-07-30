@@ -107,7 +107,11 @@
     creatorFilter: "",
     selectedId: null,
     selectedIds: [],
+    workspaceMode: "field",
+    panelView: "browse",
     mode: "select",
+    movingFeatureId: null,
+    movingOriginalPoint: null,
     creatorName: "",
     livePositionEnabled: false,
     livePositionConnection: "off",
@@ -174,6 +178,10 @@
 
   const elements = {
     toolButtons: Array.from(document.querySelectorAll(".tool-button")),
+    workspaceModeButtons: Array.from(document.querySelectorAll("[data-workspace-mode]")),
+    panelViewButtons: Array.from(document.querySelectorAll("[data-panel-view]")),
+    panelPanes: Array.from(document.querySelectorAll("[data-panel-pane]")),
+    atlasMenu: document.getElementById("atlasMenu"),
     aboutBtn: document.getElementById("aboutBtn"),
     aboutDialog: document.getElementById("aboutDialog"),
     aboutCloseBtn: document.getElementById("aboutCloseBtn"),
@@ -266,6 +274,7 @@
     featureList: document.getElementById("featureList"),
     statusBar: document.getElementById("statusBar"),
     emptySelection: document.getElementById("emptySelection"),
+    selectionSummary: document.getElementById("selectionSummary"),
     editorForm: document.getElementById("editorForm"),
     featureId: document.getElementById("featureId"),
     titleInput: document.getElementById("titleInput"),
@@ -292,6 +301,10 @@
     trailmarkDropSubmitBtn: document.getElementById("trailmarkDropSubmitBtn"),
     notesInput: document.getElementById("notesInput"),
     saveFeatureBtn: document.getElementById("saveFeatureBtn"),
+    moveFeatureBtn: document.getElementById("moveFeatureBtn"),
+    moveFeatureActions: document.getElementById("moveFeatureActions"),
+    confirmMoveBtn: document.getElementById("confirmMoveBtn"),
+    cancelMoveBtn: document.getElementById("cancelMoveBtn"),
     deleteFeatureBtn: document.getElementById("deleteFeatureBtn"),
   };
 
@@ -310,6 +323,7 @@
     prepareSearchInputAgainstAutofill();
     loadState();
     applyTheme();
+    updateWorkspaceUI();
     renderFilters();
     renderAll();
     bindEvents();
@@ -345,6 +359,17 @@
   }
 
   function bindEvents() {
+    elements.workspaceModeButtons.forEach((button) => {
+      button.addEventListener("click", () => setWorkspaceMode(button.dataset.workspaceMode));
+    });
+    elements.panelViewButtons.forEach((button) => {
+      button.addEventListener("click", () => setPanelView(button.dataset.panelView));
+    });
+    elements.atlasMenu.querySelectorAll("button").forEach((button) => {
+      button.addEventListener("click", () => {
+        elements.atlasMenu.open = false;
+      });
+    });
     elements.toolButtons.forEach((button) => {
       button.addEventListener("click", () => setMode(button.dataset.mode));
     });
@@ -501,6 +526,9 @@
       saveSelectedFeature();
     });
 
+    elements.moveFeatureBtn.addEventListener("click", beginMoveSelectedFeature);
+    elements.confirmMoveBtn.addEventListener("click", confirmFeatureMove);
+    elements.cancelMoveBtn.addEventListener("click", () => cancelFeatureMove());
     elements.deleteFeatureBtn.addEventListener("click", deleteSelectedFeature);
 
     map.on("click", handleMapClick);
@@ -525,6 +553,9 @@
 
     window.addEventListener("keydown", (event) => {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z") {
+        if (state.workspaceMode !== "edit") {
+          return;
+        }
         const editable =
           event.target instanceof Element && event.target.closest("input, textarea, select, [contenteditable='true']");
         if (editable) {
@@ -536,7 +567,9 @@
       }
 
       if (event.key === "Escape") {
-        if (state.drawPoints.length) {
+        if (state.movingFeatureId) {
+          cancelFeatureMove();
+        } else if (state.drawPoints.length) {
           cancelDrawing();
         } else if (hasActiveViewFilters()) {
           resetViewFilters();
@@ -1660,6 +1693,8 @@
   }
 
   function undoLastAction() {
+    state.movingFeatureId = null;
+    state.movingOriginalPoint = null;
     const snapshot = state.undoStack.pop();
     updateUndoButton();
     if (!snapshot) {
@@ -1694,7 +1729,70 @@
     elements.undoBtn.disabled = state.undoStack.length === 0;
   }
 
+  function setWorkspaceMode(mode) {
+    const nextMode = mode === "edit" ? "edit" : "field";
+    if (state.workspaceMode === nextMode) {
+      return;
+    }
+    if (state.movingFeatureId) {
+      cancelFeatureMove(false);
+    }
+    if (nextMode === "field" && (state.drawPoints.length || state.draftFeature)) {
+      cancelDrawing(false, false);
+    }
+
+    state.workspaceMode = nextMode;
+    if (nextMode === "field") {
+      state.mode = "select";
+      map.dragging.enable();
+      map.getContainer().classList.remove("is-drawing");
+      setPanelView(state.selectedId ? "details" : "browse", false);
+    } else {
+      setPanelView(state.selectedId ? "details" : "browse", false);
+    }
+    updateWorkspaceUI();
+    updateModeButtons();
+    renderAll();
+    window.setTimeout(() => map.invalidateSize(), 0);
+    setStatus(nextMode === "field" ? "Field View ready" : "Edit Atlas ready");
+  }
+
+  function updateWorkspaceUI() {
+    document.documentElement.dataset.workspace = state.workspaceMode;
+    elements.workspaceModeButtons.forEach((button) => {
+      const active = button.dataset.workspaceMode === state.workspaceMode;
+      button.classList.toggle("is-active", active);
+      button.setAttribute("aria-pressed", String(active));
+    });
+    updatePanelView();
+  }
+
+  function setPanelView(view, announce = true) {
+    state.panelView = view === "details" ? "details" : "browse";
+    updatePanelView();
+    if (announce) {
+      setStatus(state.panelView === "details" ? "Showing selected entry" : "Browsing Atlas entries");
+    }
+  }
+
+  function updatePanelView() {
+    elements.panelViewButtons.forEach((button) => {
+      const active = button.dataset.panelView === state.panelView;
+      button.classList.toggle("is-active", active);
+      button.setAttribute("aria-pressed", String(active));
+    });
+    elements.panelPanes.forEach((pane) => {
+      pane.hidden = pane.dataset.panelPane !== state.panelView;
+    });
+  }
+
   function setMode(mode) {
+    if (state.workspaceMode !== "edit" && mode !== "select") {
+      setWorkspaceMode("edit");
+    }
+    if (state.movingFeatureId) {
+      cancelFeatureMove(false);
+    }
     if (state.mode !== mode) {
       cancelDrawing(false, false);
     }
@@ -1704,6 +1802,7 @@
 
     updateModeButtons();
     updateDrawButtons();
+    renderEditor();
 
     const statusByMode = {
       select: "Select features or drag the map",
@@ -1738,6 +1837,7 @@
       state.drawPoints = state.draftFeature.points.map((draftPoint) => ({ ...draftPoint }));
       state.selectedId = state.draftFeature.id;
       state.selectedIds = [state.draftFeature.id];
+      setPanelView("details", false);
       updateDrawButtons();
       renderAll();
       renderDraft();
@@ -1923,27 +2023,21 @@
       marker.on("click", (event) => selectFeature(feature.id, isAdditiveSelectionEvent(event.originalEvent)));
       if (draggable) {
         marker.on("dragstart", () => {
-          pushUndo(`${feature.title} move`);
           marker.closeTooltip();
         });
         marker.on("dragend", (event) => {
           feature.points = [clampPoint(event.target.getLatLng())];
-          stampFeatureUpdate(feature);
-          feature.updatedAt = new Date().toISOString();
           state.selectedId = feature.id;
           state.selectedIds = [feature.id];
           lastDragEndedAt = Date.now();
-          saveState();
           renderAll();
-          setStatus(
-            isGuildFeature(feature)
-              ? `Moved ${feature.title}. Publish the Guild Atlas to share the new position`
-              : `Moved ${feature.title}. The new position is saved in this browser`,
-          );
+          setStatus("Review the new position, then confirm or cancel");
         });
       }
       marker.bindTooltip(getFeatureTooltip(feature, category), { direction: "top", offset: [0, -24] });
-      return marker;
+      return draggable
+        ? L.layerGroup([marker, createMoveMapControl(feature)])
+        : marker;
     }
 
     const latLngs = feature.points.map((point) => [point.y, point.x]);
@@ -1994,7 +2088,56 @@
   }
 
   function canRepositionMarker(feature) {
-    return state.mode === "select" && feature.type === "marker" && !isDefaultFeature(feature) && !isCanonFeature(feature);
+    return (
+      state.workspaceMode === "edit" &&
+      state.mode === "select" &&
+      state.movingFeatureId === feature.id &&
+      feature.type === "marker" &&
+      !isDefaultFeature(feature) &&
+      !isCanonFeature(feature)
+    );
+  }
+
+  function createMoveMapControl(feature) {
+    const point = feature.points[0];
+    const control = L.marker([point.y, point.x], {
+      interactive: true,
+      zIndexOffset: 1800,
+      icon: L.divIcon({
+        className: "",
+        html: `
+          <div class="draft-map-actions move-map-actions" aria-label="Move marker actions">
+            <button class="draft-map-action move-map-confirm" type="button" title="Confirm new position" aria-label="Confirm new position">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4 10-10" /></svg>
+            </button>
+            <button class="draft-map-action draft-map-discard move-map-cancel" type="button" title="Cancel movement" aria-label="Cancel movement">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6 18 18M18 6 6 18" /></svg>
+            </button>
+          </div>
+        `,
+        iconSize: [70, 32],
+        iconAnchor: [-10, 16],
+      }),
+    });
+    control.on("add", () => {
+      const container = control.getElement();
+      if (!container) {
+        return;
+      }
+      L.DomEvent.disableClickPropagation(container);
+      L.DomEvent.disableScrollPropagation(container);
+      container.querySelector(".move-map-confirm").addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        confirmFeatureMove();
+      });
+      container.querySelector(".move-map-cancel").addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        cancelFeatureMove();
+      });
+    });
+    return control;
   }
 
   function createGeometrySymbolLayer(feature, point, selected) {
@@ -2398,13 +2541,21 @@
     const selectedFeatures = getSelectedFeatures();
     const feature = selectedFeatures.length === 1 ? getSelectedFeature() : null;
     const disabled = !feature;
+    const editing = state.workspaceMode === "edit";
+    const moving = Boolean(feature && state.movingFeatureId === feature.id);
 
-    elements.editorForm.hidden = disabled;
-    elements.emptySelection.hidden = !disabled;
+    elements.editorForm.hidden = disabled || !editing;
+    elements.selectionSummary.hidden = disabled || editing;
+    elements.emptySelection.hidden = Boolean(feature);
     elements.emptySelection.textContent =
       selectedFeatures.length > 1
         ? `${selectedFeatures.length} entries selected. Ctrl-click, Cmd-click, or Shift-click entries to adjust the selection.`
-        : "Choose a mark, trail, or range from the map or ledger.";
+        : "Choose a mark, trail, or range from the map or Browse Atlas.";
+    if (feature && !editing) {
+      renderSelectionSummary(feature);
+    } else {
+      elements.selectionSummary.innerHTML = "";
+    }
     elements.featureId.value = feature ? feature.id : "";
     elements.titleInput.value = feature ? feature.title : "";
     renderCategoryInputs(feature ? getFeatureCategories(feature) : ["landmark"], disabled);
@@ -2421,6 +2572,12 @@
     const isDraft = Boolean(feature && state.draftFeature && feature.id === state.draftFeature.id);
     elements.saveFeatureBtn.textContent = isDraft ? "Create Mark" : "Save";
     elements.deleteFeatureBtn.textContent = selectedFeatures.length > 1 ? `Delete ${selectedFeatures.length}` : isDraft ? "Discard" : "Delete";
+    const canMove = canBeginFeatureMove(feature) || moving;
+    elements.moveFeatureBtn.disabled = !canMove;
+    elements.moveFeatureBtn.hidden = isDraft || moving;
+    elements.moveFeatureActions.hidden = !moving;
+    elements.editorForm.classList.toggle("is-moving-feature", moving);
+    elements.editorForm.querySelector(".editor-actions").hidden = moving;
 
     [
       elements.titleInput,
@@ -2430,9 +2587,92 @@
       elements.notesInput,
       elements.saveFeatureBtn,
     ].forEach((element) => {
-      element.disabled = disabled;
+      element.disabled = disabled || moving;
     });
-    elements.deleteFeatureBtn.disabled = selectedFeatures.length === 0;
+    elements.deleteFeatureBtn.disabled = selectedFeatures.length === 0 || moving;
+  }
+
+  function renderSelectionSummary(feature) {
+    const category = categoryById[feature.category] || categoryById.landmark;
+    const source = isGuildFeature(feature)
+      ? '<span class="source-badge">Guild</span>'
+      : isCanonFeature(feature)
+        ? '<span class="source-badge">Skyrim</span>'
+        : "";
+    elements.selectionSummary.innerHTML = `
+      <div class="selection-summary-heading">
+        <span class="selection-summary-symbol" style="${getFeatureSwatchStyle(feature)}">${getFeatureMarkerIcon(feature)}</span>
+        <div>
+          <h3>${escapeHtml(feature.title || category.label)}</h3>
+          <p>${escapeHtml(getFeatureCategoryLabel(feature))} ${source}</p>
+        </div>
+      </div>
+      <dl class="selection-summary-facts">
+        <div><dt>Confidence</dt><dd>${escapeHtml(titleCase(feature.confidence || "scouted"))}</dd></div>
+        <div><dt>Type</dt><dd>${escapeHtml(titleCase(featureTypeLabel(feature.type)))}</dd></div>
+      </dl>
+      ${feature.notes ? `<div class="selection-summary-notes"><span>Field notes</span><p>${escapeHtml(feature.notes)}</p></div>` : ""}
+      ${getAttributionHtml(feature) ? `<p class="selection-summary-attribution">${getAttributionHtml(feature)}</p>` : ""}
+    `;
+  }
+
+  function canBeginFeatureMove(feature) {
+    return Boolean(
+      feature &&
+        state.workspaceMode === "edit" &&
+        state.mode === "select" &&
+        feature.type === "marker" &&
+        !isDefaultFeature(feature) &&
+        !isCanonFeature(feature) &&
+        (!state.draftFeature || feature.id !== state.draftFeature.id),
+    );
+  }
+
+  function beginMoveSelectedFeature() {
+    const feature = getSelectedFeature();
+    if (!canBeginFeatureMove(feature)) {
+      setStatus("Select a custom marker in Edit Atlas before moving it");
+      return;
+    }
+    pushUndo(`${feature.title} move`);
+    state.movingFeatureId = feature.id;
+    state.movingOriginalPoint = { ...feature.points[0] };
+    renderAll();
+    setStatus("Drag the highlighted marker, then confirm or cancel");
+  }
+
+  function confirmFeatureMove() {
+    const feature = state.features.find((candidate) => candidate.id === state.movingFeatureId);
+    if (!feature) {
+      cancelFeatureMove(false);
+      return;
+    }
+    stampFeatureUpdate(feature);
+    feature.updatedAt = new Date().toISOString();
+    state.movingFeatureId = null;
+    state.movingOriginalPoint = null;
+    saveState();
+    renderAll();
+    setStatus("Position updated");
+  }
+
+  function cancelFeatureMove(showStatus = true) {
+    const feature = state.features.find((candidate) => candidate.id === state.movingFeatureId);
+    if (feature && state.movingOriginalPoint) {
+      feature.points = [{ ...state.movingOriginalPoint }];
+    }
+    const expectedLabel = feature ? `${feature.title} move` : "";
+    const pendingUndo = state.undoStack[state.undoStack.length - 1];
+    if (pendingUndo && pendingUndo.label === expectedLabel) {
+      state.undoStack.pop();
+      updateUndoButton();
+    }
+    state.movingFeatureId = null;
+    state.movingOriginalPoint = null;
+    renderAll();
+    if (showStatus) {
+      setStatus("Move cancelled");
+    }
   }
 
   function renderCategoryInputs(selectedCategoryIds, disabled) {
@@ -2490,6 +2730,9 @@
   }
 
   function selectFeature(id, additive = false) {
+    if (state.movingFeatureId && id !== state.movingFeatureId) {
+      cancelFeatureMove(false);
+    }
     if (!id) {
       state.selectedIds = [];
       state.selectedId = null;
@@ -2512,6 +2755,9 @@
       state.selectedId = id;
     }
 
+    if (!additive) {
+      setPanelView("details", false);
+    }
     renderAll();
     const selectedFeatures = getSelectedFeatures();
     if (selectedFeatures.length > 1) {
