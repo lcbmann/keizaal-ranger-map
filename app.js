@@ -182,12 +182,15 @@
 
   map.createPane("trailmark-pane");
   map.getPane("trailmark-pane").style.zIndex = "720";
+  map.createPane("trailmark-radius-pane");
+  map.getPane("trailmark-radius-pane").style.zIndex = "710";
   map.createPane("live-position-pane");
   map.getPane("live-position-pane").style.zIndex = "730";
 
   const featureLayer = L.layerGroup().addTo(map);
   const labelLayer = L.layerGroup().addTo(map);
   const draftLayer = L.layerGroup().addTo(map);
+  const trailmarkRadiusLayer = L.layerGroup().addTo(map);
   const livePositionLayer = L.layerGroup().addTo(map);
   const overwatchPositionLayer = L.layerGroup().addTo(map);
 
@@ -206,8 +209,11 @@
     aboutCloseBtn: document.getElementById("aboutCloseBtn"),
     helpBtn: document.getElementById("helpBtn"),
     themeToggleBtn: document.getElementById("themeToggleBtn"),
+    settingsBtn: document.getElementById("settingsBtn"),
     helpDialog: document.getElementById("helpDialog"),
     helpCloseBtn: document.getElementById("helpCloseBtn"),
+    settingsDialog: document.getElementById("settingsDialog"),
+    settingsCloseBtn: document.getElementById("settingsCloseBtn"),
     showLabelsInput: document.getElementById("showLabelsInput"),
     livePositionInput: document.getElementById("livePositionInput"),
     livePositionStatus: document.getElementById("livePositionStatus"),
@@ -403,6 +409,9 @@
     elements.helpBtn.addEventListener("click", () => elements.helpDialog.showModal());
     elements.helpCloseBtn.addEventListener("click", () => elements.helpDialog.close());
     closeDialogOnBackdrop(elements.helpDialog);
+    elements.settingsBtn.addEventListener("click", () => elements.settingsDialog.showModal());
+    elements.settingsCloseBtn.addEventListener("click", () => elements.settingsDialog.close());
+    closeDialogOnBackdrop(elements.settingsDialog);
     elements.themeToggleBtn.addEventListener("click", () => {
       state.darkMode = !state.darkMode;
       applyTheme();
@@ -922,6 +931,7 @@
   }
 
   function renderLivePosition() {
+    renderTrailmarkVisitRadii();
     if (!state.livePositionEnabled || !state.livePositionPoint) {
       livePositionLayer.clearLayers();
       livePositionMarker = null;
@@ -963,6 +973,32 @@
       markerElement.classList.toggle("is-stale", point.stale);
       markerElement.style.setProperty("--heading", `${Number(point.heading) || 0}deg`);
     }
+  }
+
+  function renderTrailmarkVisitRadii() {
+    trailmarkRadiusLayer.clearLayers();
+    const point = state.livePositionPoint;
+    if (!state.livePositionEnabled || !point || point.stale) {
+      return;
+    }
+
+    getVisibleFeatures()
+      .filter(isOfficialTrailmark)
+      .forEach((feature) => {
+        const trailmarkPoint = feature.points[0];
+        L.circle([trailmarkPoint.y, trailmarkPoint.x], {
+          radius: TRAILMARK_VISIT_RADIUS,
+          pane: "trailmark-radius-pane",
+          interactive: false,
+          bubblingMouseEvents: false,
+          color: "#7da56a",
+          weight: 1,
+          opacity: 0.24,
+          fillColor: "#7da56a",
+          fillOpacity: 0.035,
+          className: "trailmark-visit-radius",
+        }).addTo(trailmarkRadiusLayer);
+      });
   }
 
   function centerOnLivePosition(zoomIn) {
@@ -1249,7 +1285,7 @@
       return;
     }
 
-    if (state.workspaceMode === "field" && !getSelectedFeature()) {
+    if (nearbyChanged && state.workspaceMode === "field" && !getSelectedFeature()) {
       selectFeature(nearest.feature.id);
     } else if (nearbyChanged) {
       renderAll();
@@ -2140,6 +2176,7 @@
     renderCreatorFilter();
     featureLayer.clearLayers();
     labelLayer.clearLayers();
+    renderTrailmarkVisitRadii();
 
     getVisibleFeatures()
       .slice()

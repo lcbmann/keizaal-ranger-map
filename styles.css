@@ -120,7 +120,8 @@ textarea {
 
 .about-button,
 .help-button,
-.theme-button {
+.theme-button,
+.settings-button {
   width: 29px;
   height: 29px;
   flex: 0 0 auto;
@@ -144,13 +145,15 @@ textarea {
 
 .about-button:hover,
 .help-button:hover,
-.theme-button:hover {
+.theme-button:hover,
+.settings-button:hover {
   color: #1f4d31;
   background: rgba(255, 246, 222, 0.82);
 }
 
 .about-button svg,
-.theme-button svg {
+.theme-button svg,
+.settings-button svg {
   width: 18px;
   height: 18px;
   fill: none;
@@ -161,6 +164,10 @@ textarea {
 }
 
 .theme-button {
+  color: #3f5f3b;
+}
+
+.settings-button {
   color: #3f5f3b;
 }
 
@@ -593,6 +600,47 @@ textarea {
   width: 17px;
   height: 17px;
   accent-color: #2b5c3e;
+}
+
+.settings-dialog {
+  width: min(520px, calc(100vw - 32px));
+}
+
+.settings-panel {
+  display: grid;
+  gap: 18px;
+  padding: 16px;
+  border: 1px solid rgba(72, 45, 17, 0.28);
+  border-radius: 4px;
+  background: rgba(255, 246, 222, 0.38);
+}
+
+.settings-panel-kicker {
+  margin: 0 0 4px !important;
+  color: #6d4e2e !important;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.settings-panel h3 {
+  margin: 0 0 5px;
+  color: #332111;
+  font-size: 1rem;
+}
+
+.settings-panel p:not(.settings-panel-kicker) {
+  margin: 0 !important;
+  max-width: 48ch;
+  font-size: 0.86rem;
+}
+
+.settings-note {
+  margin: 14px 0 0 !important;
+  color: #6b5135 !important;
+  font-size: 0.82rem;
+  font-style: italic;
 }
 
 .workflow-dialog.help-dialog {
@@ -2262,6 +2310,10 @@ html[data-workspace="field"] .poi-marker.is-trailmark.is-nearby {
   pointer-events: none;
 }
 
+.trailmark-visit-radius {
+  pointer-events: none;
+}
+
 @keyframes trailmark-beacon {
   0% {
     opacity: 0.76;
@@ -2623,6 +2675,11 @@ html[data-workspace="field"] .poi-marker.is-trailmark.is-nearby {
     height: 38px;
   }
 
+  .settings-button {
+    width: 38px;
+    height: 38px;
+  }
+
   .topbar-actions .utility-actions {
     display: flex;
     justify-content: flex-end;
@@ -2843,7 +2900,8 @@ html[data-theme="dark"] .receive-preview-heading > span {
 
 html[data-theme="dark"] .about-button,
 html[data-theme="dark"] .help-button,
-html[data-theme="dark"] .theme-button {
+html[data-theme="dark"] .theme-button,
+html[data-theme="dark"] .settings-button {
   color: #eadfca;
   border-color: rgba(194, 138, 24, 0.48);
   background: #181610;
@@ -2949,7 +3007,8 @@ html[data-theme="dark"] .help-button {
 
 html[data-theme="dark"] .about-button:hover,
 html[data-theme="dark"] .help-button:hover,
-html[data-theme="dark"] .theme-button:hover {
+html[data-theme="dark"] .theme-button:hover,
+html[data-theme="dark"] .settings-button:hover {
   color: #fff4dc;
   border-color: #c28a18;
   background: #2a2112;
@@ -3111,6 +3170,8 @@ html[data-theme="dark"] .field-note p,
 html[data-theme="dark"] .help-step ol,
 html[data-theme="dark"] .help-note,
 html[data-theme="dark"] .help-display-settings p:last-child,
+html[data-theme="dark"] .settings-panel p:not(.settings-panel-kicker),
+html[data-theme="dark"] .settings-note,
 html[data-theme="dark"] .receive-preview p,
 html[data-theme="dark"] .feature-note {
   color: #cfc1a7 !important;
@@ -3120,6 +3181,7 @@ html[data-theme="dark"] .field-note-signature,
 html[data-theme="dark"] .help-step strong,
 html[data-theme="dark"] .help-note strong,
 html[data-theme="dark"] .setting-toggle,
+html[data-theme="dark"] .settings-panel h3,
 html[data-theme="dark"] .receive-preview-facts strong {
   color: #7fb08e !important;
 }

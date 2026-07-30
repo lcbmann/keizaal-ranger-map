@@ -74,6 +74,12 @@
               </svg>
             </button>
             <button id="helpBtn" class="help-button" type="button" title="How to use the atlas" aria-label="How to use the atlas">?</button>
+            <button id="settingsBtn" class="settings-button" type="button" title="Atlas settings" aria-label="Atlas settings">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7z" />
+                <path d="M19 13.5v-3l-2-.6a5.5 5.5 0 0 0-.6-1.4l.9-1.9-2.1-2.1-1.9.9a5.5 5.5 0 0 0-1.4-.6l-.6-2h-3l-.6 2a5.5 5.5 0 0 0-1.4.6l-1.9-.9-2.1 2.1.9 1.9a5.5 5.5 0 0 0-.6 1.4l-2 .6v3l2 .6c.1.5.3 1 .6 1.4l-.9 1.9 2.1 2.1 1.9-.9c.4.3.9.5 1.4.6l.6 2h3l.6-2c.5-.1 1-.3 1.4-.6l1.9.9 2.1-2.1-.9-1.9c.3-.4.5-.9.6-1.4l2-.6z" />
+              </svg>
+            </button>
           </div>
         </div>
       </header>
@@ -383,18 +389,27 @@
             </ol>
           </section>
         </div>
-        <section class="help-display-settings" aria-labelledby="display-settings-title">
+        <p class="help-note"><strong>Map crowded?</strong> Zoom in for full Skyrim reference symbols, or use the category filters to narrow the view.</p>
+      </div>
+    </dialog>
+
+    <dialog id="settingsDialog" class="field-note workflow-dialog settings-dialog">
+      <div class="field-note-inner">
+        <button id="settingsCloseBtn" class="field-note-close" type="button" aria-label="Close atlas settings">&times;</button>
+        <p class="field-note-kicker">Atlas Settings</p>
+        <h2>Settings</h2>
+        <section class="settings-panel" aria-labelledby="map-display-title">
           <div>
-            <p class="help-display-kicker">Display</p>
-            <h3 id="display-settings-title">Map display</h3>
-            <p>Show names above visible entries with the setting here. Use the moon or sun at the top right to change the interface theme. With the desktop Ranger Atlas integration installed, switch on <strong>Live position</strong> to show your local in-game location and power automatic Trailmark visits. <strong>Record visits</strong> shares your entered name, the official Trailmark, and the time you reached it. Visible labels and the live marker are included in <strong>Save Map</strong>.</p>
+            <p class="settings-panel-kicker">Map Display</p>
+            <h3 id="map-display-title">Location names</h3>
+            <p>Show the names of visible entries above their map symbols. Labels are also included when you use <strong>Save Map</strong>.</p>
           </div>
-          <label class="setting-toggle">
+          <label class="setting-toggle" for="showLabelsInput">
             <input id="showLabelsInput" type="checkbox" />
             <span>Show location names</span>
           </label>
         </section>
-        <p class="help-note"><strong>Map crowded?</strong> Zoom in for full Skyrim reference symbols, or use the category filters to narrow the view.</p>
+        <p class="settings-note">Use the sun or moon button beside Settings to change the atlas theme.</p>
       </div>
     </dialog>
 
