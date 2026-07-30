@@ -129,6 +129,20 @@
               <span class="toggle-switch" aria-hidden="true"></span>
             </label>
             <small id="livePositionStatus" class="live-position-status" aria-live="polite">Off</small>
+            <label class="field-follow-toggle" for="followLivePositionInput">
+              <input id="followLivePositionInput" type="checkbox" />
+              <span><strong>Follow live position</strong></span>
+            </label>
+            <div id="fieldOverview" class="field-console-rail">
+              <p class="field-console-label">Field status</p>
+              <div class="field-console-status">
+                <span class="field-console-status-mark" aria-hidden="true"></span>
+                <div>
+                  <strong id="fieldConsoleStatus">Ready for the road</strong>
+                  <p id="fieldConsoleHint">Enable Live position.</p>
+                </div>
+              </div>
+            </div>
           </div>
           <div class="tool-rail-section trailmark-visit-controls field-workspace-controls">
             <p class="tool-rail-label">Trailmarks</p>
@@ -163,33 +177,8 @@
             <button class="panel-tab-button" type="button" data-panel-view="details">Details</button>
             <button class="panel-tab-button is-active" type="button" data-panel-view="browse">Browse Atlas</button>
           </nav>
-          <section id="fieldOverview" class="tool-section field-overview" data-panel-pane="field">
-            <div class="field-console-heading">
-              <p class="panel-kicker">Field View</p>
-              <h2>Field Console</h2>
-              <p>Keep your eyes on the road. Skyrim position, Trailmark checks, and arrival notes appear here while you travel.</p>
-            </div>
-            <div class="field-console-status">
-              <span class="field-console-status-mark" aria-hidden="true"></span>
-              <div>
-                <strong id="fieldConsoleStatus">Ready for the road</strong>
-                <p id="fieldConsoleHint">Enable Live position to connect this field copy to Skyrim.</p>
-              </div>
-            </div>
-            <div class="field-console-card">
-              <span>Trailmark watch</span>
-              <strong>Automatic arrival details</strong>
-              <p>Official Trailmarks refresh automatically. Enable Record visits to select nearby Trailmarks and open their field notes when you arrive.</p>
-            </div>
-            <label class="field-follow-toggle" for="followLivePositionInput">
-              <input id="followLivePositionInput" type="checkbox" />
-              <span>
-                <strong>Follow live position</strong>
-                <small>Keep the map centered on your current location.</small>
-              </span>
-            </label>
-            <p class="mobile-integration-note">Live position and automatic visits require the desktop Skyrim link. Mobile remains useful for the map and Trailmark notes.</p>
-            <button id="fieldEditAtlasBtn" class="button secondary" type="button">Open Edit Atlas</button>
+          <section class="tool-section field-panel-empty" data-panel-pane="field">
+            <p class="empty-state">Select a Trailmark or entry on the map to view its details.</p>
           </section>
           <section class="tool-section inspector" data-panel-pane="details">
             <div class="section-heading-row">

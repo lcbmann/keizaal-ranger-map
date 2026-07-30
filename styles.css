@@ -1313,6 +1313,37 @@ html[data-workspace="edit"] .field-workspace-controls {
   line-height: 1.4;
 }
 
+.field-console-rail {
+  margin-top: 11px;
+  padding-top: 11px;
+  border-top: 1px solid rgba(64, 42, 19, 0.2);
+}
+
+.field-console-label {
+  margin: 0 0 7px;
+  color: #694c2f;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.field-console-rail .field-console-status {
+  padding: 8px;
+}
+
+.field-console-rail .field-console-status p {
+  margin-top: 2px;
+  font-size: 0.7rem;
+}
+
+.field-panel-empty {
+  min-height: 100%;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
 .field-console-status {
   display: grid;
   grid-template-columns: 12px minmax(0, 1fr);

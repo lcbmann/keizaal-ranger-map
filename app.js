@@ -203,7 +203,6 @@
     fieldConsoleStatus: document.getElementById("fieldConsoleStatus"),
     fieldConsoleHint: document.getElementById("fieldConsoleHint"),
     followLivePositionInput: document.getElementById("followLivePositionInput"),
-    fieldEditAtlasBtn: document.getElementById("fieldEditAtlasBtn"),
     aboutBtn: document.getElementById("aboutBtn"),
     aboutDialog: document.getElementById("aboutDialog"),
     aboutCloseBtn: document.getElementById("aboutCloseBtn"),
@@ -395,7 +394,6 @@
     elements.workspaceModeButtons.forEach((button) => {
       button.addEventListener("click", () => setWorkspaceMode(button.dataset.workspaceMode));
     });
-    elements.fieldEditAtlasBtn.addEventListener("click", () => setWorkspaceMode("edit"));
     elements.panelViewButtons.forEach((button) => {
       button.addEventListener("click", () => setPanelView(button.dataset.panelView));
     });
@@ -986,16 +984,24 @@
       .filter(isOfficialTrailmark)
       .forEach((feature) => {
         const trailmarkPoint = feature.points[0];
-        L.circle([trailmarkPoint.y, trailmarkPoint.x], {
-          radius: TRAILMARK_VISIT_RADIUS,
+        const boundary = Array.from({ length: 48 }, (_, index) => {
+          const angle = (index / 48) * Math.PI * 2;
+          return [
+            trailmarkPoint.y + Math.sin(angle) * TRAILMARK_VISIT_RADIUS,
+            trailmarkPoint.x + Math.cos(angle) * TRAILMARK_VISIT_RADIUS,
+          ];
+        });
+        L.polygon(boundary, {
           pane: "trailmark-radius-pane",
           interactive: false,
           bubblingMouseEvents: false,
           color: "#7da56a",
           weight: 1,
-          opacity: 0.24,
+          opacity: 0.38,
+          dashArray: "4 5",
           fillColor: "#7da56a",
-          fillOpacity: 0.035,
+          fillOpacity: 0.025,
+          smoothFactor: 0,
           className: "trailmark-visit-radius",
         }).addTo(trailmarkRadiusLayer);
       });
@@ -2811,7 +2817,7 @@
 
   function renderFieldOverview(feature) {
     const fieldMode = state.workspaceMode === "field";
-    elements.fieldOverview.hidden = !fieldMode || Boolean(feature);
+    elements.fieldOverview.hidden = !fieldMode;
     if (!fieldMode) {
       return;
     }
@@ -2819,17 +2825,17 @@
     if (state.livePositionConnection === "linked") {
       elements.fieldConsoleStatus.textContent = "Skyrim connected";
       elements.fieldConsoleHint.textContent = state.trailmarkVisitsEnabled
-        ? "Trailmark watch is active while you travel."
-        : "Live position is active. Enable Record visits to check in at Trailmarks.";
+        ? "Trailmark watch active."
+        : "Record visits is off.";
       return;
     }
     if (state.livePositionConnection === "connecting") {
       elements.fieldConsoleStatus.textContent = "Connecting to Skyrim";
-      elements.fieldConsoleHint.textContent = "Start the Ranger Atlas integration in Skyrim, then keep this view open.";
+      elements.fieldConsoleHint.textContent = "Waiting for the game link.";
       return;
     }
     elements.fieldConsoleStatus.textContent = "Ready for the road";
-    elements.fieldConsoleHint.textContent = "Enable Live position to connect this field copy to Skyrim.";
+    elements.fieldConsoleHint.textContent = "Enable Live position.";
   }
 
   function renderSelectionSummary(feature) {
