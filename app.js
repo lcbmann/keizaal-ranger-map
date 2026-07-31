@@ -19,6 +19,7 @@
   const SKYRIM_ATLAS_DATA = "data/skyrim-canon-atlas.generated.json";
   const LIVE_POSITION_URL = "http://127.0.0.1:38471/position";
   const FIELD_EVENTS_URL = "http://127.0.0.1:38471/events";
+  const FIELD_STATE_URL = "http://127.0.0.1:38471/field-state";
   const NATIVE_MARKERS_URL = "http://127.0.0.1:38471/markers";
   const FIELD_ACTION_CURSOR_KEY = "ranger-atlas-field-action-cursor-v1";
   const SKYRIM_WORLDSPACE_FORM_ID = 0x0000003c;
@@ -354,6 +355,8 @@
   let nativeMarkerSyncInFlight = false;
   let nativeMarkerSyncQueued = false;
   let nativeMarkerPostChain = Promise.resolve();
+  let nativeFieldStatePostChain = Promise.resolve();
+  let nativeFieldStateKey = "";
 
   init();
 
@@ -384,6 +387,7 @@
       startLivePositionPolling();
       startFieldActionPolling();
       void syncNativeTrailmarks();
+      void syncNativeFieldState(true);
     } else {
       void clearNativeTrailmarks();
     }
@@ -884,6 +888,80 @@
     }
   }
 
+  function getNearestOfficialTrailmark(point = state.livePositionPoint) {
+    if (!point || point.stale) {
+      return null;
+    }
+    return state.features
+      .filter(isOfficialTrailmark)
+      .map((feature) => ({
+        feature,
+        distance: Math.hypot(feature.points[0].x - point.x, feature.points[0].y - point.y),
+      }))
+      .sort((left, right) => left.distance - right.distance)[0] || null;
+  }
+
+  function createNativeFieldState() {
+    const nearest = getNearestOfficialTrailmark();
+    const nearestFeature = nearest?.feature;
+    const visits = nearestFeature ? state.trailmarkVisitsByFeature.get(nearestFeature.id) : [];
+    return {
+      version: 1,
+      ready: Boolean(state.livePositionEnabled && state.livePositionConnection === "linked" && getCurrentCreatorName()),
+      ranger_name: getCurrentCreatorName(),
+      game_link: state.livePositionConnection === "linked" ? "Connected to Skyrim" : "Waiting for Skyrim",
+      nearest_trailmark: nearestFeature
+        ? {
+            id: nearestFeature.id,
+            title: nearestFeature.title || "Trailmark",
+            notes: nearestFeature.notes || "",
+            distance: nearest.distance,
+            within_range: nearest.distance <= TRAILMARK_VISIT_RADIUS,
+            recent_visits: Array.isArray(visits)
+              ? visits.map((visit) => ({
+                  ranger_name: normalizeCreatorName(visit.ranger_name) || "Unknown Ranger",
+                  activity: formatTrailmarkVisitActivity(visit).label,
+                }))
+              : [],
+            recent_visitor_lines: Array.isArray(visits)
+              ? visits.map((visit) => `${normalizeCreatorName(visit.ranger_name) || "Unknown Ranger"}: ${formatTrailmarkVisitActivity(visit).label}`)
+              : [],
+          }
+        : null,
+    };
+  }
+
+  async function syncNativeFieldState(force = false) {
+    const payload = createNativeFieldState();
+    const key = JSON.stringify(payload);
+    if (!force && key === nativeFieldStateKey) {
+      return;
+    }
+
+    const send = async () => {
+      const response = await fetch(FIELD_STATE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        cache: "no-store",
+        credentials: "omit",
+        mode: "cors",
+        body: key,
+      });
+      if (!response.ok) {
+        throw new Error(`Field console bridge returned ${response.status}`);
+      }
+      nativeFieldStateKey = key;
+    };
+    const request = nativeFieldStatePostChain.then(send, send);
+    nativeFieldStatePostChain = request.catch(() => undefined);
+    try {
+      await request;
+    } catch (error) {
+      nativeFieldStateKey = "";
+      console.debug("Native Field Console sync unavailable", error);
+    }
+  }
+
   async function pollFieldActions() {
     if (!state.livePositionEnabled) {
       return;
@@ -932,10 +1010,27 @@
     state.fieldActionCursor = eventId;
     window.localStorage.setItem(FIELD_ACTION_CURSOR_KEY, String(eventId));
 
+    if (event.type === "open_nearby_trailmark") {
+      void openNearbyTrailmarkDrop();
+      return;
+    }
+    if (event.type === "record_nearby_trailmark_visit") {
+      void recordNearbyTrailmarkVisitFromFieldConsole();
+      return;
+    }
+    if (event.type === "refresh_nearby_trailmark_visits") {
+      void refreshNearbyTrailmarkVisitsFromFieldConsole();
+      return;
+    }
+    if (event.type === "submit_nearby_trailmark_drop") {
+      void submitNearbyTrailmarkDropFromFieldConsole(event.payload?.message);
+      return;
+    }
+    if (event.type === "create_mark_at_position") {
+      createFieldMarkFromConsole(event);
+      return;
+    }
     if (event.type !== "mark_here") {
-      if (event.type === "open_nearby_trailmark") {
-        void openNearbyTrailmarkDrop();
-      }
       return;
     }
 
@@ -955,6 +1050,101 @@
       placeDraftAtPoint(state.livePositionPoint, "Current Skyrim position");
     } else {
       setStatus("In-game mark received, but Skyrim is not in the outdoor world map");
+    }
+  }
+
+  function getFieldEventAtlasPoint(event) {
+    const snapshot = event?.snapshot;
+    if (
+      snapshot &&
+      isValidLivePositionSnapshot(snapshot) &&
+      Number(snapshot.worldspace_form_id) === SKYRIM_WORLDSPACE_FORM_ID &&
+      snapshot.interior !== true
+    ) {
+      return worldPositionToAtlasPoint(Number(snapshot.x), Number(snapshot.y));
+    }
+    return state.livePositionPoint && !state.livePositionPoint.stale ? state.livePositionPoint : null;
+  }
+
+  function createFieldMarkFromConsole(event) {
+    const point = getFieldEventAtlasPoint(event);
+    if (!point) {
+      setStatus("Field mark could not be placed outside the Skyrim world map");
+      return;
+    }
+    const title = String(event.payload?.title || "Field note").trim().slice(0, 120) || "Field note";
+    const notes = String(event.payload?.notes || "").trim().slice(0, 800);
+    const category = categoryById[event.payload?.category] ? event.payload.category : "landmark";
+    placeDraftAtPoint(point, title);
+    if (state.draftFeature) {
+      state.draftFeature.category = category;
+      state.draftFeature.categories = [category];
+      state.draftFeature.notes = notes;
+      state.draftFeature.confidence = "scouted";
+      renderAll();
+      renderDraft();
+    }
+    setStatus("Field mark received. It is ready to save in Edit Atlas.");
+  }
+
+  async function recordNearbyTrailmarkVisitFromFieldConsole() {
+    const nearest = getNearestOfficialTrailmark();
+    if (!nearest || nearest.distance > TRAILMARK_VISIT_RADIUS) {
+      setStatus("No official Trailmark is within field range");
+      return;
+    }
+    if (!state.trailmarkVisitsEnabled || !getCurrentCreatorName()) {
+      setStatus("Enable Record visits and enter your name before recording a visit");
+      return;
+    }
+    await recordTrailmarkVisit(nearest.feature);
+    void syncNativeFieldState(true);
+  }
+
+  async function refreshNearbyTrailmarkVisitsFromFieldConsole() {
+    const nearest = getNearestOfficialTrailmark();
+    if (!nearest) {
+      setStatus("No official Trailmark is nearby");
+      return;
+    }
+    await refreshTrailmarkVisits(nearest.feature, true);
+    void syncNativeFieldState(true);
+  }
+
+  async function submitNearbyTrailmarkDropFromFieldConsole(message) {
+    const nearest = getNearestOfficialTrailmark();
+    const cleanMessage = String(message || "").trim().slice(0, 1800);
+    if (!nearest || nearest.distance > TRAILMARK_VISIT_RADIUS) {
+      setStatus("No official Trailmark is within field-drop range");
+      return;
+    }
+    if (!cleanMessage) {
+      setStatus("Write a field drop before sending it");
+      return;
+    }
+    if (!state.discordLink || !getStoredDiscordDeviceToken()) {
+      setStatus("Link Discord in the Atlas before leaving a field drop");
+      return;
+    }
+    if (Date.now() - Number(state.trailmarkVisitCooldowns[nearest.feature.id] || 0) >= TRAILMARK_VISIT_COOLDOWN_MS) {
+      if (!state.trailmarkVisitsEnabled || !getCurrentCreatorName()) {
+        setStatus("Enable Record visits before leaving a field drop");
+        return;
+      }
+      await recordTrailmarkVisit(nearest.feature);
+    }
+    if (Date.now() - Number(state.trailmarkVisitCooldowns[nearest.feature.id] || 0) >= TRAILMARK_VISIT_COOLDOWN_MS) {
+      return;
+    }
+    try {
+      const result = await callSupabaseRpc("submit_atlas_trailmark_drop", {
+        device_token_input: getStoredDiscordDeviceToken(),
+        atlas_location_id_input: nearest.feature.id,
+        message_input: cleanMessage,
+      });
+      setStatus(result?.drop_id ? "Field drop sent to Wayfinder" : "Wayfinder did not return a drop receipt");
+    } catch (error) {
+      setStatus(getReadableError(error, "The Trailmark drop could not be sent."));
     }
   }
 
@@ -1054,6 +1244,7 @@
         }
         applyLivePositionSnapshot(snapshot);
         void syncNativeTrailmarks();
+        void syncNativeFieldState();
       }
     } catch (error) {
       if (error.name !== "AbortError" || state.livePositionEnabled) {
@@ -1129,6 +1320,7 @@
     renderLivePosition();
     centerOnLivePosition(false);
     updateSharePositionControls();
+    void syncNativeFieldState();
     if (!wasLinked) {
       setStatus("Live position linked to Skyrim");
     }
@@ -1144,6 +1336,7 @@
     updateTrailmarkVisitControls();
     updateSharePositionControls();
     renderLivePosition();
+    void syncNativeFieldState();
   }
 
   function worldPositionToAtlasPoint(worldX, worldY) {
@@ -2444,6 +2637,7 @@
 
     renderFeatureList();
     renderEditor();
+    void syncNativeFieldState();
   }
 
   function placeDraftAtPoint(point, title = "New mark") {

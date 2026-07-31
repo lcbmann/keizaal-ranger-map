@@ -12,6 +12,8 @@ namespace RangerAtlas::LocalBridge
         std::string g_snapshot;
         std::mutex g_native_marker_snapshot_mutex;
         std::string g_native_marker_snapshot = R"({"version":1,"markers":[]})";
+        std::mutex g_field_state_mutex;
+        std::string g_field_state = R"({"ready":false})";
         std::mutex g_events_mutex;
         std::deque<std::string> g_events;
         std::uint64_t g_next_event_id = 0;
@@ -27,6 +29,12 @@ namespace RangerAtlas::LocalBridge
         {
             std::scoped_lock lock(g_native_marker_snapshot_mutex);
             return g_native_marker_snapshot;
+        }
+
+        std::string get_field_state()
+        {
+            std::scoped_lock lock(g_field_state_mutex);
+            return g_field_state;
         }
 
         std::size_t get_content_length(std::string_view request)
@@ -208,6 +216,11 @@ namespace RangerAtlas::LocalBridge
                 return;
             }
 
+            if (request_view.starts_with("GET /field-state ")) {
+                send_response(client, "200 OK", get_field_state(), origin);
+                return;
+            }
+
             if (request_view.starts_with("POST /markers ")) {
                 const auto header_end = request_view.find("\r\n\r\n");
                 const auto body = header_end == std::string_view::npos
@@ -218,6 +231,20 @@ namespace RangerAtlas::LocalBridge
                     return;
                 }
                 UpdateNativeMarkerSnapshot(std::string(body));
+                send_response(client, "200 OK", R"({"ok":true})", origin);
+                return;
+            }
+
+            if (request_view.starts_with("POST /field-state ")) {
+                const auto header_end = request_view.find("\r\n\r\n");
+                const auto body = header_end == std::string_view::npos
+                    ? std::string_view{}
+                    : request_view.substr(header_end + 4);
+                if (body.empty() || body.front() != '{' || body.size() > 256 * 1024) {
+                    send_response(client, "400 Bad Request", R"({"error":"invalid_field_state"})", origin);
+                    return;
+                }
+                UpdateFieldState(std::string(body));
                 send_response(client, "200 OK", R"({"ok":true})", origin);
                 return;
             }
@@ -276,7 +303,7 @@ namespace RangerAtlas::LocalBridge
             }
 
             spdlog::info(
-                "Local bridge listening on http://127.0.0.1:{}/position, /events, and /markers.",
+                "Local bridge listening on http://127.0.0.1:{}/position, /events, /markers, and /field-state.",
                 kBridgePort);
 
             while (!stop_token.stop_requested()) {
@@ -324,7 +351,18 @@ namespace RangerAtlas::LocalBridge
         g_native_marker_snapshot = std::move(snapshot);
     }
 
-    void QueueFieldAction(std::string action)
+    void UpdateFieldState(std::string snapshot)
+    {
+        std::scoped_lock lock(g_field_state_mutex);
+        g_field_state = std::move(snapshot);
+    }
+
+    std::string GetFieldState()
+    {
+        return get_field_state();
+    }
+
+    void QueueFieldAction(std::string action, std::string payload_json)
     {
         std::scoped_lock lock(g_events_mutex);
         const auto now_ms = static_cast<std::uint64_t>(
@@ -342,6 +380,9 @@ namespace RangerAtlas::LocalBridge
         const auto snapshot = get_snapshot();
         if (!snapshot.empty()) {
             event << R"(,"snapshot":)" << snapshot;
+        }
+        if (!payload_json.empty() && payload_json.front() == '{') {
+            event << R"(,"payload":)" << payload_json;
         }
         event << '}';
 

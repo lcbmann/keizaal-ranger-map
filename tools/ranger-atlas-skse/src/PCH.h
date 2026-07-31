@@ -13,6 +13,7 @@
 #include <array>
 #include <atomic>
 #include <chrono>
+#include <cmath>
 #include <condition_variable>
 #include <cstdint>
 #include <cstdlib>
@@ -28,6 +29,7 @@
 #include <string>
 #include <string_view>
 #include <thread>
+#include <vector>
 
 #include <spdlog/sinks/basic_file_sink.h>
 

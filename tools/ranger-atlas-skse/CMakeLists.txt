@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 
-project(RangerAtlas VERSION 0.8.0 LANGUAGES CXX)
+project(RangerAtlas VERSION 0.9.0 LANGUAGES CXX)
 
 find_package(CommonLibSSE CONFIG REQUIRED)
 
@@ -8,8 +8,11 @@ add_commonlibsse_plugin(
     ${PROJECT_NAME}
     SOURCES
         src/PCH.h
+        src/FieldAtlasUI.h
+        src/FieldAtlasUI.cpp
         src/LocalBridge.h
         src/LocalBridge.cpp
+        src/MenuFrameworkApi.h
         src/plugin.cpp
 )
 

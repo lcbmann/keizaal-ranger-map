@@ -1,5 +1,6 @@
 #include "PCH.h"
 
+#include "FieldAtlasUI.h"
 #include "LocalBridge.h"
 
 namespace
@@ -11,7 +12,6 @@ namespace
     constexpr std::uint32_t kFieldTrailmarkKey = 0x57;  // F11 keyboard scan code.
 
     std::atomic_bool g_world_ready = false;
-    std::atomic_bool g_field_menu_open = false;
     std::condition_variable_any g_capture_wake;
     std::mutex g_capture_mutex;
     std::jthread g_capture_worker;
@@ -19,24 +19,6 @@ namespace
     std::atomic_bool g_controls_registered = false;
 
     void capture_player_position();
-
-    void show_field_console()
-    {
-        RE::DebugMessageBox(
-            "RANGER ATLAS\n\nF7  Open the Ranger Atlas menu\nF8  Mark current position\nF11 Open nearest Trailmark drop\n\nThe Atlas page must be open in your browser.");
-    }
-
-    void open_field_menu()
-    {
-        g_field_menu_open = true;
-        RE::DebugMessageBox(
-            "RANGER ATLAS MENU\n\nF8  Mark current position\nF11 Open nearby Trailmark drop\n\nPress OK, then press one of the action keys.\nThe open Atlas page will finish the action.");
-    }
-
-    void close_field_menu()
-    {
-        g_field_menu_open = false;
-    }
 
     class FieldInputSink final : public RE::BSTEventSink<RE::InputEvent*>
     {
@@ -57,12 +39,7 @@ namespace
                 }
 
                 if (button->GetIDCode() == kFieldMenuKey) {
-                    if (g_field_menu_open.load()) {
-                        close_field_menu();
-                        RE::DebugNotification("Ranger Atlas menu closed.");
-                    } else {
-                        open_field_menu();
-                    }
+                    RangerAtlas::FieldAtlasUI::Toggle();
                     handled_any = true;
                 } else if (button->GetIDCode() == kFieldMarkKey) {
                     RangerAtlas::LocalBridge::QueueFieldAction("mark_here");
@@ -73,7 +50,7 @@ namespace
                     RE::DebugNotification("Ranger Atlas Trailmark request queued.");
                     handled_any = true;
                 } else if (button->GetIDCode() == kFieldConsoleKey) {
-                    show_field_console();
+                    RangerAtlas::FieldAtlasUI::Toggle();
                     handled_any = true;
                 }
             }
@@ -116,6 +93,7 @@ namespace
 
         g_world_ready = true;
         RangerAtlas::LocalBridge::Start();
+        RangerAtlas::FieldAtlasUI::Initialize();
 
         if (!g_controls_registered.exchange(true)) {
             if (const auto input = RE::BSInputDeviceManager::GetSingleton()) {
@@ -313,7 +291,7 @@ namespace
 
         if (message->type == SKSE::MessagingInterface::kPreLoadGame) {
             g_world_ready = false;
-            close_field_menu();
+            RangerAtlas::FieldAtlasUI::Close();
             if (g_controls_registered.exchange(false)) {
                 if (const auto input = RE::BSInputDeviceManager::GetSingleton()) {
                     input->RemoveEventSink(&g_input_sink);
@@ -350,7 +328,7 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse)
     }
 
     spdlog::info(
-        "Ranger Atlas loaded. Local integration is dormant until a post-load or new-game signal. Stable no-JS build 0.8.0.");
+        "Ranger Atlas loaded. Local integration is dormant until a post-load or new-game signal. Field Console build 0.9.0.");
 
     return true;
 }
