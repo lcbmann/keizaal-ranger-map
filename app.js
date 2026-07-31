@@ -19,6 +19,7 @@
   const SKYRIM_ATLAS_DATA = "data/skyrim-canon-atlas.generated.json";
   const LIVE_POSITION_URL = "http://127.0.0.1:38471/position";
   const FIELD_EVENTS_URL = "http://127.0.0.1:38471/events";
+  const NATIVE_MARKERS_URL = "http://127.0.0.1:38471/markers";
   const FIELD_ACTION_CURSOR_KEY = "ranger-atlas-field-action-cursor-v1";
   const SKYRIM_WORLDSPACE_FORM_ID = 0x0000003c;
   const WORLD_TO_ATLAS_X = [73.826813, 0.215295427, 4067.73578];
@@ -121,6 +122,7 @@
     livePositionEnabled: false,
     followLivePosition: false,
     livePositionConnection: "off",
+    nativeMarkerSyncKey: "",
     livePositionPoint: null,
     livePositionHeading: 0,
     livePositionSnapshot: null,
@@ -378,6 +380,9 @@
     if (state.livePositionEnabled) {
       startLivePositionPolling();
       startFieldActionPolling();
+      void syncNativeTrailmarks();
+    } else {
+      void clearNativeTrailmarks();
     }
   }
 
@@ -452,6 +457,7 @@
         renderTrailmarkVisitRadii();
         startLivePositionPolling();
         startFieldActionPolling();
+        void syncNativeTrailmarks(true);
         setStatus("Connecting to the local Ranger Atlas integration");
       } else {
         state.followLivePosition = false;
@@ -459,6 +465,7 @@
         void removeSharedLivePosition();
         stopLivePositionPolling();
         stopFieldActionPolling();
+        void clearNativeTrailmarks();
         setStatus("Live position hidden");
       }
       updateTrailmarkVisitControls();
@@ -796,6 +803,59 @@
     if (fieldActionRequest) {
       fieldActionRequest.abort();
       fieldActionRequest = null;
+    }
+  }
+
+  async function postNativeMarkerSnapshot(payload) {
+    const response = await fetch(NATIVE_MARKERS_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      cache: "no-store",
+      credentials: "omit",
+      mode: "cors",
+      body: JSON.stringify(payload),
+    });
+    if (!response.ok) {
+      throw new Error(`Native marker bridge returned ${response.status}`);
+    }
+  }
+
+  async function clearNativeTrailmarks() {
+    try {
+      await postNativeMarkerSnapshot({ version: 1, markers: [] });
+      state.nativeMarkerSyncKey = "";
+    } catch (error) {
+      console.debug("Native Skyrim Trailmark clear unavailable", error);
+    }
+  }
+
+  async function syncNativeTrailmarks(force = false) {
+    if (!state.livePositionEnabled) {
+      return;
+    }
+
+    const markers = state.features
+      .filter(isOfficialTrailmark)
+      .map((feature) => ({
+        id: feature.id,
+        title: feature.title || "Trailmark",
+        x: Number(feature.points?.[0]?.x),
+        y: Number(feature.points?.[0]?.y),
+      }))
+      .filter((marker) => marker.id && marker.title && Number.isFinite(marker.x) && Number.isFinite(marker.y))
+      .sort((left, right) => left.id.localeCompare(right.id));
+    const payload = { version: 1, markers };
+    const syncKey = JSON.stringify(payload);
+    if (!force && syncKey === state.nativeMarkerSyncKey) {
+      return;
+    }
+
+    try {
+      await postNativeMarkerSnapshot(payload);
+      state.nativeMarkerSyncKey = syncKey;
+    } catch (error) {
+      state.nativeMarkerSyncKey = "";
+      console.debug("Native Skyrim Trailmark sync unavailable", error);
     }
   }
 
@@ -4163,6 +4223,7 @@
       saveState();
       renderAll();
       updateMapDensity();
+      void syncNativeTrailmarks(true);
       setStatus("Official GUILD Atlas updated");
     } catch (error) {
       console.warn("Could not refresh the official GUILD Atlas", error);

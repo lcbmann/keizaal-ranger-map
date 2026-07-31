@@ -4,7 +4,7 @@ This project is being introduced in compatibility-gated stages.
 
 ## Stage 1: local position reader
 
-The `0.6.1` build initializes as an SKSE DLL and waits for SKSE's
+The `0.7.0` build initializes as an SKSE DLL and waits for SKSE's
 post-load/new-game signal. It then reads the local player's position on
 Skyrim's main thread every five seconds. A separate scheduler only queues the
 captures; it never reads Skyrim state itself. The plugin writes:
@@ -13,7 +13,9 @@ captures; it never reads Skyrim state itself. The plugin writes:
 - the latest coordinates and form IDs to `RangerAtlasPosition.json`.
 
 After the character enters the world, it also serves the same snapshot from
-`http://127.0.0.1:38471/position`. The bridge binds only to the local loopback
+`http://127.0.0.1:38471/position`. The bridge also accepts a complete official
+Trailmark snapshot at `POST /markers` and serves it to the companion Skyrim
+Platform plugin at `GET /markers`. The bridge binds only to the local loopback
 interface and makes no outbound requests.
 
 It performs no position work during Keizaal login or character selection. It
@@ -21,7 +23,7 @@ still has no ESP, ESM, or ESL and no outbound networking.
 
 ## Field controls
 
-The `0.6.1` build adds an in-game Ranger Atlas action menu after the character has
+The `0.7.0` build adds an in-game Ranger Atlas action menu after the character has
 entered the world:
 
 - `F7` opens the Ranger Atlas menu. Press `F8` for a mark or `F11` for a
@@ -53,14 +55,24 @@ The plugin also waits for an outdoor Tamriel world instead of assuming that a
 normal save-load signal means the player is ready. This matters for SkyMP
 character selection and other server-managed transitions.
 
-## Native map marker experiment
+## Native Skyrim map markers
 
-The temporary native Skyrim map-marker experiment is disabled in the `0.6.2`
-build. The first implementation was able to reach the runtime marker-creation
-path, but it was not safe with SkyMP's server-managed world transitions. The
-plugin therefore keeps the stable local position reader and field actions while
-the native map-marker route is redesigned. The browser Atlas and Discord
-Trailmark workflows remain the source of truth.
+The `0.7.0` release moves native marker creation out of the C++ DLL. The
+companion `ranger-atlas-skyrim-platform.js` plugin performs the known-working
+`placeAtMe`/`addToMap` operation from Skyrim Platform, one marker per update,
+only after outdoor Tamriel is confirmed. The C++ DLL never constructs
+`ExtraMapMarker` data. This separation is intentional for SkyMP's
+server-managed load transitions.
+
+Install both files from the release archive:
+
+```text
+SKSE/Plugins/RangerAtlas.dll
+Platform/Plugins/ranger-atlas-skyrim-platform.js
+```
+
+Keep the browser Atlas open with **Live position** enabled to send the current
+official Trailmark snapshot. Do not save while testing temporary native markers.
 
 ## Optional Trailmark visits
 
@@ -81,4 +93,7 @@ channel. The DLL itself still makes no outbound requests.
 SKSE/
   Plugins/
     RangerAtlas.dll
+Platform/
+  Plugins/
+    ranger-atlas-skyrim-platform.js
 ```

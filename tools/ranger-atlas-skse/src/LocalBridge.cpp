@@ -10,6 +10,8 @@ namespace RangerAtlas::LocalBridge
 
         std::mutex g_snapshot_mutex;
         std::string g_snapshot;
+        std::mutex g_native_marker_snapshot_mutex;
+        std::string g_native_marker_snapshot = R"({"version":1,"markers":[]})";
         std::mutex g_events_mutex;
         std::deque<std::string> g_events;
         std::uint64_t g_next_event_id = 0;
@@ -19,6 +21,69 @@ namespace RangerAtlas::LocalBridge
         {
             std::scoped_lock lock(g_snapshot_mutex);
             return g_snapshot;
+        }
+
+        std::string get_native_marker_snapshot()
+        {
+            std::scoped_lock lock(g_native_marker_snapshot_mutex);
+            return g_native_marker_snapshot;
+        }
+
+        std::size_t get_content_length(std::string_view request)
+        {
+            for (const auto prefix : {"\r\nContent-Length:"sv, "\r\ncontent-length:"sv}) {
+                const auto start = request.find(prefix);
+                if (start == std::string_view::npos) {
+                    continue;
+                }
+
+                const auto value_start = start + prefix.size();
+                const auto value_end = request.find("\r\n", value_start);
+                if (value_end == std::string_view::npos) {
+                    return 0;
+                }
+
+                const auto value = request.substr(value_start, value_end - value_start);
+                std::size_t result = 0;
+                for (const auto character : value) {
+                    if (character == ' ' || character == '\t') {
+                        continue;
+                    }
+                    if (character < '0' || character > '9') {
+                        return 0;
+                    }
+                    result = result * 10 + static_cast<std::size_t>(character - '0');
+                }
+                return result;
+            }
+            return 0;
+        }
+
+        std::string read_request(SOCKET client)
+        {
+            constexpr std::size_t kMaxRequestBytes = 256 * 1024;
+            std::string request;
+            std::array<char, 4096> buffer{};
+
+            while (request.size() < kMaxRequestBytes) {
+                const auto received = recv(client, buffer.data(), static_cast<int>(buffer.size()), 0);
+                if (received <= 0) {
+                    break;
+                }
+                request.append(buffer.data(), static_cast<std::size_t>(received));
+
+                const auto header_end = request.find("\r\n\r\n");
+                if (header_end == std::string::npos) {
+                    continue;
+                }
+
+                const auto body_start = header_end + 4;
+                if (request.size() >= body_start + get_content_length(request)) {
+                    break;
+                }
+            }
+
+            return request;
         }
 
         std::string get_events()
@@ -98,7 +163,7 @@ namespace RangerAtlas::LocalBridge
             }
             if (allow_options) {
                 response
-                    << "Access-Control-Allow-Methods: GET, OPTIONS\r\n"
+                    << "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
                     << "Access-Control-Allow-Headers: Content-Type\r\n"
                     << "Access-Control-Max-Age: 600\r\n";
             }
@@ -116,30 +181,48 @@ namespace RangerAtlas::LocalBridge
                 reinterpret_cast<const char*>(&timeout_ms),
                 sizeof(timeout_ms));
 
-            std::array<char, 4096> buffer{};
-            const auto received = recv(client, buffer.data(), static_cast<int>(buffer.size() - 1), 0);
-            if (received <= 0) {
+            const auto request = read_request(client);
+            if (request.empty()) {
                 return;
             }
 
-            const std::string_view request(buffer.data(), static_cast<std::size_t>(received));
-            const auto origin = get_origin(request);
+            const std::string_view request_view(request);
+            const auto origin = get_origin(request_view);
             if (!is_allowed_origin(origin)) {
                 send_response(client, "403 Forbidden", R"({"error":"origin_not_allowed"})", "");
                 return;
             }
 
-            if (request.starts_with("OPTIONS ")) {
+            if (request_view.starts_with("OPTIONS ")) {
                 send_response(client, "204 No Content", "", origin, true);
                 return;
             }
 
-            if (request.starts_with("GET /events ")) {
+            if (request_view.starts_with("GET /events ")) {
                 send_response(client, "200 OK", get_events(), origin);
                 return;
             }
 
-            if (!request.starts_with("GET /position ")) {
+            if (request_view.starts_with("GET /markers ")) {
+                send_response(client, "200 OK", get_native_marker_snapshot(), origin);
+                return;
+            }
+
+            if (request_view.starts_with("POST /markers ")) {
+                const auto header_end = request_view.find("\r\n\r\n");
+                const auto body = header_end == std::string_view::npos
+                    ? std::string_view{}
+                    : request_view.substr(header_end + 4);
+                if (body.empty() || body.front() != '{' || body.size() > 200 * 1024) {
+                    send_response(client, "400 Bad Request", R"({"error":"invalid_marker_snapshot"})", origin);
+                    return;
+                }
+                UpdateNativeMarkerSnapshot(std::string(body));
+                send_response(client, "200 OK", R"({"ok":true})", origin);
+                return;
+            }
+
+            if (!request_view.starts_with("GET /position ")) {
                 send_response(client, "404 Not Found", R"({"error":"not_found"})", origin);
                 return;
             }
@@ -193,7 +276,7 @@ namespace RangerAtlas::LocalBridge
             }
 
             SKSE::log::info(
-                "Local bridge listening on http://127.0.0.1:{}/position and /events.",
+                "Local bridge listening on http://127.0.0.1:{}/position, /events, and /markers.",
                 kBridgePort);
 
             while (!stop_token.stop_requested()) {
@@ -233,6 +316,12 @@ namespace RangerAtlas::LocalBridge
     {
         std::scoped_lock lock(g_snapshot_mutex);
         g_snapshot = std::move(snapshot);
+    }
+
+    void UpdateNativeMarkerSnapshot(std::string snapshot)
+    {
+        std::scoped_lock lock(g_native_marker_snapshot_mutex);
+        g_native_marker_snapshot = std::move(snapshot);
     }
 
     void QueueFieldAction(std::string action)
