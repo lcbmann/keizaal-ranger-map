@@ -95,7 +95,6 @@ namespace
 
         g_world_ready = true;
         RangerAtlas::LocalBridge::Start();
-        RangerAtlas::FieldAtlasUI::Initialize();
 
         if (!g_controls_registered.exchange(true)) {
             if (const auto input = RE::BSInputDeviceManager::GetSingleton()) {
@@ -107,7 +106,9 @@ namespace
             }
         }
 
-        spdlog::info("Keizaal world confirmed; Ranger Atlas local integration is now active.");
+        spdlog::info(
+            "Keizaal world confirmed; Ranger Atlas local bridge is active. "
+            "Field Console initialization is deferred until the first F7 or Insert press.");
         capture_player_position();
     }
 
@@ -330,7 +331,7 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse)
     }
 
     spdlog::info(
-        "Ranger Atlas loaded. Local integration is dormant until a post-load or new-game signal. Field Console build 0.10.2.");
+        "Ranger Atlas loaded. Local integration is dormant until a post-load or new-game signal. Field Console build 0.10.3.");
 
     return true;
 }
