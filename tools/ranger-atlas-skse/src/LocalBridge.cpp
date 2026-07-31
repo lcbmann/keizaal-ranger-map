@@ -13,6 +13,9 @@ namespace RangerAtlas::LocalBridge
         std::mutex g_events_mutex;
         std::deque<std::string> g_events;
         std::uint64_t g_next_event_id = 0;
+        std::mutex g_native_markers_mutex;
+        std::map<std::string, NativeMarker> g_native_markers;
+        bool g_native_marker_clear_requested = false;
         std::jthread g_server;
 
         std::string get_snapshot()
@@ -60,6 +63,81 @@ namespace RangerAtlas::LocalBridge
                    origin.starts_with("http://127.0.0.1:");
         }
 
+        std::string header_value(std::string_view request, std::string_view name)
+        {
+            const auto header_start = request.find(name);
+            if (header_start == std::string_view::npos) {
+                return "";
+            }
+            const auto value_start = header_start + name.size();
+            const auto value_end = request.find("\r\n", value_start);
+            return std::string(request.substr(value_start, value_end - value_start));
+        }
+
+        std::string url_decode(std::string_view value)
+        {
+            std::string decoded;
+            decoded.reserve(value.size());
+            for (std::size_t index = 0; index < value.size(); ++index) {
+                if (value[index] == '+') {
+                    decoded.push_back(' ');
+                    continue;
+                }
+                if (value[index] != '%' || index + 2 >= value.size()) {
+                    decoded.push_back(value[index]);
+                    continue;
+                }
+                const auto hex = [](char character) -> int {
+                    if (character >= '0' && character <= '9') return character - '0';
+                    if (character >= 'a' && character <= 'f') return character - 'a' + 10;
+                    if (character >= 'A' && character <= 'F') return character - 'A' + 10;
+                    return -1;
+                };
+                const auto high = hex(value[index + 1]);
+                const auto low = hex(value[index + 2]);
+                if (high < 0 || low < 0) {
+                    decoded.push_back(value[index]);
+                    continue;
+                }
+                decoded.push_back(static_cast<char>((high << 4) | low));
+                index += 2;
+            }
+            return decoded;
+        }
+
+        std::map<std::string, std::string> parse_form(std::string_view body)
+        {
+            std::map<std::string, std::string> fields;
+            while (!body.empty()) {
+                const auto separator = body.find('&');
+                const auto part = body.substr(0, separator);
+                const auto equals = part.find('=');
+                if (equals != std::string_view::npos) {
+                    fields[url_decode(part.substr(0, equals))] = url_decode(part.substr(equals + 1));
+                }
+                if (separator == std::string_view::npos) {
+                    break;
+                }
+                body.remove_prefix(separator + 1);
+            }
+            return fields;
+        }
+
+        bool finite_float(std::string_view value, float& result)
+        {
+            try {
+                std::size_t consumed = 0;
+                const auto parsed = std::stof(std::string(value), &consumed);
+                if (consumed != value.size() || !std::isfinite(parsed)) {
+                    return false;
+                }
+                result = parsed;
+                return true;
+            } catch (...) {
+                return false;
+            }
+        }
+
         void send_all(SOCKET socket, std::string_view response)
         {
             std::size_t sent_total = 0;
@@ -98,7 +176,7 @@ namespace RangerAtlas::LocalBridge
             }
             if (allow_options) {
                 response
-                    << "Access-Control-Allow-Methods: GET, OPTIONS\r\n"
+                    << "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
                     << "Access-Control-Allow-Headers: Content-Type\r\n"
                     << "Access-Control-Max-Age: 600\r\n";
             }
@@ -116,30 +194,80 @@ namespace RangerAtlas::LocalBridge
                 reinterpret_cast<const char*>(&timeout_ms),
                 sizeof(timeout_ms));
 
+            std::string request;
             std::array<char, 4096> buffer{};
-            const auto received = recv(client, buffer.data(), static_cast<int>(buffer.size() - 1), 0);
-            if (received <= 0) {
+            std::size_t expected_size = 0;
+            while (request.size() < 16384) {
+                const auto received = recv(client, buffer.data(), static_cast<int>(buffer.size()), 0);
+                if (received <= 0) {
+                    break;
+                }
+                request.append(buffer.data(), static_cast<std::size_t>(received));
+                const auto header_end = request.find("\r\n\r\n");
+                if (header_end == std::string::npos) {
+                    continue;
+                }
+                const auto content_length = header_value(request, "\r\nContent-Length: ");
+                expected_size = header_end + 4;
+                if (!content_length.empty()) {
+                    try {
+                        expected_size += std::stoul(content_length);
+                    } catch (...) {
+                        expected_size = request.size();
+                    }
+                }
+                if (request.size() >= expected_size) {
+                    break;
+                }
+            }
+            if (request.empty()) {
                 return;
             }
 
-            const std::string_view request(buffer.data(), static_cast<std::size_t>(received));
-            const auto origin = get_origin(request);
+            const std::string_view request_view(request);
+            const auto origin = get_origin(request_view);
             if (!is_allowed_origin(origin)) {
                 send_response(client, "403 Forbidden", R"({"error":"origin_not_allowed"})", "");
                 return;
             }
 
-            if (request.starts_with("OPTIONS ")) {
+            if (request_view.starts_with("OPTIONS ")) {
                 send_response(client, "204 No Content", "", origin, true);
                 return;
             }
 
-            if (request.starts_with("GET /events ")) {
+            if (request_view.starts_with("GET /events ")) {
                 send_response(client, "200 OK", get_events(), origin);
                 return;
             }
 
-            if (!request.starts_with("GET /position ")) {
+            if (request_view.starts_with("POST /markers/clear ")) {
+                ClearNativeMarkers();
+                send_response(client, "200 OK", R"({"ok":true})", origin);
+                return;
+            }
+
+            if (request_view.starts_with("POST /markers ")) {
+                const auto header_end = request_view.find("\r\n\r\n");
+                const auto body = header_end == std::string_view::npos
+                    ? std::string_view{}
+                    : request_view.substr(header_end + 4);
+                const auto fields = parse_form(body);
+                NativeMarker marker;
+                marker.id = fields.contains("id") ? fields.at("id") : "";
+                marker.title = fields.contains("title") ? fields.at("title") : "";
+                if (marker.id.empty() || marker.title.empty() || marker.title.size() > 160 ||
+                    !finite_float(fields.contains("x") ? fields.at("x") : "", marker.atlas_x) ||
+                    !finite_float(fields.contains("y") ? fields.at("y") : "", marker.atlas_y)) {
+                    send_response(client, "400 Bad Request", R"({"error":"invalid_marker"})", origin);
+                    return;
+                }
+                QueueNativeMarker(std::move(marker));
+                send_response(client, "200 OK", R"({"ok":true})", origin);
+                return;
+            }
+
+            if (!request_view.starts_with("GET /position ")) {
                 send_response(client, "404 Not Found", R"({"error":"not_found"})", origin);
                 return;
             }
@@ -261,5 +389,38 @@ namespace RangerAtlas::LocalBridge
             g_events.pop_front();
         }
         SKSE::log::info("Queued field action '{}' with event id {}.", action, event_id);
+    }
+
+    void QueueNativeMarker(NativeMarker marker)
+    {
+        std::scoped_lock lock(g_native_markers_mutex);
+        g_native_markers[marker.id] = std::move(marker);
+    }
+
+    void ClearNativeMarkers()
+    {
+        std::scoped_lock lock(g_native_markers_mutex);
+        g_native_marker_clear_requested = true;
+        g_native_markers.clear();
+    }
+
+    std::vector<NativeMarker> TakeNativeMarkers()
+    {
+        std::scoped_lock lock(g_native_markers_mutex);
+        std::vector<NativeMarker> markers;
+        markers.reserve(g_native_markers.size());
+        for (auto& [id, marker] : g_native_markers) {
+            markers.push_back(std::move(marker));
+        }
+        g_native_markers.clear();
+        return markers;
+    }
+
+    bool TakeNativeMarkerClearRequest()
+    {
+        std::scoped_lock lock(g_native_markers_mutex);
+        const auto requested = g_native_marker_clear_requested;
+        g_native_marker_clear_requested = false;
+        return requested;
     }
 }

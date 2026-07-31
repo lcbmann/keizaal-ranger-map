@@ -20,6 +20,7 @@
 #include <fstream>
 #include <iomanip>
 #include <limits.h>
+#include <map>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -27,6 +28,8 @@
 #include <string>
 #include <string_view>
 #include <thread>
+#include <cmath>
+#include <unordered_map>
 
 #include <spdlog/sinks/basic_file_sink.h>
 

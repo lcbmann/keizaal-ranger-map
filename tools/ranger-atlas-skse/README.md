@@ -4,7 +4,7 @@ This project is being introduced in compatibility-gated stages.
 
 ## Stage 1: local position reader
 
-The `0.5.2` build initializes as an SKSE DLL and waits for SKSE's
+The `0.6.0` build initializes as an SKSE DLL and waits for SKSE's
 post-load/new-game signal. It then reads the local player's position on
 Skyrim's main thread every five seconds. A separate scheduler only queues the
 captures; it never reads Skyrim state itself. The plugin writes:
@@ -17,12 +17,11 @@ After the character enters the world, it also serves the same snapshot from
 interface and makes no outbound requests.
 
 It performs no position work during Keizaal login or character selection. It
-still has no ESP, ESM, or ESL; no gameplay hooks; no outbound networking; and
-no Skyrim Platform JavaScript.
+still has no ESP, ESM, or ESL and no outbound networking.
 
 ## Field controls
 
-The `0.5.2` build adds an in-game Ranger Atlas action menu after the character has
+The `0.6.0` build adds an in-game Ranger Atlas action menu after the character has
 entered the world:
 
 - `F7` opens the Ranger Atlas menu. Press `F8` for a mark or `F11` for a
@@ -49,6 +48,22 @@ or gameplay handlers.
 The native controls are intentionally limited to the outdoor Skyrim world;
 interiors are rejected because they do not have a stable position on the
 province map.
+
+## Experimental native Trailmark sync
+
+When **Live position** is enabled on the open Atlas page, the page sends the
+official GUILD Trailmarks to the local bridge. The plugin converts their Atlas
+coordinates into Skyrim world coordinates and creates temporary copies of the
+vanilla map-marker reference. They appear on Skyrim's normal world map as
+non-fast-travel landmark markers. When the page receives an updated GUILD Atlas,
+it clears and recreates the temporary markers.
+
+This is deliberately limited to official Trailmarks in this first experiment.
+The copies are session-only and must not be treated as save data: use a
+disposable test save and do not save while testing. If a marker is misplaced or
+does not appear, close Skyrim and report the `RangerAtlas.log` lines rather than
+trying to repair the save. The browser Atlas and Discord Trailmark workflows
+remain the source of truth.
 
 ## Optional Trailmark visits
 
