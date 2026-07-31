@@ -4,7 +4,7 @@ This project is being introduced in compatibility-gated stages.
 
 ## Stage 1: local position reader
 
-The `0.5.0` build initializes as an SKSE DLL and waits for SKSE's
+The `0.5.2` build initializes as an SKSE DLL and waits for SKSE's
 post-load/new-game signal. It then reads the local player's position on
 Skyrim's main thread every five seconds. A separate scheduler only queues the
 captures; it never reads Skyrim state itself. The plugin writes:
@@ -22,18 +22,19 @@ no Skyrim Platform JavaScript.
 
 ## Field controls
 
-The `0.5.1` build adds three optional keyboard controls after the character has
+The `0.5.2` build adds an in-game Ranger Atlas action menu after the character has
 entered the world:
 
-- `F7` queues a mark at the current outdoor Skyrim position. The open Atlas
+- `F7` opens the Ranger Atlas menu. Press `F8` for a mark or `F11` for a
+  nearby Trailmark drop after closing the menu.
+- `F8` queues a mark at the current outdoor Skyrim position. The open Atlas
   page receives the event and opens a draft mark using the calibrated map
   coordinates.
-- `F8` asks the open Atlas page to open the nearest official Trailmark's
+- `F11` asks the open Atlas page to open the nearest official Trailmark's
   field-drop dialog. The Ranger still writes and submits the message in the
   browser, where the existing Discord link and permissions are used.
 - `Insert` opens a safe native Skyrim instruction box listing the field actions.
-  Press OK, then use `F7` or `F8`; the Atlas
-  page must be open in the browser to receive the selected action.
+  The Atlas page must be open in the browser to receive the selected action.
 
 This build does not embed a miniature copy of the Atlas map inside Skyrim yet;
 the native menu is only a safe action launcher while the map remains in the
