@@ -5,6 +5,7 @@ import {
   ObjectReference,
   on,
   printConsole,
+  writeLogs,
   unsubscribe,
 } from "skyrimPlatform";
 
@@ -49,13 +50,25 @@ let nextPollAt = 0;
 let createIndex = 0;
 let worldGeneration = 0;
 let mapSyncHandle: EventHandle | null = null;
+let updateLogged = false;
+let mapOpenLogged = false;
+let mapCloseLogged = false;
 
 function log(message: string): void {
   printConsole(`[${PLUGIN}] ${message}`);
 }
 
+function diagnostic(message: string): void {
+  try {
+    writeLogs(PLUGIN, message);
+  } catch {
+    // Diagnostics must never affect the game integration.
+  }
+}
+
 function getHttpClient(): HttpClient {
   if (!http) {
+    diagnostic("Creating local bridge HTTP client.");
     http = new HttpClient(BRIDGE);
   }
   return http;
@@ -229,8 +242,10 @@ async function pollMarkerSnapshot(): Promise<void> {
   }
 
   pollInFlight = true;
+  diagnostic("Requesting GET /markers.");
   try {
     const response = await getHttpClient().get("/markers");
+    diagnostic(`GET /markers returned status ${response.status}.`);
     if (response.status !== 200 || !response.body) {
       return;
     }
@@ -240,6 +255,7 @@ async function pollMarkerSnapshot(): Promise<void> {
     }
     applyDesiredMarkers(payload.markers);
   } catch (error) {
+    diagnostic(`GET /markers failed: ${String(error)}`);
     // The browser and DLL are optional; retry silently until they are available.
   } finally {
     pollInFlight = false;
@@ -251,6 +267,10 @@ function updateMapSync(): void {
   // Do not touch Skyrim's Game API or the local bridge during title/login.
   if (!nativeMapOpen) {
     return;
+  }
+  if (!updateLogged) {
+    updateLogged = true;
+    diagnostic("Map update callback entered.");
   }
 
   if (worldReady && !isOutdoorTamriel()) {
@@ -281,6 +301,7 @@ function updateMapSync(): void {
 }
 
 function disarmMapSync(): void {
+  diagnostic("Disarming native map sync.");
   if (mapSyncHandle) {
     unsubscribe(mapSyncHandle);
     mapSyncHandle = null;
@@ -297,6 +318,10 @@ function disarmMapSync(): void {
 }
 
 on("menuOpen", (event) => {
+  if (!mapOpenLogged) {
+    mapOpenLogged = true;
+    diagnostic(`menuOpen event received: ${String(event.name)}.`);
+  }
   if (event.name !== MAP_MENU_NAME) {
     return;
   }
@@ -306,11 +331,16 @@ on("menuOpen", (event) => {
   nextPollAt = 0;
   if (!mapSyncHandle) {
     mapSyncHandle = on("update", updateMapSync);
+    diagnostic("Registered temporary map update handler.");
   }
   log("Native Skyrim map opened; Trailmark sync is active.");
 });
 
 on("menuClose", (event) => {
+  if (!mapCloseLogged) {
+    mapCloseLogged = true;
+    diagnostic(`menuClose event received: ${String(event.name)}.`);
+  }
   if (event.name !== MAP_MENU_NAME) {
     return;
   }
@@ -318,4 +348,4 @@ on("menuClose", (event) => {
   log("Native Skyrim map closed; temporary Trailmark markers disabled.");
 });
 
-log("Loaded. Native Trailmark sync is dormant until the Skyrim map is opened.");
+diagnostic("Module evaluated; waiting for MapMenu.");

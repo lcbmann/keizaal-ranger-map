@@ -93,8 +93,24 @@ namespace
         const auto player = RE::PlayerCharacter::GetSingleton();
         const auto cell = player ? player->GetParentCell() : nullptr;
         const auto worldspace = player ? player->GetWorldspace() : nullptr;
-        if (!player || !cell || !worldspace || cell->IsInteriorCell() ||
-            worldspace->GetFormID() != 0x0000003C) {
+        if (!player) {
+            SKSE::log::info("World probe: player unavailable.");
+            return;
+        }
+        if (!cell) {
+            SKSE::log::info("World probe: player cell unavailable.");
+            return;
+        }
+        if (!worldspace) {
+            SKSE::log::info("World probe: player worldspace unavailable.");
+            return;
+        }
+        SKSE::log::info(
+            "World probe: cell=[{:08X}] interior={}, worldspace=[{:08X}].",
+            cell->GetFormID(),
+            cell->IsInteriorCell(),
+            worldspace->GetFormID());
+        if (cell->IsInteriorCell() || worldspace->GetFormID() != 0x0000003C) {
             return;
         }
 
@@ -132,6 +148,7 @@ namespace
         spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%l] %v");
         spdlog::set_level(spdlog::level::info);
         spdlog::flush_on(spdlog::level::info);
+        SKSE::log::info("Ranger Atlas diagnostic logging initialized.");
     }
 
     void write_position_snapshot(
@@ -242,8 +259,11 @@ namespace
     void on_skse_message(SKSE::MessagingInterface::Message* message)
     {
         if (!message) {
+            SKSE::log::warn("Received null SKSE message.");
             return;
         }
+
+        SKSE::log::info("Received SKSE message type {}.", message->type);
 
         if (message->type == SKSE::MessagingInterface::kPreLoadGame) {
             g_world_ready = false;
@@ -273,6 +293,7 @@ namespace
 
 SKSEPluginLoad(const SKSE::LoadInterface* skse)
 {
+    SKSE::log::info("Ranger Atlas SKSEPluginLoad entered.");
     initialize_logging();
     SKSE::Init(skse);
 
@@ -283,7 +304,7 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse)
     }
 
     SKSE::log::info(
-        "Ranger Atlas loaded. Local integration is dormant until a post-load or new-game signal.");
+        "Ranger Atlas loaded. Local integration is dormant until a post-load or new-game signal. Diagnostic build 0.7.8.");
 
     return true;
 }
