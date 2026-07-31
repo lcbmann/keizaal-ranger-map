@@ -908,7 +908,7 @@
     const playerPoint = state.livePositionPoint && !state.livePositionPoint.stale
       ? { x: state.livePositionPoint.x, y: state.livePositionPoint.y, heading: state.livePositionPoint.heading || 0 }
       : null;
-    const nearbyTrailmarks = playerPoint
+    const officialTrailmarks = playerPoint
       ? state.features
         .filter(isOfficialTrailmark)
         .map((feature) => ({
@@ -917,10 +917,10 @@
           x: feature.points[0]?.x,
           y: feature.points[0]?.y,
           distance: Math.hypot(feature.points[0].x - playerPoint.x, feature.points[0].y - playerPoint.y),
+          within_range: Math.hypot(feature.points[0].x - playerPoint.x, feature.points[0].y - playerPoint.y) <= TRAILMARK_VISIT_RADIUS,
         }))
         .filter((feature) => Number.isFinite(feature.x) && Number.isFinite(feature.y))
         .sort((left, right) => left.distance - right.distance)
-        .slice(0, 12)
       : [];
     return {
       version: 1,
@@ -928,7 +928,7 @@
       ranger_name: getCurrentCreatorName(),
       game_link: state.livePositionConnection === "linked" ? "Connected to Skyrim" : "Waiting for Skyrim",
       player_point: playerPoint,
-      nearby_trailmarks: nearbyTrailmarks,
+      official_trailmarks: officialTrailmarks,
       nearest_trailmark: nearestFeature
         ? {
             id: nearestFeature.id,

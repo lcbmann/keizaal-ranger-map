@@ -39,7 +39,9 @@ namespace
                 }
 
                 if (button->GetIDCode() == kFieldMenuKey) {
-                    RangerAtlas::FieldAtlasUI::Toggle();
+                    if (!RangerAtlas::FieldAtlasUI::OwnsInput()) {
+                        RangerAtlas::FieldAtlasUI::Toggle();
+                    }
                     handled_any = true;
                 } else if (button->GetIDCode() == kFieldMarkKey) {
                     RangerAtlas::LocalBridge::QueueFieldAction("mark_here");
@@ -328,7 +330,7 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse)
     }
 
     spdlog::info(
-        "Ranger Atlas loaded. Local integration is dormant until a post-load or new-game signal. Field Console build 0.9.0.");
+        "Ranger Atlas loaded. Local integration is dormant until a post-load or new-game signal. Field Console build 0.10.0.");
 
     return true;
 }

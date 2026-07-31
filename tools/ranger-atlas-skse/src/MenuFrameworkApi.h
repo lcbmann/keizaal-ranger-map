@@ -21,6 +21,8 @@ namespace RangerAtlas::MenuFramework
 
     struct DrawList;
 
+    using InputEventCallback = bool(__stdcall*)(RE::InputEvent*);
+
     struct Window
     {
         std::atomic_bool IsOpen{ false };
@@ -55,6 +57,12 @@ namespace RangerAtlas::MenuFramework
     {
         const auto add = function<Window* (*)(RenderFunction)>("AddWindow");
         return add ? add(render) : nullptr;
+    }
+
+    inline bool register_input_event(InputEventCallback callback)
+    {
+        const auto register_event = function<std::int64_t (*)(InputEventCallback)>("RegisterInpoutEvent");
+        return register_event && register_event(callback) >= 0;
     }
 
     inline bool begin(const char* name, bool* open)
@@ -114,6 +122,51 @@ namespace RangerAtlas::MenuFramework
         if (const auto draw = function<void (*)(float, float)>("igSameLine")) {
             draw(0.0F, -1.0F);
         }
+    }
+
+    inline bool begin_tab_bar(const char* id)
+    {
+        const auto begin = function<bool (*)(const char*, int)>("igBeginTabBar");
+        return begin && begin(id, 0);
+    }
+
+    inline void end_tab_bar()
+    {
+        if (const auto end = function<void (*)()>("igEndTabBar")) {
+            end();
+        }
+    }
+
+    inline bool begin_tab_item(const char* label)
+    {
+        const auto begin = function<bool (*)(const char*, bool*, int)>("igBeginTabItem");
+        return begin && begin(label, nullptr, 0);
+    }
+
+    inline void end_tab_item()
+    {
+        if (const auto end = function<void (*)()>("igEndTabItem")) {
+            end();
+        }
+    }
+
+    inline bool begin_combo(const char* label, const char* preview)
+    {
+        const auto begin = function<bool (*)(const char*, const char*, int)>("igBeginCombo");
+        return begin && begin(label, preview, 0);
+    }
+
+    inline void end_combo()
+    {
+        if (const auto end = function<void (*)()>("igEndCombo")) {
+            end();
+        }
+    }
+
+    inline bool selectable(const char* label, bool selected = false)
+    {
+        const auto draw = function<bool (*)(const char*, bool, int, Vec2)>("igSelectable_Bool");
+        return draw && draw(label, selected, 0, { 0.0F, 0.0F });
     }
 
     inline bool button(const char* label, Vec2 size = { 0.0F, 0.0F })

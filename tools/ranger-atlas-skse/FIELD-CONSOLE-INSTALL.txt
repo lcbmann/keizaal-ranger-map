@@ -1,4 +1,4 @@
-Ranger Atlas Field Console 0.9.1
+Ranger Atlas Field Console 0.10.0
 
 1. Install the included RangerAtlas.dll with Vortex, or copy it to:
    Data\SKSE\Plugins\RangerAtlas.dll
@@ -9,8 +9,12 @@ Ranger Atlas Field Console 0.9.1
 3. Keep the Ranger Atlas page open in a browser. Enter your name, link Discord
    once if you use Trailmark field drops, and enable Live position.
 
-4. Enter the outdoor Skyrim world, then press F7 to open or close the Field Console.
-   The panel is non-blocking: you can keep walking while it is visible.
+4. Enter the outdoor Skyrim world, then press F7 to open the interactive Field
+   Console. It captures the cursor so its tabs, buttons, and text fields work.
+
+5. Select "Travel with map open" to release Skyrim's controls and leave a
+   compact live map on screen while moving. Press F7 to close it. Press F7
+   again whenever you need the interactive console.
 
 The package includes the compact Atlas map used by the Field Console. Keep the
 Data\\SKSE\\Plugins\\RangerAtlas\\field-map.jpg file installed alongside the DLL.
