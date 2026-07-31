@@ -282,9 +282,8 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse)
         return false;
     }
 
-    start_capture_worker();
     SKSE::log::info(
-        "Ranger Atlas loaded. Waiting for an outdoor Tamriel world before activating local integration.");
+        "Ranger Atlas loaded. Local integration is dormant until a post-load or new-game signal.");
 
     return true;
 }
