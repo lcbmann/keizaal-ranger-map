@@ -37,6 +37,7 @@ namespace
                 return RE::BSEventNotifyControl::kContinue;
             }
 
+            bool handled_any = false;
             for (auto current = *event; current; current = current->next) {
                 const auto button = current->AsButtonEvent();
                 if (!button || button->GetDevice() != RE::INPUT_DEVICE::kKeyboard || !button->IsDown()) {
@@ -46,15 +47,18 @@ namespace
                 if (button->GetIDCode() == kFieldMarkKey) {
                     RangerAtlas::LocalBridge::QueueFieldAction("mark_here");
                     RE::DebugNotification("Ranger Atlas mark queued. Open the Atlas to finish it.");
+                    handled_any = true;
                 } else if (button->GetIDCode() == kFieldTrailmarkKey) {
                     RangerAtlas::LocalBridge::QueueFieldAction("open_nearby_trailmark");
                     RE::DebugNotification("Ranger Atlas Trailmark request queued.");
+                    handled_any = true;
                 } else if (button->GetIDCode() == kFieldConsoleKey) {
                     toggle_field_console();
+                    handled_any = true;
                 }
             }
 
-            return RE::BSEventNotifyControl::kContinue;
+            return handled_any ? RE::BSEventNotifyControl::kStop : RE::BSEventNotifyControl::kContinue;
         }
     };
 

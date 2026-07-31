@@ -22,7 +22,7 @@ no Skyrim Platform JavaScript.
 
 ## Field controls
 
-The `0.5.0` build adds three optional keyboard controls after the character has
+The `0.5.1` build adds three optional keyboard controls after the character has
 entered the world:
 
 - `F7` queues a mark at the current outdoor Skyrim position. The open Atlas
@@ -42,6 +42,9 @@ browser.
 The local bridge now exposes `GET /events` on loopback. It contains a bounded
 queue of recent field actions and never sends data outside the local computer.
 The website consumes each action once per browser using a local event cursor.
+Atlas shortcut events are consumed by the plugin after they are queued, without
+rewriting Skyrim's input event data, so they do not fall through to other menu
+or gameplay handlers.
 The native controls are intentionally limited to the outdoor Skyrim world;
 interiors are rejected because they do not have a stable position on the
 province map.
