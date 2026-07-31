@@ -58,59 +58,14 @@ namespace RangerAtlas::FieldAtlasUI
                    (static_cast<std::uint32_t>(alpha) << 24);
         }
 
-        class ScopedConsoleStyle
-        {
-        public:
-            ScopedConsoleStyle()
-            {
-                color_count_ += MenuFramework::push_style_color(21, rgba(43, 79, 54, 235));
-                color_count_ += MenuFramework::push_style_color(22, rgba(62, 105, 72, 245));
-                color_count_ += MenuFramework::push_style_color(23, rgba(31, 64, 43, 255));
-                color_count_ += MenuFramework::push_style_color(24, rgba(44, 76, 52, 230));
-                color_count_ += MenuFramework::push_style_color(25, rgba(62, 104, 70, 245));
-                color_count_ += MenuFramework::push_style_color(26, rgba(35, 66, 44, 255));
-                color_count_ += MenuFramework::push_style_color(27, rgba(176, 143, 73, 180));
-                color_count_ += MenuFramework::push_style_color(33, rgba(37, 59, 43, 225));
-                color_count_ += MenuFramework::push_style_color(34, rgba(62, 104, 70, 245));
-                color_count_ += MenuFramework::push_style_color(35, rgba(48, 86, 59, 255));
-                variable_count_ += MenuFramework::push_style_var(12, 3.0F);
-                variable_count_ += MenuFramework::push_style_var(22, 3.0F);
-            }
-
-            ~ScopedConsoleStyle()
-            {
-                if (variable_count_ > 0) {
-                    MenuFramework::pop_style_var(variable_count_);
-                }
-                if (color_count_ > 0) {
-                    MenuFramework::pop_style_color(color_count_);
-                }
-            }
-
-            ScopedConsoleStyle(const ScopedConsoleStyle&) = delete;
-            ScopedConsoleStyle& operator=(const ScopedConsoleStyle&) = delete;
-
-        private:
-            int color_count_ = 0;
-            int variable_count_ = 0;
-        };
-
         void accent_text(const char* value)
         {
-            const auto styled = MenuFramework::push_style_color(0, rgba(224, 190, 111));
             MenuFramework::text(value);
-            if (styled) {
-                MenuFramework::pop_style_color();
-            }
         }
 
         void muted_text(const char* value)
         {
-            const auto styled = MenuFramework::push_style_color(0, rgba(195, 187, 166));
             MenuFramework::text_wrapped(value);
-            if (styled) {
-                MenuFramework::pop_style_color();
-            }
         }
 
         std::string json_escape(std::string_view value)
@@ -549,7 +504,6 @@ namespace RangerAtlas::FieldAtlasUI
         {
             const auto travel_mode = g_travel_mode.load();
             bool open = true;
-            ScopedConsoleStyle style;
             MenuFramework::set_next_window_pos({ 34.0F, 64.0F });
             MenuFramework::set_next_window_size(travel_mode ? MenuFramework::Vec2{ 406.0F, 0.0F } : MenuFramework::Vec2{ 530.0F, 0.0F });
             if (!MenuFramework::begin("Ranger Atlas##RangerAtlasFieldConsole", &open)) {

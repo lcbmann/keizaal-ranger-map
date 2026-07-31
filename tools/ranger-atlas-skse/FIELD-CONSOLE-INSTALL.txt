@@ -1,24 +1,27 @@
-Ranger Atlas Field Console 0.10.1
+Ranger Atlas Field Console 0.10.2
 
-1. Install the included RangerAtlas.dll with Vortex, or copy it to:
-   Data\SKSE\Plugins\RangerAtlas.dll
+1. Download the RangerAtlas ZIP. In Vortex, use "Install From File", select
+   the ZIP, then enable and deploy the Ranger Atlas mod.
 
-2. Install SKSE Menu Framework as an SKSE DLL dependency:
+2. Install and enable SKSE Menu Framework with Vortex as the only additional
+   dependency:
    https://www.nexusmods.com/skyrimspecialedition/mods/120352
 
-3. Keep the Ranger Atlas page open in a browser. Enter your name, link Discord
+3. Launch Skyrim normally through Keizaal. Ranger Atlas adds no ESP, ESM, or
+   ESL, so no new entry should appear in Vortex's Plugins tab.
+
+4. Keep the Ranger Atlas page open in a browser. Enter your name, link Discord
    once if you use Trailmark field drops, and enable Live position.
 
-4. Enter the outdoor Skyrim world, then press F7 to open the interactive Field
+5. Enter the outdoor Skyrim world, then press F7 to open the interactive Field
    Console. It captures the cursor so its tabs, buttons, and text fields work.
 
-5. Select "Travel with map open" to release Skyrim's controls and leave a
-   compact live map on screen while moving. Press F7 to close it. Press F7
-   again whenever you need the interactive console.
+6. Select "Travel view" to release Skyrim's controls and leave a compact live
+   map on screen while moving. Press F7 to close it. Press F7 again whenever
+   you need the interactive console.
 
 The package includes the compact Atlas map used by the Field Console. Keep the
 Data\\SKSE\\Plugins\\RangerAtlas\\field-map.jpg file installed alongside the DLL.
 
-The console never installs an ESP/ESM/ESL and does not use Skyrim Platform
-JavaScript. If SKSE Menu Framework is missing, Ranger Atlas remains safe and
-F7 only displays a notification.
+The console does not use Skyrim Platform JavaScript. If SKSE Menu Framework is
+missing, Ranger Atlas remains safe and F7 only displays a notification.
