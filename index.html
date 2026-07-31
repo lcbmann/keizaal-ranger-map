@@ -134,18 +134,14 @@
               <span><strong>Follow live position</strong></span>
             </label>
             <div id="fieldOverview" class="field-console-rail">
-              <p class="field-console-label">Field status</p>
               <div class="field-console-status">
-                <span class="field-console-status-mark" aria-hidden="true"></span>
-                <div>
-                  <strong id="fieldConsoleStatus">Ready for the road</strong>
-                  <p id="fieldConsoleHint">Enable Live position.</p>
-                </div>
+                <strong id="fieldConsoleStatus">Ready for the road</strong>
+                <p id="fieldConsoleHint">Enable Live position.</p>
               </div>
             </div>
           </div>
           <div class="tool-rail-section trailmark-visit-controls field-workspace-controls">
-            <p class="tool-rail-label">Trailmarks</p>
+            <p class="tool-rail-label">Trailmark watch</p>
             <label class="trailmark-visit-toggle" for="trailmarkVisitsInput">
               <span>Record visits</span>
               <input id="trailmarkVisitsInput" type="checkbox" />
@@ -168,6 +164,7 @@
             <strong id="trailmarkArrivalTitle"></strong>
             <p id="trailmarkArrivalText"></p>
             <div id="trailmarkArrivalVisitors" class="trailmark-arrival-visitors"></div>
+            <button id="trailmarkArrivalDropBtn" class="button primary trailmark-arrival-drop-action" type="button">Leave Field Drop</button>
             <button id="trailmarkArrivalLinkBtn" class="button secondary" type="button" hidden>Link Discord</button>
           </section>
         </section>
@@ -594,6 +591,6 @@
       crossorigin=""
     ></script>
     <script src="supabase-config.js"></script>
-    <script src="app.js?v=d776cbd"></script>
+    <script src="app.js?v=20260731-field-drop"></script>
   </body>
 </html>

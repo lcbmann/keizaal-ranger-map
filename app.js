@@ -233,6 +233,7 @@
     trailmarkArrivalTitle: document.getElementById("trailmarkArrivalTitle"),
     trailmarkArrivalText: document.getElementById("trailmarkArrivalText"),
     trailmarkArrivalVisitors: document.getElementById("trailmarkArrivalVisitors"),
+    trailmarkArrivalDropBtn: document.getElementById("trailmarkArrivalDropBtn"),
     trailmarkArrivalLinkBtn: document.getElementById("trailmarkArrivalLinkBtn"),
     receiveDialog: document.getElementById("receiveDialog"),
     receiveCodeInput: document.getElementById("receiveCodeInput"),
@@ -470,6 +471,12 @@
     elements.discordUnlinkBtn.addEventListener("click", unlinkDiscord);
     closeDialogOnBackdrop(elements.discordLinkDialog);
     elements.trailmarkArrivalCloseBtn.addEventListener("click", hideTrailmarkArrival);
+    elements.trailmarkArrivalDropBtn.addEventListener("click", () => {
+      const feature = state.features.find(
+        (candidate) => candidate.id === elements.trailmarkArrival.dataset.featureId,
+      );
+      openTrailmarkDropDialog(feature);
+    });
     elements.trailmarkArrivalLinkBtn.addEventListener("click", openDiscordLinkDialog);
     elements.refreshTrailmarkVisitsBtn.addEventListener("click", () => {
       const feature = getSelectedFeature();
@@ -1548,8 +1555,8 @@
     });
   }
 
-  function openTrailmarkDropDialog() {
-    const feature = getSelectedFeature();
+  function openTrailmarkDropDialog(featureOverride = null) {
+    const feature = featureOverride || getSelectedFeature();
     if (!isOfficialTrailmark(feature)) {
       setStatus("Select an official Trailmark first");
       return;
@@ -1663,10 +1670,14 @@
     selectFeature(feature.id);
     elements.trailmarkArrival.dataset.featureId = feature.id;
     elements.trailmarkArrivalTitle.textContent = feature.title;
-    elements.trailmarkArrivalText.textContent = result.discord_linked
-      ? "Visit recorded. Use the Trailmark panel in Discord to open the matching channel."
-      : "Visit recorded. Link Discord if you want Wayfinder to prepare this Trailmark through the Discord panel.";
-    elements.trailmarkArrivalLinkBtn.hidden = Boolean(result.discord_linked);
+    const discordLinked = Boolean(result.discord_linked || state.discordLink);
+    elements.trailmarkArrivalText.textContent = discordLinked
+      ? "Visit recorded. You can leave a field drop here through the Atlas."
+      : "Visit recorded. Link Discord to leave a field drop through the Atlas.";
+    elements.trailmarkArrivalDropBtn.textContent = discordLinked
+      ? "Leave Field Drop"
+      : "Link Discord to Leave Drop";
+    elements.trailmarkArrivalLinkBtn.hidden = true;
     elements.trailmarkArrival.hidden = false;
     renderTrailmarkArrivalVisitors(feature.id);
   }
@@ -1733,7 +1744,7 @@
         device_token: deviceToken,
       });
       if (request && request.status === "granted") {
-        elements.trailmarkArrivalText.textContent = "Wayfinder prepared access. Open this Trailmark through the Trailmark panel in Discord.";
+        elements.trailmarkArrivalText.textContent = "Trailmark access is ready. You can leave a field drop through the Atlas.";
         return;
       }
       if (request && request.status === "failed") {

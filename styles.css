@@ -1319,21 +1319,20 @@ html[data-workspace="edit"] .field-workspace-controls {
   border-top: 1px solid rgba(64, 42, 19, 0.2);
 }
 
-.field-console-label {
-  margin: 0 0 7px;
-  color: #694c2f;
-  font-size: 0.66rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+.field-console-rail .field-console-status {
+  display: block;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
 
-.field-console-rail .field-console-status {
-  padding: 8px;
+.field-console-rail .field-console-status strong {
+  font-size: 0.78rem;
 }
 
 .field-console-rail .field-console-status p {
-  margin-top: 2px;
+  margin: 2px 0 0;
   font-size: 0.7rem;
 }
 
@@ -1398,14 +1397,13 @@ html[data-workspace="edit"] .field-workspace-controls {
 }
 
 .field-follow-toggle {
-  display: grid;
-  grid-template-columns: 20px minmax(0, 1fr);
+  display: flex;
   gap: 8px;
-  align-items: start;
-  padding: 9px 10px;
-  border: 1px solid rgba(72, 45, 17, 0.22);
-  border-radius: 4px;
-  background: rgba(255, 246, 222, 0.26);
+  align-items: center;
+  padding: 7px 0 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   cursor: pointer;
 }
 
@@ -1423,7 +1421,7 @@ html[data-workspace="edit"] .field-workspace-controls {
 
 .field-follow-toggle strong {
   color: var(--ink);
-  font-size: 0.82rem;
+  font-size: 0.76rem;
 }
 
 .field-follow-toggle small {
@@ -2074,6 +2072,12 @@ html[data-workspace="edit"] .field-workspace-controls {
   min-height: 32px;
   align-items: center;
   text-decoration: none;
+}
+
+.trailmark-arrival-drop-action {
+  width: 100% !important;
+  justify-content: center;
+  margin-top: 8px;
 }
 
 .trailmark-presence-panel {
@@ -2998,6 +3002,16 @@ html[data-theme="dark"] .field-console-card,
 html[data-theme="dark"] .field-follow-toggle {
   border-color: rgba(194, 138, 24, 0.24);
   background: #1b1812;
+}
+
+html[data-theme="dark"] .field-console-rail .field-console-status {
+  border: 0;
+  background: transparent;
+}
+
+html[data-theme="dark"] .field-follow-toggle {
+  border: 0;
+  background: transparent;
 }
 
 html[data-theme="dark"] .field-console-status strong,
