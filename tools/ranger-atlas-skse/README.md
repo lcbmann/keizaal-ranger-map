@@ -31,7 +31,7 @@ entered the world:
 - `F8` asks the open Atlas page to open the nearest official Trailmark's
   field-drop dialog. The Ranger still writes and submits the message in the
   browser, where the existing Discord link and permissions are used.
-- `F6` opens a safe native Skyrim instruction box listing the field actions.
+- `Insert` opens a safe native Skyrim instruction box listing the field actions.
   Press OK, then use `F7` or `F8`; the Atlas
   page must be open in the browser to receive the selected action.
 

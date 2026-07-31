@@ -5,7 +5,7 @@
 namespace
 {
     constexpr auto kCaptureInterval = std::chrono::seconds(5);
-    constexpr std::uint32_t kFieldConsoleKey = 0x40;  // F6 keyboard scan code.
+    constexpr std::uint32_t kFieldConsoleKey = 0xD2;  // Insert keyboard scan code.
     constexpr std::uint32_t kFieldMarkKey = 0x41;  // F7 keyboard scan code.
     constexpr std::uint32_t kFieldTrailmarkKey = 0x42;  // F8 keyboard scan code.
 
@@ -214,7 +214,7 @@ namespace
             if (const auto input = RE::BSInputDeviceManager::GetSingleton()) {
                 input->AddEventSink(&g_input_sink);
                 SKSE::log::info(
-                    "Ranger Atlas field controls registered: F6 console, F7 mark, F8 Trailmark.");
+                    "Ranger Atlas field controls registered: Insert console, F7 mark, F8 Trailmark.");
             } else {
                 SKSE::log::warn("Ranger Atlas field controls could not access the input device manager.");
             }

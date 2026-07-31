@@ -849,7 +849,7 @@
 
     if (event.type !== "mark_here") {
       if (event.type === "open_nearby_trailmark") {
-        openNearbyTrailmarkDrop();
+        void openNearbyTrailmarkDrop();
       }
       return;
     }
@@ -873,7 +873,7 @@
     }
   }
 
-  function openNearbyTrailmarkDrop() {
+  async function openNearbyTrailmarkDrop() {
     const point = state.livePositionPoint;
     if (!point || point.stale) {
       setStatus("Connect to Skyrim before opening a Trailmark drop");
@@ -898,11 +898,26 @@
       setWorkspaceMode("field");
     }
     selectFeature(nearest.feature.id);
-    if (Date.now() - Number(state.trailmarkVisitCooldowns[nearest.feature.id] || 0) >= TRAILMARK_VISIT_COOLDOWN_MS) {
-      setStatus(`Arrived at ${nearest.feature.title}. Record the visit before leaving a drop`);
+    if (Date.now() - Number(state.trailmarkVisitCooldowns[nearest.feature.id] || 0) < TRAILMARK_VISIT_COOLDOWN_MS) {
+      openTrailmarkDropDialog(nearest.feature);
       return;
     }
-    openTrailmarkDropDialog(nearest.feature);
+
+    if (!state.trailmarkVisitsEnabled || !getCurrentCreatorName()) {
+      setStatus("Enable Record visits and enter your name before opening a Trailmark drop");
+      return;
+    }
+    if (state.trailmarkVisitInFlight) {
+      setStatus(`Checking in at ${nearest.feature.title}`);
+      return;
+    }
+
+    state.trailmarkVisitCandidate = null;
+    setStatus(`Recording your arrival at ${nearest.feature.title}`);
+    await recordTrailmarkVisit(nearest.feature);
+    if (Date.now() - Number(state.trailmarkVisitCooldowns[nearest.feature.id] || 0) < TRAILMARK_VISIT_COOLDOWN_MS) {
+      openTrailmarkDropDialog(nearest.feature);
+    }
   }
 
   function stopLivePositionPolling(clearPosition = true) {
@@ -1658,7 +1673,7 @@
       ? "Link Discord before leaving a drop"
       : canLeaveDrop
         ? "Post a field drop to this Trailmark's Discord channel"
-        : "Record a visit here before leaving a drop";
+        : "Arrive at this Trailmark with Record visits enabled before leaving a drop";
     if (state.trailmarkVisitsLoading.has(feature.id)) {
       elements.trailmarkPresenceStatus.textContent = "Checking the latest field record...";
       return;
@@ -1705,7 +1720,7 @@
     }
     const recentVisit = Number(state.trailmarkVisitCooldowns[feature.id] || 0);
     if (Date.now() - recentVisit >= TRAILMARK_VISIT_COOLDOWN_MS) {
-      setStatus(`Record a visit to ${feature.title} before leaving a drop`);
+      setStatus(`Arrive at ${feature.title} with Record visits enabled before leaving a drop`);
       return;
     }
 
@@ -2341,7 +2356,9 @@
       setWorkspaceMode("edit");
     }
     pushUndo("draft mark placement");
-    state.mode = "select";
+    state.mode = "marker";
+    map.dragging.enable();
+    map.getContainer().classList.remove("is-drawing");
     state.draftFeature = createFeature({
       type: "marker",
       category: "landmark",
