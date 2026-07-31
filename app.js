@@ -2209,6 +2209,10 @@
     }
 
     const point = clampPoint(event.latlng);
+    if (!point) {
+      setStatus("Could not read that map position");
+      return;
+    }
 
     if (state.mode === "marker") {
       placeDraftAtPoint(point, "Draft mark placed");
@@ -2253,7 +2257,11 @@
       addDrawPoint(clampPoint(state.pointerStart.latlng));
     }
 
-    addDrawPoint(clampPoint(event.latlng), 7);
+    const point = clampPoint(event.latlng);
+    if (!point) {
+      return;
+    }
+    addDrawPoint(point, 7);
     renderDraft();
     updateDrawButtons();
     setStatus(`Sketching ${state.mode === "range" ? "range" : "trail"} (${state.drawPoints.length} points)`);
@@ -2352,6 +2360,11 @@
   }
 
   function placeDraftAtPoint(point, title = "New mark") {
+    const draftPoint = clampPoint(point);
+    if (!draftPoint) {
+      setStatus("Could not read the position for this mark");
+      return;
+    }
     if (state.workspaceMode !== "edit") {
       setWorkspaceMode("edit");
     }
@@ -2363,7 +2376,7 @@
       type: "marker",
       category: "landmark",
       title,
-      points: [clampPoint(point)],
+      points: [draftPoint],
     });
     state.drawPoints = state.draftFeature.points.map((draftPoint) => ({ ...draftPoint }));
     state.selectedId = state.draftFeature.id;
@@ -2423,7 +2436,11 @@
           marker.closeTooltip();
         });
         marker.on("dragend", (event) => {
-          feature.points = [clampPoint(event.target.getLatLng())];
+          const point = clampPoint(event.target.getLatLng());
+          if (!point) {
+            return;
+          }
+          feature.points = [point];
           state.selectedId = feature.id;
           state.selectedIds = [feature.id];
           lastDragEndedAt = Date.now();
@@ -5217,9 +5234,14 @@
   }
 
   function clampPoint(latlng) {
+    const x = Number(latlng?.lng ?? latlng?.x);
+    const y = Number(latlng?.lat ?? latlng?.y);
+    if (!Number.isFinite(x) || !Number.isFinite(y)) {
+      return null;
+    }
     return {
-      x: Math.max(0, Math.min(MAP_WIDTH, Math.round(latlng.lng))),
-      y: Math.max(0, Math.min(MAP_HEIGHT, Math.round(latlng.lat))),
+      x: Math.max(0, Math.min(MAP_WIDTH, Math.round(x))),
+      y: Math.max(0, Math.min(MAP_HEIGHT, Math.round(y))),
     };
   }
 
