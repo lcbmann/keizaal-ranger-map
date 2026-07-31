@@ -39,12 +39,15 @@ const activeMarkers: Record<string, ActiveMarker> = {};
 let desiredMarkers: AtlasMarker[] = [];
 let desiredKey = "";
 let skyrimLoaded = false;
+let bridgeReady = false;
 let worldReady = false;
 let nativeMapOpen = false;
 let nativeMarkersVisible = false;
+let bridgePollInFlight = false;
 let pollInFlight = false;
 let createInFlight = false;
 let nextPollAt = 0;
+let nextBridgePollAt = 0;
 let createIndex = 0;
 let worldGeneration = 0;
 
@@ -246,14 +249,53 @@ async function pollMarkerSnapshot(): Promise<void> {
   }
 }
 
+async function pollBridgeReadiness(): Promise<void> {
+  if (!skyrimLoaded || bridgeReady || bridgePollInFlight) {
+    return;
+  }
+
+  bridgePollInFlight = true;
+  try {
+    const response = await getHttpClient().get("/position");
+    if (response.status !== 200 || !response.body) {
+      return;
+    }
+
+    const snapshot = JSON.parse(response.body) as {
+      version?: number;
+      x?: number;
+      y?: number;
+      worldspace_form_id?: number;
+      interior?: boolean;
+    };
+    if (
+      snapshot.version === 1 &&
+      Number.isFinite(snapshot.x) &&
+      Number.isFinite(snapshot.y) &&
+      snapshot.worldspace_form_id === TAMRIEL_FORM_ID &&
+      snapshot.interior === false
+    ) {
+      bridgeReady = true;
+      log("Local bridge confirmed an in-world Tamriel position; gameplay integration is active.");
+    }
+  } catch {
+    // The bridge is intentionally unavailable until the player enters the server world.
+  } finally {
+    bridgePollInFlight = false;
+    nextBridgePollAt = Date.now() + POLL_INTERVAL_MS;
+  }
+}
+
 on("preLoadGame", () => {
   worldGeneration += 1;
   skyrimLoaded = false;
+  bridgeReady = false;
   worldReady = false;
   nativeMapOpen = false;
   nativeMarkersVisible = false;
   desiredMarkers = [];
   desiredKey = "";
+  nextBridgePollAt = 0;
   // SkyMP owns the load transition. Do not touch references while Skyrim is
   // unloading its current world.
   hideNativeMarkers();
@@ -286,6 +328,13 @@ on("menuClose", (event) => {
 
 on("update", () => {
   if (!skyrimLoaded) {
+    return;
+  }
+
+  if (!bridgeReady) {
+    if (Date.now() >= nextBridgePollAt) {
+      void pollBridgeReadiness();
+    }
     return;
   }
 

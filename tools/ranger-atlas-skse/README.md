@@ -4,7 +4,7 @@ This project is being introduced in compatibility-gated stages.
 
 ## Stage 1: local position reader
 
-The `0.7.4` build initializes as an SKSE DLL and waits for SKSE's
+The `0.7.5` build initializes as an SKSE DLL and waits for SKSE's
 post-load/new-game signal. It then reads the local player's position on
 Skyrim's main thread every five seconds. A separate scheduler only queues the
 captures; it never reads Skyrim state itself. The plugin writes:
@@ -23,7 +23,7 @@ still has no ESP, ESM, or ESL and no outbound networking.
 
 ## Field controls
 
-The `0.7.4` build adds an in-game Ranger Atlas action menu after the character has
+The `0.7.5` build adds an in-game Ranger Atlas action menu after the character has
 entered the world:
 
 - `F7` opens the Ranger Atlas menu. Press `F8` for a mark or `F11` for a
@@ -57,7 +57,7 @@ character selection and other server-managed transitions.
 
 ## Native Skyrim map markers
 
-The `0.7.4` release moves native marker creation out of the C++ DLL. The
+The `0.7.5` release moves native marker creation out of the C++ DLL. The
 companion `ranger-atlas-skyrim-platform.js` plugin performs the known-working
 `placeAtMe`/`addToMap` operation from Skyrim Platform, one marker per update,
 only after outdoor Tamriel is confirmed. The C++ DLL never constructs
@@ -68,6 +68,9 @@ This separation is intentional for SkyMP's server-managed load transitions.
 
 The DLL itself is dormant during the title screen and Keizaal login. Its
 position worker starts only after SKSE reports a post-load or new-game signal.
+The Platform plugin waits for a valid in-world `/position` response from that
+bridge before calling Skyrim's `Game` API at all; Skyrim's base `skyrimLoaded`
+event is not treated as a server-login completion signal.
 The Platform plugin also creates its loopback HTTP client lazily, after the
 completed-load/map-open path begins.
 
