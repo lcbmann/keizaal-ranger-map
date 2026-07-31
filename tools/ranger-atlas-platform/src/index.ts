@@ -34,7 +34,7 @@ interface ActiveMarker {
   reference: ObjectReference;
 }
 
-const http = new HttpClient(BRIDGE);
+let http: HttpClient | null = null;
 const activeMarkers: Record<string, ActiveMarker> = {};
 let desiredMarkers: AtlasMarker[] = [];
 let desiredKey = "";
@@ -50,6 +50,13 @@ let worldGeneration = 0;
 
 function log(message: string): void {
   printConsole(`[${PLUGIN}] ${message}`);
+}
+
+function getHttpClient(): HttpClient {
+  if (!http) {
+    http = new HttpClient(BRIDGE);
+  }
+  return http;
 }
 
 function isOutdoorTamriel(): boolean {
@@ -222,7 +229,7 @@ async function pollMarkerSnapshot(): Promise<void> {
 
   pollInFlight = true;
   try {
-    const response = await http.get("/markers");
+    const response = await getHttpClient().get("/markers");
     if (response.status !== 200 || !response.body) {
       return;
     }
