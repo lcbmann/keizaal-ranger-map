@@ -4,7 +4,7 @@ This project is being introduced in compatibility-gated stages.
 
 ## Stage 1: local position reader
 
-The `0.6.0` build initializes as an SKSE DLL and waits for SKSE's
+The `0.6.1` build initializes as an SKSE DLL and waits for SKSE's
 post-load/new-game signal. It then reads the local player's position on
 Skyrim's main thread every five seconds. A separate scheduler only queues the
 captures; it never reads Skyrim state itself. The plugin writes:
@@ -21,7 +21,7 @@ still has no ESP, ESM, or ESL and no outbound networking.
 
 ## Field controls
 
-The `0.6.0` build adds an in-game Ranger Atlas action menu after the character has
+The `0.6.1` build adds an in-game Ranger Atlas action menu after the character has
 entered the world:
 
 - `F7` opens the Ranger Atlas menu. Press `F8` for a mark or `F11` for a
@@ -48,6 +48,10 @@ or gameplay handlers.
 The native controls are intentionally limited to the outdoor Skyrim world;
 interiors are rejected because they do not have a stable position on the
 province map.
+
+The plugin also waits for an outdoor Tamriel world instead of assuming that a
+normal save-load signal means the player is ready. This matters for SkyMP
+character selection and other server-managed transitions.
 
 ## Experimental native Trailmark sync
 

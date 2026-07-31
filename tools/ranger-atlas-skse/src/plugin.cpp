@@ -26,6 +26,9 @@ namespace
     std::jthread g_capture_worker;
     std::optional<std::filesystem::path> g_output_directory;
     std::unordered_map<std::string, RE::TESObjectREFR*> g_native_markers;
+    std::atomic_bool g_controls_registered = false;
+
+    void capture_player_position();
 
     void show_field_console()
     {
@@ -198,6 +201,38 @@ namespace
 
     FieldInputSink g_input_sink;
 
+    void try_initialize_world()
+    {
+        if (g_world_ready.load()) {
+            return;
+        }
+
+        const auto player = RE::PlayerCharacter::GetSingleton();
+        const auto cell = player ? player->GetParentCell() : nullptr;
+        const auto worldspace = player ? player->GetWorldspace() : nullptr;
+        if (!player || !cell || !worldspace || cell->IsInteriorCell() ||
+            worldspace->GetFormID() != 0x0000003C) {
+            return;
+        }
+
+        g_world_ready = true;
+        RangerAtlas::LocalBridge::Start();
+
+        if (!g_controls_registered.exchange(true)) {
+            if (const auto input = RE::BSInputDeviceManager::GetSingleton()) {
+                input->AddEventSink(&g_input_sink);
+                SKSE::log::info("Ranger Atlas field controls registered after outdoor Tamriel was confirmed.");
+            } else {
+                g_controls_registered = false;
+                SKSE::log::warn("Ranger Atlas field controls could not access the input device manager.");
+            }
+        }
+
+        SKSE::log::info("Keizaal world confirmed; Ranger Atlas local integration is now active.");
+        capture_player_position();
+        synchronize_native_markers();
+    }
+
     void initialize_logging()
     {
         auto log_directory = SKSE::log::log_directory();
@@ -300,15 +335,15 @@ namespace
                 return;
             }
 
-            if (!g_world_ready.load()) {
-                continue;
-            }
-
             if (const auto tasks = SKSE::GetTaskInterface()) {
-                tasks->AddTask([] {
-                    capture_player_position();
-                    synchronize_native_markers();
-                });
+                if (g_world_ready.load()) {
+                    tasks->AddTask([] {
+                        capture_player_position();
+                        synchronize_native_markers();
+                    });
+                } else {
+                    tasks->AddTask(try_initialize_world);
+                }
             }
         }
     }
@@ -333,31 +368,24 @@ namespace
             g_world_ready = false;
             close_field_menu();
             remove_native_markers();
+            if (g_controls_registered.exchange(false)) {
+                if (const auto input = RE::BSInputDeviceManager::GetSingleton()) {
+                    input->RemoveEventSink(&g_input_sink);
+                }
+            }
             return;
         }
 
         if (message->type == SKSE::MessagingInterface::kPostLoadGame ||
             message->type == SKSE::MessagingInterface::kNewGame) {
-            g_world_ready = true;
+            g_world_ready = false;
             start_capture_worker();
-            RangerAtlas::LocalBridge::Start();
-
-            if (const auto input = RE::BSInputDeviceManager::GetSingleton()) {
-                input->AddEventSink(&g_input_sink);
-                SKSE::log::info(
-                    "Ranger Atlas field controls registered: F7 menu, F8 mark, F11 Trailmark, Insert help.");
-            } else {
-                SKSE::log::warn("Ranger Atlas field controls could not access the input device manager.");
-            }
 
             if (const auto tasks = SKSE::GetTaskInterface()) {
-                tasks->AddTask([] {
-                    capture_player_position();
-                    synchronize_native_markers();
-                });
-                SKSE::log::info("Character entered the world; queued the initial position capture.");
+                tasks->AddTask(try_initialize_world);
+                SKSE::log::info("Load/new-game signal received; waiting for an outdoor Tamriel world before activating.");
             } else {
-                SKSE::log::error("SKSE task interface is unavailable; position capture was not queued.");
+                SKSE::log::error("SKSE task interface is unavailable; deferred world activation was not queued.");
             }
         }
     }
@@ -374,8 +402,9 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse)
         return false;
     }
 
+    start_capture_worker();
     SKSE::log::info(
-        "Ranger Atlas continuous position reader loaded. Waiting for the character to enter the world.");
+        "Ranger Atlas loaded. Waiting for an outdoor Tamriel world before activating local integration.");
 
     return true;
 }
