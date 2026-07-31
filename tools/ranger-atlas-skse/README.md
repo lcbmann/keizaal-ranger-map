@@ -4,7 +4,7 @@ This project is being introduced in compatibility-gated stages.
 
 ## Stage 1: local position reader
 
-The `0.7.11` build initializes as an SKSE DLL and waits for SKSE's
+The `0.8.0` build initializes as an SKSE DLL and waits for SKSE's
 post-load/new-game signal. It then reads the local player's position on
 Skyrim's main thread every five seconds. A separate scheduler only queues the
 captures; it never reads Skyrim state itself. The plugin writes:
@@ -23,7 +23,7 @@ still has no ESP, ESM, or ESL and no outbound networking.
 
 ## Field controls
 
-The `0.7.11` build adds an in-game Ranger Atlas action menu after the character has
+The `0.8.0` build adds an in-game Ranger Atlas action menu after the character has
 entered the world:
 
 - `F7` opens the Ranger Atlas menu. Press `F8` for a mark or `F11` for a
@@ -55,16 +55,18 @@ The plugin also waits for an outdoor Tamriel world instead of assuming that a
 normal save-load signal means the player is ready. This matters for SkyMP
 character selection and other server-managed transitions.
 
-## Native Skyrim map markers
+## Optional native Skyrim map markers
 
-The `0.7.11` release moves native marker creation out of the C++ DLL. The
-companion `ranger-atlas-skyrim-platform.js` plugin performs the known-working
+The normal `0.8.0` release does not install a Skyrim Platform JavaScript plugin.
+The companion `ranger-atlas-skyrim-platform.js` plugin is experimental and performs the
 `placeAtMe`/`addToMap` operation from Skyrim Platform, one marker per update,
 only after outdoor Tamriel is confirmed. The C++ DLL never constructs
 `ExtraMapMarker` data. The Platform plugin waits for Skyrim's completed-load
 signal and for `MapMenu` to be open before it creates a marker. It creates one
 temporary marker at a time; closing the map disables those temporary markers.
-This separation is intentional for SkyMP's server-managed load transitions.
+This separation is intentional for SkyMP's server-managed load transitions, but the
+JavaScript add-on is not part of the supported release because it can interfere with
+Keizaal login on some installations.
 
 The DLL itself is dormant during the title screen and Keizaal login. Its
 position worker starts only after SKSE reports a post-load or new-game signal.
@@ -77,18 +79,24 @@ the temporary Trailmark markers safely.
 The Platform plugin also creates its loopback HTTP client lazily, after the
 completed-load/map-open path begins.
 
-The `0.7.11` diagnostic build writes Platform lifecycle messages through
-Skyrim Platform's `writeLogs` API and DLL lifecycle messages to `RangerAtlas.log`.
+The `0.8.0` build writes native lifecycle messages to `RangerAtlas.log`.
 
-Install both files from the release archive:
+Install the supported release from the archive:
 
 ```text
 SKSE/Plugins/RangerAtlas.dll
-Platform/Plugins/ranger-atlas-skyrim-platform.js
 ```
 
-Keep the browser Atlas open with **Live position** enabled to send the current
-official Trailmark snapshot. Do not save while testing temporary native markers.
+If an older integration was installed, remove this file before launching:
+
+```text
+Data/Platform/Plugins/ranger-atlas-skyrim-platform.js
+```
+
+Keep the browser Atlas open with **Live position** enabled. The browser Atlas,
+position sharing, field actions, trailmark visits, and field drops work without
+Skyrim Platform. Only temporary native Skyrim map markers require the experimental
+JavaScript add-on.
 
 ## Optional Trailmark visits
 
@@ -109,7 +117,8 @@ channel. The DLL itself still makes no outbound requests.
 SKSE/
   Plugins/
     RangerAtlas.dll
-Platform/
-  Plugins/
-    ranger-atlas-skyrim-platform.js
 ```
+
+The experimental Platform add-on is kept in the repository under
+`tools/ranger-atlas-platform`, but is deliberately excluded from the supported
+release archive.
