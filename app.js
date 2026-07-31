@@ -1429,18 +1429,18 @@
           className: "live-position-leaflet-marker",
           html: `
             <div class="live-position-marker" style="--heading:0deg">
-              <svg class="live-position-arrow" viewBox="0 0 32 32" aria-hidden="true">
-                <path d="M16 2 27 28 16 21 5 28Z" />
+              <svg class="live-position-arrow" viewBox="0 0 36 40" aria-hidden="true">
+                <path d="M18 2 27 37 18 29 9 37Z" />
               </svg>
             </div>
           `,
-          iconSize: [34, 34],
-          iconAnchor: [17, 17],
+          iconSize: [38, 42],
+          iconAnchor: [19, 21],
         }),
       }).addTo(livePositionLayer);
       livePositionMarker.bindTooltip("", {
         direction: "top",
-        offset: [0, -12],
+        offset: [0, -17],
       });
     }
 

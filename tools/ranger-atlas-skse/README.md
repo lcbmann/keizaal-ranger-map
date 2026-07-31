@@ -4,7 +4,7 @@ This project is being introduced in compatibility-gated stages.
 
 ## Field Console
 
-`0.11.1` adds an optional native **Field Console**. It is a real in-game C++
+`0.11.2` adds an optional native **Field Console**. It is a real in-game C++
 window, not a Skyrim Platform script and not a temporary Skyrim map marker.
 Press `F7` after entering the outdoor Skyrim world to open it.
 
@@ -41,7 +41,7 @@ remain browser-only administrative work for this release.
 
 ## Stage 1: local position reader
 
-The `0.11.1` build initializes as an SKSE DLL and waits for SKSE's
+The `0.11.2` build initializes as an SKSE DLL and waits for SKSE's
 post-load/new-game signal. It then reads the local player's position on
 Skyrim's main thread four times per second. A separate scheduler only queues
 one capture at a time; it never reads Skyrim state itself. Diagnostic logging
@@ -62,7 +62,7 @@ still has no ESP, ESM, or ESL and no outbound networking.
 
 ## Field Console control
 
-The `0.11.1` build uses one in-game shortcut after the character has entered
+The `0.11.2` build uses one in-game shortcut after the character has entered
 the outdoor world:
 
 - `F7` opens or closes the native Field Console when SKSE Menu Framework is

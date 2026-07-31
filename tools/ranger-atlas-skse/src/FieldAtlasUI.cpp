@@ -279,20 +279,22 @@ namespace RangerAtlas::FieldAtlasUI
             const auto radians = heading * pi / 180.0F;
             const MenuFramework::Vec2 direction{ std::sin(radians), -std::cos(radians) };
             const MenuFramework::Vec2 right{ std::cos(radians), std::sin(radians) };
-            const MenuFramework::Vec2 outer_tip{ center.x + direction.x * 15.0F, center.y + direction.y * 15.0F };
-            const MenuFramework::Vec2 outer_tail{ center.x - direction.x * 8.0F, center.y - direction.y * 8.0F };
-            const MenuFramework::Vec2 outer_left{ outer_tail.x - right.x * 8.0F, outer_tail.y - right.y * 8.0F };
-            const MenuFramework::Vec2 outer_right{ outer_tail.x + right.x * 8.0F, outer_tail.y + right.y * 8.0F };
-            const MenuFramework::Vec2 inner_tip{ center.x + direction.x * 12.0F, center.y + direction.y * 12.0F };
-            const MenuFramework::Vec2 inner_tail{ center.x - direction.x * 5.0F, center.y - direction.y * 5.0F };
-            const MenuFramework::Vec2 inner_left{ inner_tail.x - right.x * 5.0F, inner_tail.y - right.y * 5.0F };
-            const MenuFramework::Vec2 inner_right{ inner_tail.x + right.x * 5.0F, inner_tail.y + right.y * 5.0F };
+            const MenuFramework::Vec2 outer_tip{ center.x + direction.x * 19.0F, center.y + direction.y * 19.0F };
+            const MenuFramework::Vec2 outer_tail{ center.x - direction.x * 11.0F, center.y - direction.y * 11.0F };
+            const MenuFramework::Vec2 outer_left{ outer_tail.x - right.x * 9.0F, outer_tail.y - right.y * 9.0F };
+            const MenuFramework::Vec2 outer_right{ outer_tail.x + right.x * 9.0F, outer_tail.y + right.y * 9.0F };
+            const MenuFramework::Vec2 gold_tip{ center.x + direction.x * 16.0F, center.y + direction.y * 16.0F };
+            const MenuFramework::Vec2 gold_tail{ center.x - direction.x * 7.5F, center.y - direction.y * 7.5F };
+            const MenuFramework::Vec2 gold_left{ gold_tail.x - right.x * 6.2F, gold_tail.y - right.y * 6.2F };
+            const MenuFramework::Vec2 gold_right{ gold_tail.x + right.x * 6.2F, gold_tail.y + right.y * 6.2F };
+            const MenuFramework::Vec2 notch_tip{ center.x - direction.x * 1.0F, center.y - direction.y * 1.0F };
+            const MenuFramework::Vec2 notch_tail{ center.x - direction.x * 8.5F, center.y - direction.y * 8.5F };
+            const MenuFramework::Vec2 notch_left{ notch_tail.x - right.x * 3.0F, notch_tail.y - right.y * 3.0F };
+            const MenuFramework::Vec2 notch_right{ notch_tail.x + right.x * 3.0F, notch_tail.y + right.y * 3.0F };
 
-            MenuFramework::draw_circle_filled(draw_list, center, 12.0F, rgba(24, 31, 27, 235));
-            MenuFramework::draw_circle(draw_list, center, 12.0F, rgba(231, 208, 142), 2.0F);
-            MenuFramework::draw_triangle_filled(draw_list, outer_tip, outer_left, outer_right, rgba(24, 31, 27, 255));
-            MenuFramework::draw_triangle_filled(draw_list, inner_tip, inner_left, inner_right, rgba(73, 170, 191, 255));
-            MenuFramework::draw_circle_filled(draw_list, center, 2.6F, rgba(240, 226, 181, 255));
+            MenuFramework::draw_triangle_filled(draw_list, outer_tip, outer_left, outer_right, rgba(31, 23, 13, 255));
+            MenuFramework::draw_triangle_filled(draw_list, gold_tip, gold_left, gold_right, rgba(196, 154, 40, 255));
+            MenuFramework::draw_triangle_filled(draw_list, notch_tip, notch_left, notch_right, rgba(31, 23, 13, 255));
         }
 
         MenuFramework::Vec2 smooth_player_position(MenuFramework::Vec2 target, float target_heading)
