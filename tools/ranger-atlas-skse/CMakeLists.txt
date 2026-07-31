@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 
-project(RangerAtlas VERSION 0.7.8 LANGUAGES CXX)
+project(RangerAtlas VERSION 0.7.9 LANGUAGES CXX)
 
 find_package(CommonLibSSE CONFIG REQUIRED)
 

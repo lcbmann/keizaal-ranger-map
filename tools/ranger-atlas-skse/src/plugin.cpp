@@ -133,22 +133,44 @@ namespace
 
     void initialize_logging()
     {
-        auto log_directory = SKSE::log::log_directory();
-        if (!log_directory) {
+        std::filesystem::path output_directory;
+        if (const auto skse_directory = SKSE::log::log_directory()) {
+            output_directory = *skse_directory;
+        } else {
+            char* user_profile = nullptr;
+            std::size_t user_profile_size = 0;
+            if (_dupenv_s(&user_profile, &user_profile_size, "USERPROFILE") == 0 &&
+                user_profile && *user_profile) {
+                output_directory = std::filesystem::path(user_profile) /
+                    "Documents" / "My Games" / "Skyrim Special Edition" / "SKSE";
+            }
+            std::free(user_profile);
+            if (output_directory.empty()) {
+                return;
+            }
+        }
+
+        std::error_code directory_error;
+        std::filesystem::create_directories(output_directory, directory_error);
+        if (directory_error) {
             return;
         }
 
-        g_output_directory = *log_directory;
-        *log_directory /= "RangerAtlas.log";
-        auto sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(
-            log_directory->string(), true);
-        auto logger = std::make_shared<spdlog::logger>("RangerAtlas", std::move(sink));
+        try {
+            const auto log_path = output_directory / "RangerAtlas.log";
+            auto sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(
+                log_path.string(), true);
+            auto logger = std::make_shared<spdlog::logger>("RangerAtlas", std::move(sink));
 
-        spdlog::set_default_logger(std::move(logger));
-        spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%l] %v");
-        spdlog::set_level(spdlog::level::info);
-        spdlog::flush_on(spdlog::level::info);
-        SKSE::log::info("Ranger Atlas diagnostic logging initialized.");
+            spdlog::set_default_logger(std::move(logger));
+            spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%l] %v");
+            spdlog::set_level(spdlog::level::info);
+            spdlog::flush_on(spdlog::level::info);
+            g_output_directory = output_directory;
+            SKSE::log::info("Ranger Atlas diagnostic logging initialized at {}.", log_path.string());
+        } catch (const std::exception& error) {
+            SKSE::log::error("Ranger Atlas diagnostic logging could not be initialized: {}", error.what());
+        }
     }
 
     void write_position_snapshot(
@@ -293,9 +315,9 @@ namespace
 
 SKSEPluginLoad(const SKSE::LoadInterface* skse)
 {
-    SKSE::log::info("Ranger Atlas SKSEPluginLoad entered.");
-    initialize_logging();
     SKSE::Init(skse);
+    initialize_logging();
+    SKSE::log::info("Ranger Atlas SKSEPluginLoad entered.");
 
     const auto messaging = SKSE::GetMessagingInterface();
     if (!messaging || !messaging->RegisterListener(on_skse_message)) {
@@ -304,7 +326,7 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse)
     }
 
     SKSE::log::info(
-        "Ranger Atlas loaded. Local integration is dormant until a post-load or new-game signal. Diagnostic build 0.7.8.");
+        "Ranger Atlas loaded. Local integration is dormant until a post-load or new-game signal. Diagnostic build 0.7.9.");
 
     return true;
 }
