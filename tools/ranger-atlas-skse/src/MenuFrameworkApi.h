@@ -110,6 +110,15 @@ namespace RangerAtlas::MenuFramework
         }
     }
 
+    inline void text_colored(Vec4 color, const char* value)
+    {
+        if (const auto print = function<void (*)(Vec4, const char*, ...)>("igTextColored")) {
+            print(color, "%s", value);
+        } else {
+            text(value);
+        }
+    }
+
     inline void spacing()
     {
         if (const auto add_spacing = function<void (*)()>("igSpacing")) {
@@ -128,6 +137,20 @@ namespace RangerAtlas::MenuFramework
     {
         if (const auto draw = function<void (*)(float, float)>("igSameLine")) {
             draw(0.0F, -1.0F);
+        }
+    }
+
+    inline void set_next_item_width(float width)
+    {
+        if (const auto set_width = function<void (*)(float)>("igSetNextItemWidth")) {
+            set_width(width);
+        }
+    }
+
+    inline void progress_bar(float fraction, Vec2 size, const char* overlay = nullptr)
+    {
+        if (const auto draw = function<void (*)(float, Vec2, const char*)>("igProgressBar")) {
+            draw(fraction, size, overlay);
         }
     }
 
@@ -233,6 +256,32 @@ namespace RangerAtlas::MenuFramework
     {
         if (const auto draw = function<void (*)(DrawList*, Vec2, float, std::uint32_t, int)>("ImDrawList_AddCircleFilled")) {
             draw(draw_list, center, radius, color, 20);
+        }
+    }
+
+    inline void draw_line(DrawList* draw_list, Vec2 start, Vec2 end, std::uint32_t color, float thickness = 1.0F)
+    {
+        if (const auto draw = function<void (*)(DrawList*, Vec2, Vec2, std::uint32_t, float)>("ImDrawList_AddLine")) {
+            draw(draw_list, start, end, color, thickness);
+        }
+    }
+
+    inline void draw_rect(
+        DrawList* draw_list,
+        Vec2 minimum,
+        Vec2 maximum,
+        std::uint32_t color,
+        float thickness = 1.0F)
+    {
+        if (const auto draw = function<void (*)(DrawList*, Vec2, Vec2, std::uint32_t, float, int, float)>("ImDrawList_AddRect")) {
+            draw(draw_list, minimum, maximum, color, 0.0F, 0, thickness);
+        }
+    }
+
+    inline void draw_text(DrawList* draw_list, Vec2 position, std::uint32_t color, const char* value)
+    {
+        if (const auto draw = function<void (*)(DrawList*, Vec2, std::uint32_t, const char*, const char*)>("ImDrawList_AddText_Vec2")) {
+            draw(draw_list, position, color, value, nullptr);
         }
     }
 

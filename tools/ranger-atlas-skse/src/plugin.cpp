@@ -336,7 +336,7 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse)
     }
 
     spdlog::info(
-        "Ranger Atlas loaded. Local integration is dormant until a post-load or new-game signal. Field Console build 0.11.2.");
+        "Ranger Atlas loaded. Local integration is dormant until a post-load or new-game signal. Field Console build 0.12.0.");
 
     return true;
 }

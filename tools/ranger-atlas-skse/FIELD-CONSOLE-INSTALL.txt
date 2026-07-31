@@ -1,4 +1,4 @@
-Ranger Atlas Field Console 0.11.2
+Ranger Atlas Field Console 0.12.0
 
 1. Download the RangerAtlas ZIP. In Vortex, use "Install From File", select
    the ZIP, then enable and deploy the Ranger Atlas mod.
@@ -17,8 +17,10 @@ Ranger Atlas Field Console 0.11.2
    Console. It captures the cursor so its tabs, buttons, and text fields work,
    while the multiplayer world continues running around you.
 
-6. Choose a Travel map size, then select "Travel view" to release Skyrim's
-   controls and leave the live map on screen while moving. Press F7 to close
+6. Choose a Travel View size, then select "Begin Travel View" to release
+   Skyrim's controls and leave the live map on screen while moving. Green
+   flags show official Trailmarks, the gold route points to the nearest one,
+   and its distance and compass direction remain visible. Press F7 to close
    it. Press F7 again whenever you need the interactive console.
 
 The package includes the compact Atlas map used by the Field Console. Keep the
