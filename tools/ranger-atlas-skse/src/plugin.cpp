@@ -6,10 +6,7 @@
 namespace
 {
     constexpr auto kCaptureInterval = std::chrono::seconds(5);
-    constexpr std::uint32_t kFieldConsoleKey = 0xD2;  // Insert keyboard scan code.
     constexpr std::uint32_t kFieldMenuKey = 0x41;  // F7 keyboard scan code.
-    constexpr std::uint32_t kFieldMarkKey = 0x42;  // F8 keyboard scan code.
-    constexpr std::uint32_t kFieldTrailmarkKey = 0x57;  // F11 keyboard scan code.
 
     std::atomic_bool g_world_ready = false;
     std::condition_variable_any g_capture_wake;
@@ -42,17 +39,6 @@ namespace
                     if (!RangerAtlas::FieldAtlasUI::OwnsInput()) {
                         RangerAtlas::FieldAtlasUI::Toggle();
                     }
-                    handled_any = true;
-                } else if (button->GetIDCode() == kFieldMarkKey) {
-                    RangerAtlas::LocalBridge::QueueFieldAction("mark_here");
-                    RE::DebugNotification("Ranger Atlas mark queued. Open the Atlas to finish it.");
-                    handled_any = true;
-                } else if (button->GetIDCode() == kFieldTrailmarkKey) {
-                    RangerAtlas::LocalBridge::QueueFieldAction("open_nearby_trailmark");
-                    RE::DebugNotification("Ranger Atlas Trailmark request queued.");
-                    handled_any = true;
-                } else if (button->GetIDCode() == kFieldConsoleKey) {
-                    RangerAtlas::FieldAtlasUI::Toggle();
                     handled_any = true;
                 }
             }
@@ -108,7 +94,7 @@ namespace
 
         spdlog::info(
             "Keizaal world confirmed; Ranger Atlas local bridge is active. "
-            "Field Console initialization is deferred until the first F7 or Insert press.");
+            "Field Console initialization is deferred until the first F7 press.");
         capture_player_position();
     }
 
@@ -331,7 +317,7 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse)
     }
 
     spdlog::info(
-        "Ranger Atlas loaded. Local integration is dormant until a post-load or new-game signal. Field Console build 0.10.3.");
+        "Ranger Atlas loaded. Local integration is dormant until a post-load or new-game signal. Field Console build 0.11.0.");
 
     return true;
 }

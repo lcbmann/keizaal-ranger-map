@@ -14,6 +14,12 @@ namespace RangerAtlas::FieldAtlasUI
             const char* label;
         };
 
+        struct TravelSizeOption
+        {
+            const char* label;
+            MenuFramework::Vec2 map_size;
+        };
+
         constexpr std::array mark_categories{
             MarkCategory{ "landmark", "Landmark" },
             MarkCategory{ "cache", "Cache" },
@@ -31,8 +37,13 @@ namespace RangerAtlas::FieldAtlasUI
         constexpr float atlas_map_width = 8192.0F;
         constexpr float atlas_map_height = 6144.0F;
         constexpr float trailmark_radius = 96.0F;
-        constexpr MenuFramework::Vec2 interactive_map_size{ 484.0F, 363.0F };
-        constexpr MenuFramework::Vec2 travel_map_size{ 360.0F, 270.0F };
+        constexpr float atlas_units_to_meters = 0.79F;
+        constexpr MenuFramework::Vec2 interactive_map_size{ 640.0F, 480.0F };
+        constexpr std::array travel_sizes{
+            TravelSizeOption{ "Compact", { 360.0F, 270.0F } },
+            TravelSizeOption{ "Standard", { 480.0F, 360.0F } },
+            TravelSizeOption{ "Large", { 640.0F, 480.0F } },
+        };
         constexpr std::uint32_t field_menu_key = 0x41;
 
         MenuFramework::Window* g_window = nullptr;
@@ -47,6 +58,7 @@ namespace RangerAtlas::FieldAtlasUI
         std::array<char, 801> g_mark_notes{};
         std::array<char, 1801> g_drop_message{};
         std::size_t g_mark_category = 0;
+        std::size_t g_travel_size = 0;
         std::string g_status = "Ready.";
         void* g_map_texture = nullptr;
 
@@ -258,19 +270,68 @@ namespace RangerAtlas::FieldAtlasUI
             };
         }
 
-        void draw_player_arrow(MenuFramework::DrawList* draw_list, MenuFramework::Vec2 center, float heading)
+        void draw_player_marker(MenuFramework::DrawList* draw_list, MenuFramework::Vec2 center, float heading)
         {
             constexpr float pi = 3.14159265358979323846F;
             const auto radians = heading * pi / 180.0F;
             const MenuFramework::Vec2 direction{ std::sin(radians), -std::cos(radians) };
             const MenuFramework::Vec2 right{ std::cos(radians), std::sin(radians) };
-            const MenuFramework::Vec2 tip{ center.x + direction.x * 11.0F, center.y + direction.y * 11.0F };
-            const MenuFramework::Vec2 tail{ center.x - direction.x * 7.0F, center.y - direction.y * 7.0F };
-            const MenuFramework::Vec2 left{ tail.x - right.x * 6.0F, tail.y - right.y * 6.0F };
-            const MenuFramework::Vec2 right_point{ tail.x + right.x * 6.0F, tail.y + right.y * 6.0F };
+            const MenuFramework::Vec2 outer_tip{ center.x + direction.x * 15.0F, center.y + direction.y * 15.0F };
+            const MenuFramework::Vec2 outer_tail{ center.x - direction.x * 8.0F, center.y - direction.y * 8.0F };
+            const MenuFramework::Vec2 outer_left{ outer_tail.x - right.x * 8.0F, outer_tail.y - right.y * 8.0F };
+            const MenuFramework::Vec2 outer_right{ outer_tail.x + right.x * 8.0F, outer_tail.y + right.y * 8.0F };
+            const MenuFramework::Vec2 inner_tip{ center.x + direction.x * 12.0F, center.y + direction.y * 12.0F };
+            const MenuFramework::Vec2 inner_tail{ center.x - direction.x * 5.0F, center.y - direction.y * 5.0F };
+            const MenuFramework::Vec2 inner_left{ inner_tail.x - right.x * 5.0F, inner_tail.y - right.y * 5.0F };
+            const MenuFramework::Vec2 inner_right{ inner_tail.x + right.x * 5.0F, inner_tail.y + right.y * 5.0F };
 
-            MenuFramework::draw_circle(draw_list, center, 10.0F, rgba(255, 247, 205), 2.0F);
-            MenuFramework::draw_triangle_filled(draw_list, tip, left, right_point, rgba(62, 166, 203));
+            MenuFramework::draw_circle_filled(draw_list, center, 12.0F, rgba(24, 31, 27, 235));
+            MenuFramework::draw_circle(draw_list, center, 12.0F, rgba(231, 208, 142), 2.0F);
+            MenuFramework::draw_triangle_filled(draw_list, outer_tip, outer_left, outer_right, rgba(24, 31, 27, 255));
+            MenuFramework::draw_triangle_filled(draw_list, inner_tip, inner_left, inner_right, rgba(73, 170, 191, 255));
+            MenuFramework::draw_circle_filled(draw_list, center, 2.6F, rgba(240, 226, 181, 255));
+        }
+
+        std::string compass_direction(MenuFramework::Vec2 from, MenuFramework::Vec2 to, bool abbreviated)
+        {
+            constexpr float pi = 3.14159265358979323846F;
+            constexpr std::array short_names{ "N", "NE", "E", "SE", "S", "SW", "W", "NW" };
+            constexpr std::array long_names{
+                "north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"
+            };
+            // Atlas Y increases southward, so invert its delta for compass bearings.
+            auto degrees = std::atan2(to.x - from.x, from.y - to.y) * 180.0F / pi;
+            if (degrees < 0.0F) {
+                degrees += 360.0F;
+            }
+            const auto index = static_cast<std::size_t>(std::lround(degrees / 45.0F)) % short_names.size();
+            return abbreviated ? short_names[index] : long_names[index];
+        }
+
+        std::string navigation_readout(std::string_view raw_state, std::string_view nearest, bool abbreviated)
+        {
+            const auto distance = static_cast<float>(json_number(nearest, "distance", -1.0));
+            if (distance < 0.0F) {
+                return {};
+            }
+            const auto meters = (std::max)(5, static_cast<int>(std::lround(distance * atlas_units_to_meters / 5.0F) * 5));
+            std::string readout = std::to_string(meters) + " m";
+
+            const auto player_source = json_object(raw_state, "player_point");
+            const auto point_source = json_object(nearest, "point");
+            const MenuFramework::Vec2 player{
+                static_cast<float>(json_number(player_source, "x", -1.0)),
+                static_cast<float>(json_number(player_source, "y", -1.0)),
+            };
+            const MenuFramework::Vec2 point{
+                static_cast<float>(json_number(point_source, "x", -1.0)),
+                static_cast<float>(json_number(point_source, "y", -1.0)),
+            };
+            if (player.x >= 0.0F && player.y >= 0.0F && point.x >= 0.0F && point.y >= 0.0F) {
+                readout += abbreviated ? " " : " to the ";
+                readout += compass_direction(player, point, abbreviated);
+            }
+            return readout;
         }
 
         std::uint32_t marker_color(std::string_view category)
@@ -377,7 +438,7 @@ namespace RangerAtlas::FieldAtlasUI
             }
 
             if (player.x >= 0.0F && player.y >= 0.0F) {
-                draw_player_arrow(
+                draw_player_marker(
                     draw_list,
                     map_position(origin, player, display_size),
                     static_cast<float>(json_number(player_source, "heading", 0.0)));
@@ -390,7 +451,7 @@ namespace RangerAtlas::FieldAtlasUI
             g_status = "Sent to the Ranger Atlas.";
         }
 
-        void render_trailmark(std::string_view nearest)
+        void render_trailmark(std::string_view raw_state, std::string_view nearest)
         {
             if (nearest.empty()) {
                 muted_text("No official Trailmark is available.");
@@ -398,12 +459,11 @@ namespace RangerAtlas::FieldAtlasUI
             }
 
             const auto title = json_string(nearest, "title", "Nearby Trailmark");
-            const auto distance = json_number(nearest, "distance");
             const auto within_range = json_bool(nearest, "within_range");
             accent_text(within_range ? "TRAILMARK IN RANGE" : "NEAREST TRAILMARK");
             MenuFramework::text(title.c_str());
-            muted_text((std::to_string(static_cast<int>(std::round(distance))) +
-                (within_range ? " atlas units away - within reach" : " atlas units away")).c_str());
+            const auto navigation = navigation_readout(raw_state, nearest, false);
+            muted_text((navigation + (within_range ? " - within reach" : "")).c_str());
 
             const auto notes = json_string(nearest, "notes");
             if (!notes.empty()) {
@@ -436,7 +496,7 @@ namespace RangerAtlas::FieldAtlasUI
 
             MenuFramework::separator();
             accent_text("LEAVE A FIELD DROP");
-            MenuFramework::input_text_multiline("##field-drop", g_drop_message.data(), g_drop_message.size(), { 484.0F, 86.0F });
+            MenuFramework::input_text_multiline("##field-drop", g_drop_message.data(), g_drop_message.size(), { 640.0F, 86.0F });
             if (MenuFramework::button("Send field drop", { 180.0F, 0.0F })) {
                 const std::string message(g_drop_message.data());
                 if (message.empty()) {
@@ -463,7 +523,7 @@ namespace RangerAtlas::FieldAtlasUI
                 MenuFramework::end_combo();
             }
             accent_text("NOTES");
-            MenuFramework::input_text_multiline("##mark-notes", g_mark_notes.data(), g_mark_notes.size(), { 484.0F, 90.0F });
+            MenuFramework::input_text_multiline("##mark-notes", g_mark_notes.data(), g_mark_notes.size(), { 640.0F, 90.0F });
             if (MenuFramework::button("Save mark to Atlas", { 180.0F, 0.0F })) {
                 const std::string title(g_mark_title.data());
                 if (title.empty()) {
@@ -489,6 +549,13 @@ namespace RangerAtlas::FieldAtlasUI
             g_status = "Travel view active. Press F7 to close it.";
         }
 
+        void keep_world_running()
+        {
+            if (const auto main = RE::Main::GetSingleton()) {
+                main->freezeTime = false;
+            }
+        }
+
         bool __stdcall handle_menu_input(RE::InputEvent* event)
         {
             const auto button = event ? event->AsButtonEvent() : nullptr;
@@ -503,12 +570,23 @@ namespace RangerAtlas::FieldAtlasUI
         void __stdcall render_window()
         {
             const auto travel_mode = g_travel_mode.load();
+            const auto travel_map_size = travel_sizes[g_travel_size].map_size;
             bool open = true;
             MenuFramework::set_next_window_pos({ 34.0F, 64.0F });
-            MenuFramework::set_next_window_size(travel_mode ? MenuFramework::Vec2{ 406.0F, 0.0F } : MenuFramework::Vec2{ 530.0F, 0.0F });
+            MenuFramework::set_next_window_size(
+                travel_mode ? MenuFramework::Vec2{ travel_map_size.x + 46.0F, 0.0F } : MenuFramework::Vec2{ 686.0F, 0.0F });
+
+            // Retain Menu Framework cursor capture without freezing the multiplayer world.
+            if (!travel_mode) {
+                keep_world_running();
+            }
             if (!MenuFramework::begin("Ranger Atlas##RangerAtlasFieldConsole", &open)) {
                 MenuFramework::end();
                 return;
+            }
+
+            if (!travel_mode) {
+                keep_world_running();
             }
 
             if (!open && g_window) {
@@ -527,12 +605,12 @@ namespace RangerAtlas::FieldAtlasUI
                     render_map(raw_state, travel_map_size);
                     if (!nearest.empty()) {
                         const auto title = json_string(nearest, "title", "Trailmark");
-                        const auto distance = static_cast<int>(std::round(json_number(nearest, "distance")));
+                        const auto navigation = navigation_readout(raw_state, nearest, true);
                         if (json_bool(nearest, "within_range")) {
-                            accent_text(("IN RANGE - " + title).c_str());
+                            accent_text(("IN RANGE - " + title + " | " + navigation).c_str());
                             muted_text("Press F7 twice to reopen the field controls.");
                         } else {
-                            muted_text((title + " - " + std::to_string(distance) + " away").c_str());
+                            muted_text((title + " | " + navigation).c_str());
                         }
                     }
                 } else {
@@ -548,7 +626,7 @@ namespace RangerAtlas::FieldAtlasUI
                 enable_travel_mode();
             }
             MenuFramework::same_line();
-            muted_text("F7 closes");
+            muted_text("Keep this map open while travelling");
             MenuFramework::separator();
 
             if (!ready) {
@@ -561,12 +639,25 @@ namespace RangerAtlas::FieldAtlasUI
             const auto ranger_name = json_string(raw_state, "ranger_name", "Unnamed Ranger");
             muted_text((ranger_name + " - linked to Skyrim").c_str());
             render_map(raw_state, interactive_map_size);
-            muted_text("Blue arrow: you   Green/gold: Trailmark   Small dots: Atlas marks");
+            if (!nearest.empty()) {
+                const auto title = json_string(nearest, "title", "Trailmark");
+                muted_text(("Nearest: " + title + " | " + navigation_readout(raw_state, nearest, true)).c_str());
+            }
+
+            accent_text("TRAVEL MAP SIZE");
+            if (MenuFramework::begin_combo("##travel-map-size", travel_sizes[g_travel_size].label)) {
+                for (std::size_t index = 0; index < travel_sizes.size(); ++index) {
+                    if (MenuFramework::selectable(travel_sizes[index].label, index == g_travel_size)) {
+                        g_travel_size = index;
+                    }
+                }
+                MenuFramework::end_combo();
+            }
             MenuFramework::separator();
 
             if (MenuFramework::begin_tab_bar("##field-console-tabs")) {
                 if (MenuFramework::begin_tab_item("Field")) {
-                    render_trailmark(nearest);
+                    render_trailmark(raw_state, nearest);
                     MenuFramework::end_tab_item();
                 }
                 if (MenuFramework::begin_tab_item("Mark current position")) {
