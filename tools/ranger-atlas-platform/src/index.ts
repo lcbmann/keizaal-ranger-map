@@ -1,9 +1,11 @@
 import {
+  EventHandle,
   Game,
   HttpClient,
   ObjectReference,
   on,
   printConsole,
+  unsubscribe,
 } from "skyrimPlatform";
 
 const PLUGIN = "RangerAtlasSkyrimPlatform";
@@ -46,6 +48,7 @@ let createInFlight = false;
 let nextPollAt = 0;
 let createIndex = 0;
 let worldGeneration = 0;
+let mapSyncHandle: EventHandle | null = null;
 
 function log(message: string): void {
   printConsole(`[${PLUGIN}] ${message}`);
@@ -244,41 +247,8 @@ async function pollMarkerSnapshot(): Promise<void> {
   }
 }
 
-on("preLoadGame", () => {
-  worldGeneration += 1;
-  worldReady = false;
-  nativeMapOpen = false;
-  nativeMarkersVisible = false;
-  desiredMarkers = [];
-  desiredKey = "";
-  // SkyMP owns the load transition. Do not touch references while Skyrim is
-  // unloading its current world.
-  hideNativeMarkers();
-  Object.keys(activeMarkers).forEach((id) => delete activeMarkers[id]);
-});
-
-on("menuOpen", (event) => {
-  if (event.name !== MAP_MENU_NAME) {
-    return;
-  }
-  nativeMapOpen = true;
-  nativeMarkersVisible = false;
-  nextPollAt = 0;
-  log("Native Skyrim map opened; Trailmark sync is active.");
-});
-
-on("menuClose", (event) => {
-  if (event.name !== MAP_MENU_NAME) {
-    return;
-  }
-  nativeMapOpen = false;
-  hideNativeMarkers();
-  log("Native Skyrim map closed; temporary Trailmark markers disabled.");
-});
-
-on("update", () => {
+function updateMapSync(): void {
   // Do not touch Skyrim's Game API or the local bridge during title/login.
-  // MapMenu only opens after the player has entered the game world.
   if (!nativeMapOpen) {
     return;
   }
@@ -308,6 +278,44 @@ on("update", () => {
   for (let count = 0; count < MARKER_BATCH_SIZE; count += 1) {
     void createNextMarker();
   }
+}
+
+function disarmMapSync(): void {
+  if (mapSyncHandle) {
+    unsubscribe(mapSyncHandle);
+    mapSyncHandle = null;
+  }
+
+  worldGeneration += 1;
+  worldReady = false;
+  nativeMapOpen = false;
+  nativeMarkersVisible = false;
+  desiredMarkers = [];
+  desiredKey = "";
+  hideNativeMarkers();
+  Object.keys(activeMarkers).forEach((id) => delete activeMarkers[id]);
+}
+
+on("menuOpen", (event) => {
+  if (event.name !== MAP_MENU_NAME) {
+    return;
+  }
+
+  nativeMapOpen = true;
+  nativeMarkersVisible = false;
+  nextPollAt = 0;
+  if (!mapSyncHandle) {
+    mapSyncHandle = on("update", updateMapSync);
+  }
+  log("Native Skyrim map opened; Trailmark sync is active.");
+});
+
+on("menuClose", (event) => {
+  if (event.name !== MAP_MENU_NAME) {
+    return;
+  }
+  disarmMapSync();
+  log("Native Skyrim map closed; temporary Trailmark markers disabled.");
 });
 
 log("Loaded. Native Trailmark sync is dormant until the Skyrim map is opened.");
