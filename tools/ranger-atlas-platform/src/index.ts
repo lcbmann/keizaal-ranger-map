@@ -42,6 +42,7 @@ let pollInFlight = false;
 let createInFlight = false;
 let nextPollAt = 0;
 let createIndex = 0;
+let worldGeneration = 0;
 
 function log(message: string): void {
   printConsole(`[${PLUGIN}] ${message}`);
@@ -76,18 +77,22 @@ function atlasToWorld(atlasX: number, atlasY: number): { x: number; y: number } 
   return { x: cellX * 4096, y: cellY * 4096 };
 }
 
-function disableMarker(marker: ActiveMarker): void {
+function disableMarker(marker: ActiveMarker, deleteReference = true): void {
   try {
     marker.reference.disableNoWait(false);
-    void marker.reference.delete();
+    if (deleteReference) {
+      void marker.reference.delete().catch((error) => {
+        log(`Marker delete failed: ${String(error)}`);
+      });
+    }
   } catch (error) {
     log(`Marker cleanup failed: ${String(error)}`);
   }
 }
 
-function clearNativeMarkers(): void {
+function clearNativeMarkers(deleteReferences = true): void {
   Object.keys(activeMarkers).forEach((id) => {
-    disableMarker(activeMarkers[id]);
+    disableMarker(activeMarkers[id], deleteReferences);
     delete activeMarkers[id];
   });
   createIndex = 0;
@@ -159,6 +164,7 @@ async function createNextMarker(): Promise<void> {
   }
 
   createInFlight = true;
+  const generation = worldGeneration;
   try {
     const reference = player.placeAtMe(template, 1, true, false);
     if (!reference) {
@@ -166,6 +172,9 @@ async function createNextMarker(): Promise<void> {
     }
 
     await reference.setPosition(position.x, position.y, player.getPositionZ());
+    if (!worldReady || generation !== worldGeneration) {
+      return;
+    }
     reference.setDisplayName(marker.title, true);
     reference.addToMap(false);
     activeMarkers[marker.id] = {
@@ -209,13 +218,24 @@ async function pollMarkerSnapshot(): Promise<void> {
 }
 
 on("preLoadGame", () => {
+  worldGeneration += 1;
   worldReady = false;
   desiredMarkers = [];
   desiredKey = "";
-  clearNativeMarkers();
+  // SkyMP owns the load transition. Disable references here, but do not call
+  // asynchronous deletion while Skyrim is unloading its current world.
+  clearNativeMarkers(false);
 });
 
 on("update", () => {
+  if (worldReady && !isOutdoorTamriel()) {
+    worldGeneration += 1;
+    worldReady = false;
+    desiredKey = "";
+    clearNativeMarkers(false);
+    return;
+  }
+
   if (!worldReady) {
     if (!isOutdoorTamriel()) {
       return;

@@ -351,6 +351,9 @@
   let guildAtlasLastCheckedAt = 0;
   let overwatchPollTimer = null;
   let trailmarkDropPollTimer = null;
+  let nativeMarkerSyncInFlight = false;
+  let nativeMarkerSyncQueued = false;
+  let nativeMarkerPostChain = Promise.resolve();
 
   init();
 
@@ -579,6 +582,7 @@
         elements.livePositionInput.checked = false;
         void removeSharedLivePosition();
         stopLivePositionPolling();
+        void clearNativeTrailmarks();
         setStatus("Live position stopped because Signed As is empty");
       }
       if (
@@ -590,6 +594,8 @@
         state.sharePositionEnabled = true;
         elements.livePositionInput.checked = true;
         startLivePositionPolling();
+        startFieldActionPolling();
+        void syncNativeTrailmarks(true);
       }
       saveState();
       updateTrailmarkVisitControls();
@@ -806,21 +812,27 @@
     }
   }
 
-  async function postNativeMarkerSnapshot(payload) {
-    const response = await fetch(NATIVE_MARKERS_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      cache: "no-store",
-      credentials: "omit",
-      mode: "cors",
-      body: JSON.stringify(payload),
-    });
-    if (!response.ok) {
-      throw new Error(`Native marker bridge returned ${response.status}`);
-    }
+  function postNativeMarkerSnapshot(payload) {
+    const send = async () => {
+      const response = await fetch(NATIVE_MARKERS_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        cache: "no-store",
+        credentials: "omit",
+        mode: "cors",
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) {
+        throw new Error(`Native marker bridge returned ${response.status}`);
+      }
+    };
+    const request = nativeMarkerPostChain.then(send, send);
+    nativeMarkerPostChain = request.catch(() => undefined);
+    return request;
   }
 
   async function clearNativeTrailmarks() {
+    nativeMarkerSyncQueued = false;
     try {
       await postNativeMarkerSnapshot({ version: 1, markers: [] });
       state.nativeMarkerSyncKey = "";
@@ -831,6 +843,10 @@
 
   async function syncNativeTrailmarks(force = false) {
     if (!state.livePositionEnabled) {
+      return;
+    }
+    if (nativeMarkerSyncInFlight) {
+      nativeMarkerSyncQueued = true;
       return;
     }
 
@@ -850,12 +866,21 @@
       return;
     }
 
+    nativeMarkerSyncInFlight = true;
     try {
       await postNativeMarkerSnapshot(payload);
       state.nativeMarkerSyncKey = syncKey;
     } catch (error) {
       state.nativeMarkerSyncKey = "";
       console.debug("Native Skyrim Trailmark sync unavailable", error);
+    } finally {
+      nativeMarkerSyncInFlight = false;
+      if (nativeMarkerSyncQueued) {
+        nativeMarkerSyncQueued = false;
+        if (state.livePositionEnabled) {
+          void syncNativeTrailmarks(true);
+        }
+      }
     }
   }
 
@@ -1028,6 +1053,7 @@
           throw new Error("Local bridge returned an invalid position");
         }
         applyLivePositionSnapshot(snapshot);
+        void syncNativeTrailmarks();
       }
     } catch (error) {
       if (error.name !== "AbortError" || state.livePositionEnabled) {
@@ -1431,6 +1457,7 @@
       elements.livePositionInput.checked = true;
       startLivePositionPolling();
       startFieldActionPolling();
+      void syncNativeTrailmarks(true);
     }
     if (!enabled) {
       void leaveTrailmarkVisit();
