@@ -136,7 +136,14 @@ namespace
         std::filesystem::path output_directory;
         if (const auto skse_directory = SKSE::log::log_directory()) {
             output_directory = *skse_directory;
-        } else {
+            std::error_code path_error;
+            if (std::filesystem::is_regular_file(output_directory, path_error) ||
+                output_directory.extension() == ".log") {
+                output_directory = output_directory.parent_path();
+            }
+        }
+
+        auto use_standard_directory = [&output_directory]() {
             char* user_profile = nullptr;
             std::size_t user_profile_size = 0;
             if (_dupenv_s(&user_profile, &user_profile_size, "USERPROFILE") == 0 &&
@@ -145,14 +152,24 @@ namespace
                     "Documents" / "My Games" / "Skyrim Special Edition" / "SKSE";
             }
             std::free(user_profile);
-            if (output_directory.empty()) {
-                return;
-            }
+        };
+
+        if (output_directory.empty()) {
+            use_standard_directory();
         }
 
         std::error_code directory_error;
         std::filesystem::create_directories(output_directory, directory_error);
         if (directory_error) {
+            output_directory.clear();
+            use_standard_directory();
+            directory_error.clear();
+            std::filesystem::create_directories(output_directory, directory_error);
+        }
+        if (output_directory.empty() || directory_error) {
+            SKSE::log::error(
+                "Ranger Atlas could not prepare a diagnostic directory: {}",
+                directory_error ? directory_error.message() : "no directory available");
             return;
         }
 
@@ -333,7 +350,7 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse)
     }
 
     spdlog::info(
-        "Ranger Atlas loaded. Local integration is dormant until a post-load or new-game signal. Diagnostic build 0.7.10.");
+        "Ranger Atlas loaded. Local integration is dormant until a post-load or new-game signal. Diagnostic build 0.7.11.");
 
     return true;
 }
