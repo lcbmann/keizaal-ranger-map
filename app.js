@@ -2611,11 +2611,12 @@
       return;
     }
 
+    const draft = getDraftFeature();
+    const draftIsMarker = state.mode === "marker" || draft?.type === "marker";
     const category = state.mode === "range" ? categoryById.range : categoryById.route;
     const latLngs = state.drawPoints.map((point) => [point.y, point.x]);
 
-    if (state.mode === "marker") {
-      const draft = getDraftFeature();
+    if (draftIsMarker && draft) {
       const point = draft.points[0];
       L.marker([point.y, point.x], {
         icon: L.divIcon({
@@ -2731,7 +2732,7 @@
   }
 
   function finishDrawing() {
-    if (state.mode === "marker") {
+    if (state.mode === "marker" || state.draftFeature?.type === "marker") {
       if (!state.draftFeature && state.drawPoints.length < 1) {
         setStatus("Place a draft mark first");
         return;
@@ -2804,7 +2805,7 @@
   }
 
   function canSaveDraft() {
-    if (state.mode === "marker") {
+    if (state.mode === "marker" || state.draftFeature?.type === "marker") {
       return Boolean(state.draftFeature);
     }
     if (state.mode === "range") {

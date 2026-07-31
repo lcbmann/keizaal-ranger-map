@@ -12,7 +12,7 @@ namespace RangerAtlas::LocalBridge
         std::string g_snapshot;
         std::mutex g_events_mutex;
         std::deque<std::string> g_events;
-        std::uint64_t g_next_event_id = 1;
+        std::uint64_t g_next_event_id = 0;
         std::jthread g_server;
 
         std::string get_snapshot()
@@ -238,14 +238,17 @@ namespace RangerAtlas::LocalBridge
     void QueueFieldAction(std::string action)
     {
         std::scoped_lock lock(g_events_mutex);
-        const auto event_id = g_next_event_id++;
+        const auto now_ms = static_cast<std::uint64_t>(
+            std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::system_clock::now().time_since_epoch())
+                .count());
+        const auto event_id = (std::max)(now_ms, g_next_event_id + 1);
+        g_next_event_id = event_id;
         std::ostringstream event;
         event << R"({"id":)" << event_id
               << R"(,"type":")" << action
               << R"(","created_at_unix_ms":)"
-              << std::chrono::duration_cast<std::chrono::milliseconds>(
-                     std::chrono::system_clock::now().time_since_epoch())
-                     .count();
+              << now_ms;
 
         const auto snapshot = get_snapshot();
         if (!snapshot.empty()) {
