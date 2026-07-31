@@ -35,6 +35,7 @@
   const TRAILMARK_ACCESS_POLL_LIMIT = 30;
   const GUILD_ATLAS_REFRESH_MS = 5 * 60 * 1000;
   const GUILD_ATLAS_CHECK_COOLDOWN_MS = 30 * 1000;
+  const LOCAL_POSITION_POLL_INTERVAL_MS = 250;
   const LIVE_POSITION_SHARE_INTERVAL_MS = 10 * 1000;
   const OVERWATCH_POLL_MS = 5 * 1000;
   const TRAILMARK_DROP_POLL_MS = 4 * 1000;
@@ -1306,7 +1307,7 @@
         livePositionRequest = null;
       }
       if (state.livePositionEnabled) {
-        livePositionPollTimer = window.setTimeout(pollLivePosition, 2000);
+        livePositionPollTimer = window.setTimeout(pollLivePosition, LOCAL_POSITION_POLL_INTERVAL_MS);
       }
     }
   }
@@ -1336,7 +1337,7 @@
         const deltaX = nextPoint.x - previousPoint.x;
         const deltaY = nextPoint.y - previousPoint.y;
         if (Math.hypot(deltaX, deltaY) >= 0.75) {
-          state.livePositionHeading = (Math.atan2(deltaX, deltaY) * 180) / Math.PI;
+          state.livePositionHeading = (Math.atan2(deltaX, -deltaY) * 180) / Math.PI;
         }
       }
       state.livePositionPoint = {
@@ -1409,7 +1410,6 @@
   }
 
   function renderLivePosition() {
-    renderTrailmarkVisitRadii();
     if (!state.livePositionEnabled || !state.livePositionPoint) {
       livePositionLayer.clearLayers();
       livePositionMarker = null;
@@ -1426,7 +1426,7 @@
         pane: "live-position-pane",
         zIndexOffset: 100000,
         icon: L.divIcon({
-          className: "",
+          className: "live-position-leaflet-marker",
           html: `
             <div class="live-position-marker" style="--heading:0deg">
               <svg class="live-position-arrow" viewBox="0 0 32 32" aria-hidden="true">

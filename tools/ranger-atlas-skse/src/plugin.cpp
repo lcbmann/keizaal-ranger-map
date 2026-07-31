@@ -5,7 +5,8 @@
 
 namespace
 {
-    constexpr auto kCaptureInterval = std::chrono::seconds(5);
+    constexpr auto kCaptureInterval = std::chrono::milliseconds(250);
+    constexpr auto kDiagnosticInterval = std::chrono::seconds(5);
     constexpr std::uint32_t kFieldMenuKey = 0x41;  // F7 keyboard scan code.
 
     std::atomic_bool g_world_ready = false;
@@ -14,6 +15,8 @@ namespace
     std::jthread g_capture_worker;
     std::optional<std::filesystem::path> g_output_directory;
     std::atomic_bool g_controls_registered = false;
+    std::atomic_bool g_capture_pending = false;
+    std::chrono::steady_clock::time_point g_last_diagnostic_capture{};
 
     void capture_player_position();
 
@@ -167,19 +170,9 @@ namespace
     void write_position_snapshot(
         const RE::NiPoint3& position,
         const RE::TESObjectCELL* cell,
-        const RE::TESWorldSpace* worldspace)
+        const RE::TESWorldSpace* worldspace,
+        bool persist_to_disk)
     {
-        if (!g_output_directory) {
-            return;
-        }
-
-        const auto snapshot_path = *g_output_directory / "RangerAtlasPosition.json";
-        std::ofstream snapshot(snapshot_path, std::ios::trunc);
-        if (!snapshot) {
-            spdlog::warn("Could not write position snapshot to {}", snapshot_path.string());
-            return;
-        }
-
         const auto updated_at = std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock::now().time_since_epoch()).count();
 
@@ -198,16 +191,35 @@ namespace
             << "}\n";
 
         const auto snapshot_json = snapshot_text.str();
-        snapshot << snapshot_json;
         RangerAtlas::LocalBridge::UpdateSnapshot(snapshot_json);
+
+        if (!persist_to_disk || !g_output_directory) {
+            return;
+        }
+
+        const auto snapshot_path = *g_output_directory / "RangerAtlasPosition.json";
+        std::ofstream snapshot(snapshot_path, std::ios::trunc);
+        if (!snapshot) {
+            spdlog::warn("Could not write position snapshot to {}", snapshot_path.string());
+            return;
+        }
+        snapshot << snapshot_json;
     }
 
     void capture_player_position()
     {
+        const auto now = std::chrono::steady_clock::now();
+        const auto emit_diagnostics = now - g_last_diagnostic_capture >= kDiagnosticInterval;
+        if (emit_diagnostics) {
+            g_last_diagnostic_capture = now;
+        }
+
         const auto player = RE::PlayerCharacter::GetSingleton();
         const auto cell = player ? player->GetParentCell() : nullptr;
         if (!player || !cell) {
-            spdlog::warn("Position capture skipped because the player is not in a loaded cell.");
+            if (emit_diagnostics) {
+                spdlog::warn("Position capture skipped because the player is not in a loaded cell.");
+            }
             return;
         }
 
@@ -217,19 +229,21 @@ namespace
         const auto worldspace_name =
             worldspace && worldspace->GetName() ? worldspace->GetName() : "";
 
-        spdlog::info(
-            "Player position: x={:.3f}, y={:.3f}, z={:.3f}, cell=\"{}\" [{:08X}], "
-            "worldspace=\"{}\" [{:08X}], interior={}",
-            position.x,
-            position.y,
-            position.z,
-            cell_name,
-            cell->GetFormID(),
-            worldspace_name,
-            worldspace ? worldspace->GetFormID() : 0,
-            cell->IsInteriorCell());
+        if (emit_diagnostics) {
+            spdlog::info(
+                "Player position: x={:.3f}, y={:.3f}, z={:.3f}, cell=\"{}\" [{:08X}], "
+                "worldspace=\"{}\" [{:08X}], interior={}",
+                position.x,
+                position.y,
+                position.z,
+                cell_name,
+                cell->GetFormID(),
+                worldspace_name,
+                worldspace ? worldspace->GetFormID() : 0,
+                cell->IsInteriorCell());
+        }
 
-        write_position_snapshot(position, cell, worldspace);
+        write_position_snapshot(position, cell, worldspace, emit_diagnostics);
     }
 
     void capture_loop(std::stop_token stop_token)
@@ -249,9 +263,14 @@ namespace
 
             if (const auto tasks = SKSE::GetTaskInterface()) {
                 if (g_world_ready.load()) {
-                    tasks->AddTask([] {
-                        capture_player_position();
-                    });
+                    if (!g_capture_pending.exchange(true)) {
+                        tasks->AddTask([] {
+                            if (g_world_ready.load()) {
+                                capture_player_position();
+                            }
+                            g_capture_pending = false;
+                        });
+                    }
                 } else {
                     tasks->AddTask(try_initialize_world);
                 }
@@ -266,7 +285,7 @@ namespace
         }
 
         g_capture_worker = std::jthread(capture_loop);
-        spdlog::info("Continuous local position tracker started with a five-second interval.");
+        spdlog::info("Continuous local position tracker started with a 250-millisecond interval.");
     }
 
     void on_skse_message(SKSE::MessagingInterface::Message* message)
@@ -317,7 +336,7 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse)
     }
 
     spdlog::info(
-        "Ranger Atlas loaded. Local integration is dormant until a post-load or new-game signal. Field Console build 0.11.0.");
+        "Ranger Atlas loaded. Local integration is dormant until a post-load or new-game signal. Field Console build 0.11.1.");
 
     return true;
 }

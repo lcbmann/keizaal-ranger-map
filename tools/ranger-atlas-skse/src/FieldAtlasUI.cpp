@@ -61,6 +61,9 @@ namespace RangerAtlas::FieldAtlasUI
         std::size_t g_travel_size = 0;
         std::string g_status = "Ready.";
         void* g_map_texture = nullptr;
+        MenuFramework::Vec2 g_displayed_player{ -1.0F, -1.0F };
+        float g_displayed_heading = 0.0F;
+        std::chrono::steady_clock::time_point g_last_player_render{};
 
         std::uint32_t rgba(std::uint8_t red, std::uint8_t green, std::uint8_t blue, std::uint8_t alpha = 255)
         {
@@ -292,6 +295,29 @@ namespace RangerAtlas::FieldAtlasUI
             MenuFramework::draw_circle_filled(draw_list, center, 2.6F, rgba(240, 226, 181, 255));
         }
 
+        MenuFramework::Vec2 smooth_player_position(MenuFramework::Vec2 target, float target_heading)
+        {
+            const auto now = std::chrono::steady_clock::now();
+            const auto elapsed = std::chrono::duration<float>(now - g_last_player_render).count();
+            g_last_player_render = now;
+
+            const auto needs_snap = g_displayed_player.x < 0.0F || g_displayed_player.y < 0.0F ||
+                elapsed <= 0.0F || elapsed > 0.75F ||
+                std::hypot(target.x - g_displayed_player.x, target.y - g_displayed_player.y) > 500.0F;
+            if (needs_snap) {
+                g_displayed_player = target;
+                g_displayed_heading = target_heading;
+                return g_displayed_player;
+            }
+
+            const auto blend = 1.0F - std::exp(-12.0F * elapsed);
+            g_displayed_player.x += (target.x - g_displayed_player.x) * blend;
+            g_displayed_player.y += (target.y - g_displayed_player.y) * blend;
+            const auto heading_delta = std::remainder(target_heading - g_displayed_heading, 360.0F);
+            g_displayed_heading += heading_delta * blend;
+            return g_displayed_player;
+        }
+
         std::string compass_direction(MenuFramework::Vec2 from, MenuFramework::Vec2 to, bool abbreviated)
         {
             constexpr float pi = 3.14159265358979323846F;
@@ -438,10 +464,15 @@ namespace RangerAtlas::FieldAtlasUI
             }
 
             if (player.x >= 0.0F && player.y >= 0.0F) {
+                const auto displayed_player = smooth_player_position(
+                    player,
+                    static_cast<float>(json_number(player_source, "heading", 0.0)));
                 draw_player_marker(
                     draw_list,
-                    map_position(origin, player, display_size),
-                    static_cast<float>(json_number(player_source, "heading", 0.0)));
+                    map_position(origin, displayed_player, display_size),
+                    g_displayed_heading);
+            } else {
+                g_displayed_player = { -1.0F, -1.0F };
             }
         }
 

@@ -4,7 +4,7 @@ This project is being introduced in compatibility-gated stages.
 
 ## Field Console
 
-`0.11.0` adds an optional native **Field Console**. It is a real in-game C++
+`0.11.1` adds an optional native **Field Console**. It is a real in-game C++
 window, not a Skyrim Platform script and not a temporary Skyrim map marker.
 Press `F7` after entering the outdoor Skyrim world to open it.
 
@@ -24,7 +24,7 @@ Discord device token or Supabase credential into the DLL.
 
 From the Field Console a Ranger can:
 
-- see a compact Skyrim atlas with a heading-aware live player position and all official Trailmarks;
+- see a compact Skyrim atlas with a smoothly interpolated, heading-aware live player position and all official Trailmarks;
 - see the closest official Trailmark, radius state, its notes, and recent visits;
 - record or refresh a nearby Trailmark visit;
 - write and send a field drop without tabbing out;
@@ -41,10 +41,12 @@ remain browser-only administrative work for this release.
 
 ## Stage 1: local position reader
 
-The `0.11.0` build initializes as an SKSE DLL and waits for SKSE's
+The `0.11.1` build initializes as an SKSE DLL and waits for SKSE's
 post-load/new-game signal. It then reads the local player's position on
-Skyrim's main thread every five seconds. A separate scheduler only queues the
-captures; it never reads Skyrim state itself. The plugin writes:
+Skyrim's main thread four times per second. A separate scheduler only queues
+one capture at a time; it never reads Skyrim state itself. Diagnostic logging
+and the readable position file remain throttled to once every five seconds.
+The plugin writes:
 
 - a readable entry to `RangerAtlas.log`;
 - the latest coordinates and form IDs to `RangerAtlasPosition.json`.
@@ -60,7 +62,7 @@ still has no ESP, ESM, or ESL and no outbound networking.
 
 ## Field Console control
 
-The `0.11.0` build uses one in-game shortcut after the character has entered
+The `0.11.1` build uses one in-game shortcut after the character has entered
 the outdoor world:
 
 - `F7` opens or closes the native Field Console when SKSE Menu Framework is

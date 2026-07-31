@@ -1203,6 +1203,12 @@ html[data-workspace="edit"] .field-workspace-controls {
   background: #2f6548;
 }
 
+.live-position-leaflet-marker {
+  border: 0;
+  background: transparent;
+  transition: transform 220ms linear;
+}
+
 .live-position-marker {
   position: relative;
   width: 34px;
