@@ -4,7 +4,7 @@ This project is being introduced in compatibility-gated stages.
 
 ## Field Console
 
-`0.9.0` adds an optional native **Field Console**. It is a real in-game C++
+`0.9.1` adds an optional native **Field Console**. It is a real in-game C++
 window, not a Skyrim Platform script and not a temporary Skyrim map marker.
 Press `F7` after entering the outdoor Skyrim world to open it.
 
@@ -20,18 +20,19 @@ Discord device token or Supabase credential into the DLL.
 
 From the Field Console a Ranger can:
 
+- see a compact Skyrim atlas with the live player position and nearest official Trailmark;
 - see the closest official Trailmark, radius state, its notes, and recent visits;
 - record or refresh a nearby Trailmark visit;
 - write and send a field drop without tabbing out;
 - create a named field mark at the current outdoor position.
 
-The resulting mark is created as a local Atlas draft, ready to review and save
-later in **Edit Atlas**. Trails, ranges, sharing, and Guild publishing remain
-browser-only administrative work for this release.
+The resulting mark is saved directly into the local Atlas copy. Rangers can
+edit it later in **Edit Atlas**. Trails, ranges, sharing, and Guild publishing
+remain browser-only administrative work for this release.
 
 ## Stage 1: local position reader
 
-The `0.9.0` build initializes as an SKSE DLL and waits for SKSE's
+The `0.9.1` build initializes as an SKSE DLL and waits for SKSE's
 post-load/new-game signal. It then reads the local player's position on
 Skyrim's main thread every five seconds. A separate scheduler only queues the
 captures; it never reads Skyrim state itself. The plugin writes:
@@ -50,10 +51,11 @@ still has no ESP, ESM, or ESL and no outbound networking.
 
 ## Legacy field shortcuts
 
-The `0.9.0` build retains quick actions after the character has entered the
+The `0.9.1` build retains quick actions after the character has entered the
 outdoor world:
 
-- `F7` opens the native Field Console when SKSE Menu Framework is installed.
+- `F7` opens or closes the non-blocking native Field Console when SKSE Menu
+  Framework is installed. Rangers can continue moving while it is shown.
 - `F8` queues a mark at the current outdoor Skyrim position. The open Atlas
   page receives the event and opens a draft mark using the calibrated map
   coordinates.
@@ -62,9 +64,9 @@ outdoor world:
   browser, where the existing Discord link and permissions are used.
 - `Insert` also toggles the native Field Console.
 
-This build does not embed a miniature copy of the Atlas map inside Skyrim yet;
-the native menu is only a safe action launcher while the map remains in the
-browser.
+The release package includes the compact map image used by the Field Console.
+The browser still remains the Atlas source of truth for sharing, Discord links,
+and remote data.
 
 The local bridge now exposes `GET /events` on loopback. It contains a bounded
 queue of recent field actions and never sends data outside the local computer.

@@ -905,16 +905,36 @@
     const nearest = getNearestOfficialTrailmark();
     const nearestFeature = nearest?.feature;
     const visits = nearestFeature ? state.trailmarkVisitsByFeature.get(nearestFeature.id) : [];
+    const playerPoint = state.livePositionPoint && !state.livePositionPoint.stale
+      ? { x: state.livePositionPoint.x, y: state.livePositionPoint.y, heading: state.livePositionPoint.heading || 0 }
+      : null;
+    const nearbyTrailmarks = playerPoint
+      ? state.features
+        .filter(isOfficialTrailmark)
+        .map((feature) => ({
+          id: feature.id,
+          title: feature.title || "Trailmark",
+          x: feature.points[0]?.x,
+          y: feature.points[0]?.y,
+          distance: Math.hypot(feature.points[0].x - playerPoint.x, feature.points[0].y - playerPoint.y),
+        }))
+        .filter((feature) => Number.isFinite(feature.x) && Number.isFinite(feature.y))
+        .sort((left, right) => left.distance - right.distance)
+        .slice(0, 12)
+      : [];
     return {
       version: 1,
       ready: Boolean(state.livePositionEnabled && state.livePositionConnection === "linked" && getCurrentCreatorName()),
       ranger_name: getCurrentCreatorName(),
       game_link: state.livePositionConnection === "linked" ? "Connected to Skyrim" : "Waiting for Skyrim",
+      player_point: playerPoint,
+      nearby_trailmarks: nearbyTrailmarks,
       nearest_trailmark: nearestFeature
         ? {
             id: nearestFeature.id,
             title: nearestFeature.title || "Trailmark",
             notes: nearestFeature.notes || "",
+            point: nearestFeature.points[0] ? { x: nearestFeature.points[0].x, y: nearestFeature.points[0].y } : null,
             distance: nearest.distance,
             within_range: nearest.distance <= TRAILMARK_VISIT_RADIUS,
             recent_visits: Array.isArray(visits)
@@ -1075,16 +1095,20 @@
     const title = String(event.payload?.title || "Field note").trim().slice(0, 120) || "Field note";
     const notes = String(event.payload?.notes || "").trim().slice(0, 800);
     const category = categoryById[event.payload?.category] ? event.payload.category : "landmark";
-    placeDraftAtPoint(point, title);
-    if (state.draftFeature) {
-      state.draftFeature.category = category;
-      state.draftFeature.categories = [category];
-      state.draftFeature.notes = notes;
-      state.draftFeature.confidence = "scouted";
-      renderAll();
-      renderDraft();
-    }
-    setStatus("Field mark received. It is ready to save in Edit Atlas.");
+    const feature = createFeature({
+      type: "marker",
+      category,
+      title,
+      points: [clampPoint(point)],
+    });
+    feature.categories = [category];
+    feature.notes = notes;
+    feature.confidence = "scouted";
+    pushUndo("field mark create");
+    state.features.push(feature);
+    saveState();
+    renderAll();
+    setStatus(`Created ${feature.title} at your current Skyrim position`);
   }
 
   async function recordNearbyTrailmarkVisitFromFieldConsole() {

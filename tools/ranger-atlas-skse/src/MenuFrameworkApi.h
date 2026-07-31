@@ -11,6 +11,16 @@ namespace RangerAtlas::MenuFramework
         float y;
     };
 
+    struct Vec4
+    {
+        float x;
+        float y;
+        float z;
+        float w;
+    };
+
+    struct DrawList;
+
     struct Window
     {
         std::atomic_bool IsOpen{ false };
@@ -60,10 +70,35 @@ namespace RangerAtlas::MenuFramework
         }
     }
 
+    inline void set_next_window_pos(Vec2 position)
+    {
+        if (const auto set_position = function<void (*)(Vec2, int, Vec2)>("igSetNextWindowPos")) {
+            set_position(position, 0, { 0.0F, 0.0F });
+        }
+    }
+
+    inline void set_next_window_size(Vec2 size)
+    {
+        if (const auto set_size = function<void (*)(Vec2, int)>("igSetNextWindowSize")) {
+            set_size(size, 0);
+        }
+    }
+
     inline void text(const char* value)
     {
         if (const auto print = function<void (*)(const char*, const char*)>("igTextUnformatted")) {
             print(value, nullptr);
+        }
+    }
+
+    inline void text_wrapped(const char* value)
+    {
+        if (const auto wrap = function<void (*)(float)>("igPushTextWrapPos")) {
+            wrap(0.0F);
+        }
+        text(value);
+        if (const auto unwrap = function<void (*)()>("igPopTextWrapPos")) {
+            unwrap();
         }
     }
 
@@ -97,5 +132,54 @@ namespace RangerAtlas::MenuFramework
     {
         const auto draw = function<bool (*)(const char*, char*, std::size_t, Vec2, int, void*, void*)>("igInputTextMultiline");
         return draw && draw(label, value, size, dimensions, 0, nullptr, nullptr);
+    }
+
+    inline void* load_texture(const char* path, Vec2 size)
+    {
+        const auto load = function<void* (*)(const char*, Vec2*)>("LoadTexture");
+        return load ? load(path, &size) : nullptr;
+    }
+
+    inline Vec2 cursor_screen_pos()
+    {
+        Vec2 position{};
+        if (const auto get_position = function<void (*)(Vec2*)>("igGetCursorScreenPos")) {
+            get_position(&position);
+        }
+        return position;
+    }
+
+    inline void image(void* texture, Vec2 size)
+    {
+        if (const auto draw = function<void (*)(void*, Vec2, Vec2, Vec2, Vec4, Vec4)>("igImage")) {
+            draw(texture, size, { 0.0F, 0.0F }, { 1.0F, 1.0F }, { 1.0F, 1.0F, 1.0F, 1.0F }, { 0.0F, 0.0F, 0.0F, 0.0F });
+        }
+    }
+
+    inline DrawList* window_draw_list()
+    {
+        const auto get_draw_list = function<DrawList* (*)()>("igGetWindowDrawList");
+        return get_draw_list ? get_draw_list() : nullptr;
+    }
+
+    inline void draw_circle(DrawList* draw_list, Vec2 center, float radius, std::uint32_t color, float thickness = 1.0F)
+    {
+        if (const auto draw = function<void (*)(DrawList*, Vec2, float, std::uint32_t, int, float)>("ImDrawList_AddCircle")) {
+            draw(draw_list, center, radius, color, 20, thickness);
+        }
+    }
+
+    inline void draw_circle_filled(DrawList* draw_list, Vec2 center, float radius, std::uint32_t color)
+    {
+        if (const auto draw = function<void (*)(DrawList*, Vec2, float, std::uint32_t, int)>("ImDrawList_AddCircleFilled")) {
+            draw(draw_list, center, radius, color, 20);
+        }
+    }
+
+    inline void draw_triangle_filled(DrawList* draw_list, Vec2 first, Vec2 second, Vec2 third, std::uint32_t color)
+    {
+        if (const auto draw = function<void (*)(DrawList*, Vec2, Vec2, Vec2, std::uint32_t)>("ImDrawList_AddTriangleFilled")) {
+            draw(draw_list, first, second, third, color);
+        }
     }
 }
