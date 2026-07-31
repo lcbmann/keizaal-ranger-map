@@ -10,6 +10,7 @@ const PLUGIN = "RangerAtlasSkyrimPlatform";
 const BRIDGE = "http://127.0.0.1:38471";
 const TEMPLATE_REF_ID = 0x000162a4; // RiverwoodMapMarker in Skyrim.esm.
 const TAMRIEL_FORM_ID = 0x0000003c;
+const MAP_MENU_NAME = "MapMenu";
 const POLL_INTERVAL_MS = 4000;
 const MARKER_BATCH_SIZE = 1;
 
@@ -37,7 +38,10 @@ const http = new HttpClient(BRIDGE);
 const activeMarkers: Record<string, ActiveMarker> = {};
 let desiredMarkers: AtlasMarker[] = [];
 let desiredKey = "";
+let skyrimLoaded = false;
 let worldReady = false;
+let nativeMapOpen = false;
+let nativeMarkersVisible = false;
 let pollInFlight = false;
 let createInFlight = false;
 let nextPollAt = 0;
@@ -77,25 +81,35 @@ function atlasToWorld(atlasX: number, atlasY: number): { x: number; y: number } 
   return { x: cellX * 4096, y: cellY * 4096 };
 }
 
-function disableMarker(marker: ActiveMarker, deleteReference = true): void {
+function setMarkerVisible(marker: ActiveMarker, visible: boolean): void {
   try {
-    marker.reference.disableNoWait(false);
-    if (deleteReference) {
-      void marker.reference.delete().catch((error) => {
-        log(`Marker delete failed: ${String(error)}`);
-      });
+    if (visible) {
+      marker.reference.enableNoWait(false);
+      marker.reference.addToMap(false);
+    } else {
+      marker.reference.disableNoWait(false);
     }
   } catch (error) {
-    log(`Marker cleanup failed: ${String(error)}`);
+    log(`Marker visibility update failed: ${String(error)}`);
   }
 }
 
-function clearNativeMarkers(deleteReferences = true): void {
+function hideNativeMarkers(): void {
   Object.keys(activeMarkers).forEach((id) => {
-    disableMarker(activeMarkers[id], deleteReferences);
-    delete activeMarkers[id];
+    setMarkerVisible(activeMarkers[id], false);
   });
-  createIndex = 0;
+  nativeMarkersVisible = false;
+}
+
+function showNativeMarkers(): void {
+  if (!nativeMapOpen || nativeMarkersVisible) {
+    return;
+  }
+
+  Object.keys(activeMarkers).forEach((id) => {
+    setMarkerVisible(activeMarkers[id], true);
+  });
+  nativeMarkersVisible = true;
 }
 
 function applyDesiredMarkers(markers: AtlasMarker[]): void {
@@ -134,7 +148,9 @@ function applyDesiredMarkers(markers: AtlasMarker[]): void {
       marker.x !== activeMarkers[id].x ||
       marker.y !== activeMarkers[id].y
     ) {
-      disableMarker(activeMarkers[id]);
+      // Keep the old reference disabled. Deleting references while SkyMP is
+      // streaming cells can enter Skyrim's terrain worker on a stale object.
+      setMarkerVisible(activeMarkers[id], false);
       delete activeMarkers[id];
     }
   });
@@ -146,7 +162,13 @@ function applyDesiredMarkers(markers: AtlasMarker[]): void {
 }
 
 async function createNextMarker(): Promise<void> {
-  if (!worldReady || createInFlight || createIndex >= desiredMarkers.length) {
+  if (
+    !skyrimLoaded ||
+    !worldReady ||
+    !nativeMapOpen ||
+    createInFlight ||
+    createIndex >= desiredMarkers.length
+  ) {
     return;
   }
 
@@ -194,7 +216,7 @@ async function createNextMarker(): Promise<void> {
 }
 
 async function pollMarkerSnapshot(): Promise<void> {
-  if (!worldReady || pollInFlight) {
+  if (!skyrimLoaded || !worldReady || !nativeMapOpen || pollInFlight) {
     return;
   }
 
@@ -219,20 +241,52 @@ async function pollMarkerSnapshot(): Promise<void> {
 
 on("preLoadGame", () => {
   worldGeneration += 1;
+  skyrimLoaded = false;
   worldReady = false;
+  nativeMapOpen = false;
+  nativeMarkersVisible = false;
   desiredMarkers = [];
   desiredKey = "";
-  // SkyMP owns the load transition. Disable references here, but do not call
-  // asynchronous deletion while Skyrim is unloading its current world.
-  clearNativeMarkers(false);
+  // SkyMP owns the load transition. Do not touch references while Skyrim is
+  // unloading its current world.
+  hideNativeMarkers();
+  Object.keys(activeMarkers).forEach((id) => delete activeMarkers[id]);
+});
+
+on("skyrimLoaded", () => {
+  skyrimLoaded = true;
+  log("Skyrim load completed; waiting for the native map before syncing Trailmarks.");
+});
+
+on("menuOpen", (event) => {
+  if (event.name !== MAP_MENU_NAME) {
+    return;
+  }
+  nativeMapOpen = true;
+  nativeMarkersVisible = false;
+  nextPollAt = 0;
+  log("Native Skyrim map opened; Trailmark sync is active.");
+});
+
+on("menuClose", (event) => {
+  if (event.name !== MAP_MENU_NAME) {
+    return;
+  }
+  nativeMapOpen = false;
+  hideNativeMarkers();
+  log("Native Skyrim map closed; temporary Trailmark markers disabled.");
 });
 
 on("update", () => {
+  if (!skyrimLoaded) {
+    return;
+  }
+
   if (worldReady && !isOutdoorTamriel()) {
     worldGeneration += 1;
     worldReady = false;
     desiredKey = "";
-    clearNativeMarkers(false);
+    hideNativeMarkers();
     return;
   }
 
@@ -244,6 +298,12 @@ on("update", () => {
     nextPollAt = 0;
     log("Outdoor Tamriel confirmed; native Trailmark sync is active.");
   }
+
+  if (!nativeMapOpen) {
+    return;
+  }
+
+  showNativeMarkers();
 
   if (Date.now() >= nextPollAt) {
     void pollMarkerSnapshot();
