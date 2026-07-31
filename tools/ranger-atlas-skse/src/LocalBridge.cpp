@@ -240,13 +240,13 @@ namespace RangerAtlas::LocalBridge
         {
             WSADATA winsock_data{};
             if (WSAStartup(MAKEWORD(2, 2), &winsock_data) != 0) {
-                SKSE::log::error("Local bridge could not initialize Winsock.");
+                spdlog::error("Local bridge could not initialize Winsock.");
                 return;
             }
 
             const auto server = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
             if (server == INVALID_SOCKET) {
-                SKSE::log::error("Local bridge could not create its loopback socket.");
+                spdlog::error("Local bridge could not create its loopback socket.");
                 WSACleanup();
                 return;
             }
@@ -266,7 +266,7 @@ namespace RangerAtlas::LocalBridge
 
             if (bind(server, reinterpret_cast<const sockaddr*>(&address), sizeof(address)) == SOCKET_ERROR ||
                 listen(server, SOMAXCONN) == SOCKET_ERROR) {
-                SKSE::log::error(
+            spdlog::error(
                     "Local bridge could not listen on 127.0.0.1:{} (Winsock error {}).",
                     kBridgePort,
                     WSAGetLastError());
@@ -275,7 +275,7 @@ namespace RangerAtlas::LocalBridge
                 return;
             }
 
-            SKSE::log::info(
+            spdlog::info(
                 "Local bridge listening on http://127.0.0.1:{}/position, /events, and /markers.",
                 kBridgePort);
 
@@ -349,7 +349,7 @@ namespace RangerAtlas::LocalBridge
         while (g_events.size() > 16) {
             g_events.pop_front();
         }
-        SKSE::log::info("Queued field action '{}' with event id {}.", action, event_id);
+        spdlog::info("Queued field action '{}' with event id {}.", action, event_id);
     }
 
 }

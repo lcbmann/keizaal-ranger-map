@@ -94,18 +94,18 @@ namespace
         const auto cell = player ? player->GetParentCell() : nullptr;
         const auto worldspace = player ? player->GetWorldspace() : nullptr;
         if (!player) {
-            SKSE::log::info("World probe: player unavailable.");
+            spdlog::info("World probe: player unavailable.");
             return;
         }
         if (!cell) {
-            SKSE::log::info("World probe: player cell unavailable.");
+            spdlog::info("World probe: player cell unavailable.");
             return;
         }
         if (!worldspace) {
-            SKSE::log::info("World probe: player worldspace unavailable.");
+            spdlog::info("World probe: player worldspace unavailable.");
             return;
         }
-        SKSE::log::info(
+        spdlog::info(
             "World probe: cell=[{:08X}] interior={}, worldspace=[{:08X}].",
             cell->GetFormID(),
             cell->IsInteriorCell(),
@@ -120,14 +120,14 @@ namespace
         if (!g_controls_registered.exchange(true)) {
             if (const auto input = RE::BSInputDeviceManager::GetSingleton()) {
                 input->AddEventSink(&g_input_sink);
-                SKSE::log::info("Ranger Atlas field controls registered after outdoor Tamriel was confirmed.");
+                spdlog::info("Ranger Atlas field controls registered after outdoor Tamriel was confirmed.");
             } else {
                 g_controls_registered = false;
-                SKSE::log::warn("Ranger Atlas field controls could not access the input device manager.");
+                spdlog::warn("Ranger Atlas field controls could not access the input device manager.");
             }
         }
 
-        SKSE::log::info("Keizaal world confirmed; Ranger Atlas local integration is now active.");
+        spdlog::info("Keizaal world confirmed; Ranger Atlas local integration is now active.");
         capture_player_position();
     }
 
@@ -158,6 +158,13 @@ namespace
 
         try {
             const auto log_path = output_directory / "RangerAtlas.log";
+            std::ofstream probe(log_path, std::ios::app);
+            if (!probe) {
+                SKSE::log::error("Ranger Atlas could not open diagnostic log path {}.", log_path.string());
+                return;
+            }
+            probe << "Ranger Atlas diagnostic file opened.\n";
+            probe.flush();
             auto sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(
                 log_path.string(), true);
             auto logger = std::make_shared<spdlog::logger>("RangerAtlas", std::move(sink));
@@ -167,7 +174,7 @@ namespace
             spdlog::set_level(spdlog::level::info);
             spdlog::flush_on(spdlog::level::info);
             g_output_directory = output_directory;
-            SKSE::log::info("Ranger Atlas diagnostic logging initialized at {}.", log_path.string());
+            spdlog::info("Ranger Atlas diagnostic logging initialized at {}.", log_path.string());
         } catch (const std::exception& error) {
             SKSE::log::error("Ranger Atlas diagnostic logging could not be initialized: {}", error.what());
         }
@@ -185,7 +192,7 @@ namespace
         const auto snapshot_path = *g_output_directory / "RangerAtlasPosition.json";
         std::ofstream snapshot(snapshot_path, std::ios::trunc);
         if (!snapshot) {
-            SKSE::log::warn("Could not write position snapshot to {}", snapshot_path.string());
+            spdlog::warn("Could not write position snapshot to {}", snapshot_path.string());
             return;
         }
 
@@ -216,7 +223,7 @@ namespace
         const auto player = RE::PlayerCharacter::GetSingleton();
         const auto cell = player ? player->GetParentCell() : nullptr;
         if (!player || !cell) {
-            SKSE::log::warn("Position capture skipped because the player is not in a loaded cell.");
+            spdlog::warn("Position capture skipped because the player is not in a loaded cell.");
             return;
         }
 
@@ -226,7 +233,7 @@ namespace
         const auto worldspace_name =
             worldspace && worldspace->GetName() ? worldspace->GetName() : "";
 
-        SKSE::log::info(
+        spdlog::info(
             "Player position: x={:.3f}, y={:.3f}, z={:.3f}, cell=\"{}\" [{:08X}], "
             "worldspace=\"{}\" [{:08X}], interior={}",
             position.x,
@@ -275,17 +282,17 @@ namespace
         }
 
         g_capture_worker = std::jthread(capture_loop);
-        SKSE::log::info("Continuous local position tracker started with a five-second interval.");
+        spdlog::info("Continuous local position tracker started with a five-second interval.");
     }
 
     void on_skse_message(SKSE::MessagingInterface::Message* message)
     {
         if (!message) {
-            SKSE::log::warn("Received null SKSE message.");
+            spdlog::warn("Received null SKSE message.");
             return;
         }
 
-        SKSE::log::info("Received SKSE message type {}.", message->type);
+        spdlog::info("Received SKSE message type {}.", message->type);
 
         if (message->type == SKSE::MessagingInterface::kPreLoadGame) {
             g_world_ready = false;
@@ -305,9 +312,9 @@ namespace
 
             if (const auto tasks = SKSE::GetTaskInterface()) {
                 tasks->AddTask(try_initialize_world);
-                SKSE::log::info("Load/new-game signal received; waiting for an outdoor Tamriel world before activating.");
+                spdlog::info("Load/new-game signal received; waiting for an outdoor Tamriel world before activating.");
             } else {
-                SKSE::log::error("SKSE task interface is unavailable; deferred world activation was not queued.");
+                spdlog::error("SKSE task interface is unavailable; deferred world activation was not queued.");
             }
         }
     }
@@ -317,16 +324,16 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse)
 {
     SKSE::Init(skse);
     initialize_logging();
-    SKSE::log::info("Ranger Atlas SKSEPluginLoad entered.");
+    spdlog::info("Ranger Atlas SKSEPluginLoad entered.");
 
     const auto messaging = SKSE::GetMessagingInterface();
     if (!messaging || !messaging->RegisterListener(on_skse_message)) {
-        SKSE::log::critical("Could not register the SKSE message listener.");
+        spdlog::critical("Could not register the SKSE message listener.");
         return false;
     }
 
-    SKSE::log::info(
-        "Ranger Atlas loaded. Local integration is dormant until a post-load or new-game signal. Diagnostic build 0.7.9.");
+    spdlog::info(
+        "Ranger Atlas loaded. Local integration is dormant until a post-load or new-game signal. Diagnostic build 0.7.10.");
 
     return true;
 }
