@@ -922,6 +922,22 @@
         .filter((feature) => Number.isFinite(feature.x) && Number.isFinite(feature.y))
         .sort((left, right) => left.distance - right.distance)
       : [];
+    const mapMarkers = playerPoint
+      ? getVisibleFeatures()
+        .filter((feature) => feature.type === "marker" && !isOfficialTrailmark(feature) && !isDefaultFeature(feature) && !isCanonFeature(feature))
+        .map((feature) => ({
+          id: feature.id,
+          title: feature.title || "Atlas mark",
+          category: feature.category || "landmark",
+          source: isGuildFeature(feature) ? "guild" : "personal",
+          x: feature.points[0]?.x,
+          y: feature.points[0]?.y,
+          distance: Math.hypot(feature.points[0].x - playerPoint.x, feature.points[0].y - playerPoint.y),
+        }))
+        .filter((feature) => Number.isFinite(feature.x) && Number.isFinite(feature.y))
+        .sort((left, right) => left.distance - right.distance)
+        .slice(0, 80)
+      : [];
     return {
       version: 1,
       ready: Boolean(state.livePositionEnabled && state.livePositionConnection === "linked" && getCurrentCreatorName()),
@@ -929,6 +945,7 @@
       game_link: state.livePositionConnection === "linked" ? "Connected to Skyrim" : "Waiting for Skyrim",
       player_point: playerPoint,
       official_trailmarks: officialTrailmarks,
+      map_markers: mapMarkers,
       nearest_trailmark: nearestFeature
         ? {
             id: nearestFeature.id,

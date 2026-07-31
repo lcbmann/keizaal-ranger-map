@@ -110,6 +110,45 @@ namespace RangerAtlas::MenuFramework
         }
     }
 
+    inline bool push_style_color(int index, std::uint32_t color)
+    {
+        if (const auto push = function<void (*)(int, std::uint32_t)>("igPushStyleColor_U32")) {
+            push(index, color);
+            return true;
+        }
+        return false;
+    }
+
+    inline void pop_style_color(int count = 1)
+    {
+        if (const auto pop = function<void (*)(int)>("igPopStyleColor")) {
+            pop(count);
+        }
+    }
+
+    inline bool push_style_var(int index, float value)
+    {
+        if (const auto push = function<void (*)(int, float)>("igPushStyleVar_Float")) {
+            push(index, value);
+            return true;
+        }
+        return false;
+    }
+
+    inline void pop_style_var(int count = 1)
+    {
+        if (const auto pop = function<void (*)(int)>("igPopStyleVar")) {
+            pop(count);
+        }
+    }
+
+    inline void spacing()
+    {
+        if (const auto add_spacing = function<void (*)()>("igSpacing")) {
+            add_spacing();
+        }
+    }
+
     inline void separator()
     {
         if (const auto draw = function<void (*)()>("igSeparator")) {

@@ -1,4 +1,4 @@
-Ranger Atlas Field Console 0.10.0
+Ranger Atlas Field Console 0.10.1
 
 1. Install the included RangerAtlas.dll with Vortex, or copy it to:
    Data\SKSE\Plugins\RangerAtlas.dll

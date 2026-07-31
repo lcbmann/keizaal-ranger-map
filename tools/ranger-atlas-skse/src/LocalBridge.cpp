@@ -351,6 +351,11 @@ namespace RangerAtlas::LocalBridge
         g_native_marker_snapshot = std::move(snapshot);
     }
 
+    std::string GetNativeMarkerSnapshot()
+    {
+        return get_native_marker_snapshot();
+    }
+
     void UpdateFieldState(std::string snapshot)
     {
         std::scoped_lock lock(g_field_state_mutex);
