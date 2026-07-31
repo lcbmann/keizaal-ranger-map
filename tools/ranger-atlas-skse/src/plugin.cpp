@@ -5,12 +5,72 @@
 namespace
 {
     constexpr auto kCaptureInterval = std::chrono::seconds(5);
+    constexpr std::uint32_t kFieldConsoleKey = 0x40;  // F6 keyboard scan code.
+    constexpr std::uint32_t kFieldMarkKey = 0x41;  // F7 keyboard scan code.
+    constexpr std::uint32_t kFieldTrailmarkKey = 0x42;  // F8 keyboard scan code.
 
     std::atomic_bool g_world_ready = false;
     std::condition_variable_any g_capture_wake;
     std::mutex g_capture_mutex;
     std::jthread g_capture_worker;
     std::optional<std::filesystem::path> g_output_directory;
+
+    void show_field_console()
+    {
+        RE::DebugMessageBox(
+            "RANGER ATLAS\n\nF7  Mark current position\nF8  Open nearest Trailmark drop\n\nThe Atlas page must be open in your browser.\nPress OK, then use the shortcut for the action you want.");
+    }
+
+    void toggle_field_console()
+    {
+        show_field_console();
+    }
+
+    class FieldInputSink final : public RE::BSTEventSink<RE::InputEvent*>
+    {
+    public:
+        RE::BSEventNotifyControl ProcessEvent(
+            RE::InputEvent* const* event,
+            RE::BSTEventSource<RE::InputEvent*>*) override
+        {
+            if (!event || !*event) {
+                return RE::BSEventNotifyControl::kContinue;
+            }
+
+            bool handled_any = false;
+            for (auto current = *event; current; current = current->next) {
+                const auto button = current->AsButtonEvent();
+                if (!button || button->GetDevice() != RE::INPUT_DEVICE::kKeyboard || !button->IsDown()) {
+                    continue;
+                }
+
+                bool handled = false;
+                if (button->GetIDCode() == kFieldMarkKey) {
+                    RangerAtlas::LocalBridge::QueueFieldAction("mark_here");
+                    RE::DebugNotification("Ranger Atlas mark queued. Open the Atlas to finish it.");
+                    handled = true;
+                } else if (button->GetIDCode() == kFieldTrailmarkKey) {
+                    RangerAtlas::LocalBridge::QueueFieldAction("open_nearby_trailmark");
+                    RE::DebugNotification("Ranger Atlas Trailmark request queued.");
+                    handled = true;
+                } else if (button->GetIDCode() == kFieldConsoleKey) {
+                    toggle_field_console();
+                    handled = true;
+                }
+
+                if (handled) {
+                    // Prevent the underlying game input handler from seeing this Atlas key.
+                    button->value = 0.0F;
+                    button->heldDownSecs = 1.0F;
+                    handled_any = true;
+                }
+            }
+
+            return handled_any ? RE::BSEventNotifyControl::kStop : RE::BSEventNotifyControl::kContinue;
+        }
+    };
+
+    FieldInputSink g_input_sink;
 
     void initialize_logging()
     {
@@ -150,6 +210,14 @@ namespace
             g_world_ready = true;
             start_capture_worker();
             RangerAtlas::LocalBridge::Start();
+
+            if (const auto input = RE::BSInputDeviceManager::GetSingleton()) {
+                input->AddEventSink(&g_input_sink);
+                SKSE::log::info(
+                    "Ranger Atlas field controls registered: F6 console, F7 mark, F8 Trailmark.");
+            } else {
+                SKSE::log::warn("Ranger Atlas field controls could not access the input device manager.");
+            }
 
             if (const auto tasks = SKSE::GetTaskInterface()) {
                 tasks->AddTask(capture_player_position);

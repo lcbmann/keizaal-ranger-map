@@ -10,12 +10,30 @@ namespace RangerAtlas::LocalBridge
 
         std::mutex g_snapshot_mutex;
         std::string g_snapshot;
+        std::mutex g_events_mutex;
+        std::deque<std::string> g_events;
+        std::uint64_t g_next_event_id = 1;
         std::jthread g_server;
 
         std::string get_snapshot()
         {
             std::scoped_lock lock(g_snapshot_mutex);
             return g_snapshot;
+        }
+
+        std::string get_events()
+        {
+            std::scoped_lock lock(g_events_mutex);
+            std::ostringstream body;
+            body << R"({"events":[)";
+            for (std::size_t index = 0; index < g_events.size(); ++index) {
+                if (index > 0) {
+                    body << ',';
+                }
+                body << g_events[index];
+            }
+            body << "]}";
+            return body.str();
         }
 
         std::string get_origin(std::string_view request)
@@ -116,6 +134,11 @@ namespace RangerAtlas::LocalBridge
                 return;
             }
 
+            if (request.starts_with("GET /events ")) {
+                send_response(client, "200 OK", get_events(), origin);
+                return;
+            }
+
             if (!request.starts_with("GET /position ")) {
                 send_response(client, "404 Not Found", R"({"error":"not_found"})", origin);
                 return;
@@ -169,7 +192,9 @@ namespace RangerAtlas::LocalBridge
                 return;
             }
 
-            SKSE::log::info("Local bridge listening on http://127.0.0.1:{}/position.", kBridgePort);
+            SKSE::log::info(
+                "Local bridge listening on http://127.0.0.1:{}/position and /events.",
+                kBridgePort);
 
             while (!stop_token.stop_requested()) {
                 fd_set read_set;
@@ -208,5 +233,30 @@ namespace RangerAtlas::LocalBridge
     {
         std::scoped_lock lock(g_snapshot_mutex);
         g_snapshot = std::move(snapshot);
+    }
+
+    void QueueFieldAction(std::string action)
+    {
+        std::scoped_lock lock(g_events_mutex);
+        const auto event_id = g_next_event_id++;
+        std::ostringstream event;
+        event << R"({"id":)" << event_id
+              << R"(,"type":")" << action
+              << R"(","created_at_unix_ms":)"
+              << std::chrono::duration_cast<std::chrono::milliseconds>(
+                     std::chrono::system_clock::now().time_since_epoch())
+                     .count();
+
+        const auto snapshot = get_snapshot();
+        if (!snapshot.empty()) {
+            event << R"(,"snapshot":)" << snapshot;
+        }
+        event << '}';
+
+        g_events.push_back(event.str());
+        while (g_events.size() > 16) {
+            g_events.pop_front();
+        }
+        SKSE::log::info("Queued field action '{}' with event id {}.", action, event_id);
     }
 }

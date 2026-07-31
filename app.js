@@ -18,6 +18,8 @@
   const SKYRIM_ATLAS_CODE = "SKYRIM";
   const SKYRIM_ATLAS_DATA = "data/skyrim-canon-atlas.generated.json";
   const LIVE_POSITION_URL = "http://127.0.0.1:38471/position";
+  const FIELD_EVENTS_URL = "http://127.0.0.1:38471/events";
+  const FIELD_ACTION_CURSOR_KEY = "ranger-atlas-field-action-cursor-v1";
   const SKYRIM_WORLDSPACE_FORM_ID = 0x0000003c;
   const WORLD_TO_ATLAS_X = [73.826813, 0.215295427, 4067.73578];
   const WORLD_TO_ATLAS_Y = [-0.324059025, 74.56657, 3036.85421];
@@ -122,6 +124,7 @@
     livePositionPoint: null,
     livePositionHeading: 0,
     livePositionSnapshot: null,
+    fieldActionCursor: Number(window.localStorage.getItem(FIELD_ACTION_CURSOR_KEY)) || 0,
     sharePositionEnabled: false,
     sharePositionInFlight: false,
     lastSharedPositionAt: 0,
@@ -202,6 +205,7 @@
     fieldOverview: document.getElementById("fieldOverview"),
     fieldConsoleStatus: document.getElementById("fieldConsoleStatus"),
     fieldConsoleHint: document.getElementById("fieldConsoleHint"),
+    fieldMarkHereBtn: document.getElementById("fieldMarkHereBtn"),
     followLivePositionInput: document.getElementById("followLivePositionInput"),
     aboutBtn: document.getElementById("aboutBtn"),
     aboutDialog: document.getElementById("aboutDialog"),
@@ -336,6 +340,8 @@
   let searchAutofillGuardUntil = Date.now() + 5000;
   let livePositionPollTimer = null;
   let livePositionRequest = null;
+  let fieldActionPollTimer = null;
+  let fieldActionRequest = null;
   let livePositionMarker = null;
   let trailmarkAccessPollTimer = null;
   let guildAtlasRefreshTimer = null;
@@ -371,6 +377,7 @@
     window.addEventListener("focus", () => void refreshOfficialGuildAtlas());
     if (state.livePositionEnabled) {
       startLivePositionPolling();
+      startFieldActionPolling();
     }
   }
 
@@ -444,12 +451,14 @@
       if (state.livePositionEnabled) {
         renderTrailmarkVisitRadii();
         startLivePositionPolling();
+        startFieldActionPolling();
         setStatus("Connecting to the local Ranger Atlas integration");
       } else {
         state.followLivePosition = false;
         elements.followLivePositionInput.checked = false;
         void removeSharedLivePosition();
         stopLivePositionPolling();
+        stopFieldActionPolling();
         setStatus("Live position hidden");
       }
       updateTrailmarkVisitControls();
@@ -462,6 +471,13 @@
         centerOnLivePosition(true);
       }
       setStatus(state.followLivePosition ? "Following live position" : "Live position follow paused");
+    });
+    elements.fieldMarkHereBtn.addEventListener("click", () => {
+      if (!state.livePositionPoint || state.livePositionPoint.stale) {
+        setStatus("Connect to Skyrim before placing a mark here");
+        return;
+      }
+      placeDraftAtPoint(state.livePositionPoint, "Current Skyrim position");
     });
     elements.trailmarkVisitsInput.addEventListener("change", handleTrailmarkVisitsToggle);
     elements.discordLinkBtn.addEventListener("click", openDiscordLinkDialog);
@@ -767,6 +783,126 @@
     state.livePositionConnection = "connecting";
     updateLivePositionStatus("Connecting...", "connecting");
     pollLivePosition();
+  }
+
+  function startFieldActionPolling() {
+    stopFieldActionPolling();
+    pollFieldActions();
+  }
+
+  function stopFieldActionPolling() {
+    window.clearTimeout(fieldActionPollTimer);
+    fieldActionPollTimer = null;
+    if (fieldActionRequest) {
+      fieldActionRequest.abort();
+      fieldActionRequest = null;
+    }
+  }
+
+  async function pollFieldActions() {
+    if (!state.livePositionEnabled) {
+      return;
+    }
+
+    const controller = new AbortController();
+    fieldActionRequest = controller;
+    const timeout = window.setTimeout(() => controller.abort(), 1800);
+
+    try {
+      const response = await fetch(FIELD_EVENTS_URL, {
+        cache: "no-store",
+        credentials: "omit",
+        mode: "cors",
+        signal: controller.signal,
+      });
+      if (!response.ok) {
+        throw new Error(`Local bridge returned ${response.status}`);
+      }
+      const payload = await response.json();
+      const events = Array.isArray(payload.events) ? payload.events : [];
+      events
+        .filter((event) => Number(event.id) > state.fieldActionCursor)
+        .sort((a, b) => Number(a.id) - Number(b.id))
+        .forEach(handleFieldAction);
+    } catch (error) {
+      if (error.name !== "AbortError") {
+        // The position poller owns the visible connection status; event polling is optional.
+      }
+    } finally {
+      window.clearTimeout(timeout);
+      if (fieldActionRequest === controller) {
+        fieldActionRequest = null;
+      }
+      if (state.livePositionEnabled) {
+        fieldActionPollTimer = window.setTimeout(pollFieldActions, 1200);
+      }
+    }
+  }
+
+  function handleFieldAction(event) {
+    const eventId = Number(event.id);
+    if (!Number.isFinite(eventId) || eventId <= state.fieldActionCursor) {
+      return;
+    }
+    state.fieldActionCursor = eventId;
+    window.localStorage.setItem(FIELD_ACTION_CURSOR_KEY, String(eventId));
+
+    if (event.type !== "mark_here") {
+      if (event.type === "open_nearby_trailmark") {
+        openNearbyTrailmarkDrop();
+      }
+      return;
+    }
+
+    const snapshot = event.snapshot;
+    if (
+      snapshot &&
+      isValidLivePositionSnapshot(snapshot) &&
+      Number(snapshot.worldspace_form_id) === SKYRIM_WORLDSPACE_FORM_ID &&
+      snapshot.interior !== true
+    ) {
+      const point = worldPositionToAtlasPoint(Number(snapshot.x), Number(snapshot.y));
+      state.livePositionPoint = { ...point, stale: false, heading: state.livePositionHeading };
+      renderLivePosition();
+      placeDraftAtPoint(point, "In-game mark queued");
+      setStatus("In-game mark received. Add details, then save it");
+    } else if (state.livePositionPoint && !state.livePositionPoint.stale) {
+      placeDraftAtPoint(state.livePositionPoint, "Current Skyrim position");
+    } else {
+      setStatus("In-game mark received, but Skyrim is not in the outdoor world map");
+    }
+  }
+
+  function openNearbyTrailmarkDrop() {
+    const point = state.livePositionPoint;
+    if (!point || point.stale) {
+      setStatus("Connect to Skyrim before opening a Trailmark drop");
+      return;
+    }
+
+    const nearest = state.features
+      .filter(isOfficialTrailmark)
+      .map((feature) => ({
+        feature,
+        distance: Math.hypot(feature.points[0].x - point.x, feature.points[0].y - point.y),
+      }))
+      .filter((candidate) => candidate.distance <= TRAILMARK_VISIT_RADIUS)
+      .sort((left, right) => left.distance - right.distance)[0];
+
+    if (!nearest) {
+      setStatus("No official Trailmark is within field-drop range");
+      return;
+    }
+
+    if (state.workspaceMode !== "field") {
+      setWorkspaceMode("field");
+    }
+    selectFeature(nearest.feature.id);
+    if (Date.now() - Number(state.trailmarkVisitCooldowns[nearest.feature.id] || 0) >= TRAILMARK_VISIT_COOLDOWN_MS) {
+      setStatus(`Arrived at ${nearest.feature.title}. Record the visit before leaving a drop`);
+      return;
+    }
+    openTrailmarkDropDialog(nearest.feature);
   }
 
   function stopLivePositionPolling(clearPosition = true) {
@@ -1219,6 +1355,7 @@
       state.livePositionEnabled = true;
       elements.livePositionInput.checked = true;
       startLivePositionPolling();
+      startFieldActionPolling();
     }
     if (!enabled) {
       void leaveTrailmarkVisit();
@@ -2059,21 +2196,7 @@
     const point = clampPoint(event.latlng);
 
     if (state.mode === "marker") {
-      pushUndo("draft mark placement");
-      state.draftFeature = createFeature({
-        type: "marker",
-        category: "landmark",
-        title: "New mark",
-        points: [point],
-      });
-      state.drawPoints = state.draftFeature.points.map((draftPoint) => ({ ...draftPoint }));
-      state.selectedId = state.draftFeature.id;
-      state.selectedIds = [state.draftFeature.id];
-      setPanelView("details", false);
-      updateDrawButtons();
-      renderAll();
-      renderDraft();
-      setStatus("Draft mark placed. Add details, then use the checkmark beside it to save");
+      placeDraftAtPoint(point, "Draft mark placed");
       return;
     }
 
@@ -2211,6 +2334,29 @@
 
     renderFeatureList();
     renderEditor();
+  }
+
+  function placeDraftAtPoint(point, title = "New mark") {
+    if (state.workspaceMode !== "edit") {
+      setWorkspaceMode("edit");
+    }
+    pushUndo("draft mark placement");
+    state.mode = "select";
+    state.draftFeature = createFeature({
+      type: "marker",
+      category: "landmark",
+      title,
+      points: [clampPoint(point)],
+    });
+    state.drawPoints = state.draftFeature.points.map((draftPoint) => ({ ...draftPoint }));
+    state.selectedId = state.draftFeature.id;
+    state.selectedIds = [state.draftFeature.id];
+    setPanelView("details", false);
+    updateDrawButtons();
+    updateModeButtons();
+    renderAll();
+    renderDraft();
+    setStatus(`${title} received. Add details, then save it`);
   }
 
   function createFeatureLabelLayer(feature) {
@@ -2839,15 +2985,18 @@
       elements.fieldConsoleHint.textContent = state.trailmarkVisitsEnabled
         ? "Trailmark watch active."
         : "Record visits is off.";
+      elements.fieldMarkHereBtn.disabled = !state.livePositionPoint || state.livePositionPoint.stale;
       return;
     }
     if (state.livePositionConnection === "connecting") {
       elements.fieldConsoleStatus.textContent = "Connecting to Skyrim";
       elements.fieldConsoleHint.textContent = "Waiting for the game link.";
+      elements.fieldMarkHereBtn.disabled = true;
       return;
     }
     elements.fieldConsoleStatus.textContent = "Ready for the road";
     elements.fieldConsoleHint.textContent = "Enable Live position.";
+    elements.fieldMarkHereBtn.disabled = true;
   }
 
   function renderSelectionSummary(feature) {

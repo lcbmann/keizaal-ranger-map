@@ -1380,6 +1380,12 @@ html[data-workspace="edit"] .field-workspace-controls {
   font-size: 0.7rem;
 }
 
+.field-console-action {
+  width: 100%;
+  margin-top: 10px;
+  justify-content: center;
+}
+
 .field-panel-empty {
   min-height: 100%;
   display: grid;
