@@ -19,8 +19,6 @@
   const SKYRIM_ATLAS_DATA = "data/skyrim-canon-atlas.generated.json";
   const LIVE_POSITION_URL = "http://127.0.0.1:38471/position";
   const FIELD_EVENTS_URL = "http://127.0.0.1:38471/events";
-  const NATIVE_MARKERS_URL = "http://127.0.0.1:38471/markers";
-  const NATIVE_MARKERS_CLEAR_URL = "http://127.0.0.1:38471/markers/clear";
   const FIELD_ACTION_CURSOR_KEY = "ranger-atlas-field-action-cursor-v1";
   const SKYRIM_WORLDSPACE_FORM_ID = 0x0000003c;
   const WORLD_TO_ATLAS_X = [73.826813, 0.215295427, 4067.73578];
@@ -123,7 +121,6 @@
     livePositionEnabled: false,
     followLivePosition: false,
     livePositionConnection: "off",
-    nativeMarkerSyncKey: "",
     livePositionPoint: null,
     livePositionHeading: 0,
     livePositionSnapshot: null,
@@ -381,7 +378,6 @@
     if (state.livePositionEnabled) {
       startLivePositionPolling();
       startFieldActionPolling();
-      void syncNativeTrailmarks();
     }
   }
 
@@ -456,7 +452,6 @@
         renderTrailmarkVisitRadii();
         startLivePositionPolling();
         startFieldActionPolling();
-        void syncNativeTrailmarks(true);
         setStatus("Connecting to the local Ranger Atlas integration");
       } else {
         state.followLivePosition = false;
@@ -793,63 +788,6 @@
   function startFieldActionPolling() {
     stopFieldActionPolling();
     pollFieldActions();
-  }
-
-  async function syncNativeTrailmarks(force = false) {
-    if (!state.livePositionEnabled) {
-      return;
-    }
-
-    const markers = state.features
-      .filter(isOfficialTrailmark)
-      .map((feature) => ({
-        id: feature.id,
-        title: feature.title || "Trailmark",
-        x: Number(feature.points[0].x),
-        y: Number(feature.points[0].y),
-      }))
-      .filter((marker) => marker.id && marker.title && Number.isFinite(marker.x) && Number.isFinite(marker.y))
-      .sort((left, right) => left.id.localeCompare(right.id));
-    const syncKey = JSON.stringify(markers);
-    if (!force && syncKey === state.nativeMarkerSyncKey) {
-      return;
-    }
-
-    try {
-      const clearResponse = await fetch(NATIVE_MARKERS_CLEAR_URL, {
-        method: "POST",
-        cache: "no-store",
-        credentials: "omit",
-        mode: "cors",
-      });
-      if (!clearResponse.ok) {
-        throw new Error(`Native marker bridge returned ${clearResponse.status}`);
-      }
-
-      for (const marker of markers) {
-        const response = await fetch(NATIVE_MARKERS_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          cache: "no-store",
-          credentials: "omit",
-          mode: "cors",
-          body: new URLSearchParams({
-            id: marker.id,
-            title: marker.title,
-            x: String(marker.x),
-            y: String(marker.y),
-          }),
-        });
-        if (!response.ok) {
-          throw new Error(`Native marker bridge returned ${response.status}`);
-        }
-      }
-      state.nativeMarkerSyncKey = syncKey;
-    } catch (error) {
-      state.nativeMarkerSyncKey = "";
-      // The native bridge is optional. Keep the normal browser Atlas quiet when it is absent.
-      console.debug("Native Skyrim Trailmark sync unavailable", error);
-    }
   }
 
   function stopFieldActionPolling() {
@@ -4225,7 +4163,6 @@
       saveState();
       renderAll();
       updateMapDensity();
-      void syncNativeTrailmarks(true);
       setStatus("Official GUILD Atlas updated");
     } catch (error) {
       console.warn("Could not refresh the official GUILD Atlas", error);

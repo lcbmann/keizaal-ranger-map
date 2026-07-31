@@ -53,21 +53,14 @@ The plugin also waits for an outdoor Tamriel world instead of assuming that a
 normal save-load signal means the player is ready. This matters for SkyMP
 character selection and other server-managed transitions.
 
-## Experimental native Trailmark sync
+## Native map marker experiment
 
-When **Live position** is enabled on the open Atlas page, the page sends the
-official GUILD Trailmarks to the local bridge. The plugin converts their Atlas
-coordinates into Skyrim world coordinates and creates temporary copies of the
-vanilla map-marker reference. They appear on Skyrim's normal world map as
-non-fast-travel landmark markers. When the page receives an updated GUILD Atlas,
-it clears and recreates the temporary markers.
-
-This is deliberately limited to official Trailmarks in this first experiment.
-The copies are session-only and must not be treated as save data: use a
-disposable test save and do not save while testing. If a marker is misplaced or
-does not appear, close Skyrim and report the `RangerAtlas.log` lines rather than
-trying to repair the save. The browser Atlas and Discord Trailmark workflows
-remain the source of truth.
+The temporary native Skyrim map-marker experiment is disabled in the `0.6.2`
+build. The first implementation was able to reach the runtime marker-creation
+path, but it was not safe with SkyMP's server-managed world transitions. The
+plugin therefore keeps the stable local position reader and field actions while
+the native map-marker route is redesigned. The browser Atlas and Discord
+Trailmark workflows remain the source of truth.
 
 ## Optional Trailmark visits
 
