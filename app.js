@@ -2999,6 +2999,7 @@
     }
 
     if (state.livePositionConnection === "linked") {
+      elements.fieldConsoleStatus.classList.remove("is-unavailable");
       elements.fieldConsoleStatus.textContent = "Skyrim connected";
       elements.fieldConsoleHint.textContent = state.trailmarkVisitsEnabled
         ? "Trailmark watch active."
@@ -3007,11 +3008,20 @@
       return;
     }
     if (state.livePositionConnection === "connecting") {
+      elements.fieldConsoleStatus.classList.remove("is-unavailable");
       elements.fieldConsoleStatus.textContent = "Connecting to Skyrim";
       elements.fieldConsoleHint.textContent = "Waiting for the game link.";
       elements.fieldMarkHereBtn.disabled = true;
       return;
     }
+    if (state.livePositionConnection === "unavailable") {
+      elements.fieldConsoleStatus.classList.add("is-unavailable");
+      elements.fieldConsoleStatus.textContent = "Game link unavailable";
+      elements.fieldConsoleHint.textContent = "Skyrim is not connected.";
+      elements.fieldMarkHereBtn.disabled = true;
+      return;
+    }
+    elements.fieldConsoleStatus.classList.remove("is-unavailable");
     elements.fieldConsoleStatus.textContent = "Ready for the road";
     elements.fieldConsoleHint.textContent = "Enable Live position.";
     elements.fieldMarkHereBtn.disabled = true;

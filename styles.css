@@ -1375,6 +1375,11 @@ html[data-workspace="edit"] .field-workspace-controls {
   font-size: 0.78rem;
 }
 
+.field-console-rail .field-console-status strong.is-unavailable {
+  color: #8a352d;
+  font-weight: 800;
+}
+
 .field-console-rail .field-console-status p {
   margin: 2px 0 0;
   font-size: 0.7rem;
@@ -3064,6 +3069,10 @@ html[data-theme="dark"] .field-console-status strong,
 html[data-theme="dark"] .field-console-card strong,
 html[data-theme="dark"] .field-follow-toggle strong {
   color: #eee3cd;
+}
+
+html[data-theme="dark"] .field-console-rail .field-console-status strong.is-unavailable {
+  color: #e28b79;
 }
 
 html[data-theme="dark"] .panel-tab-button {
