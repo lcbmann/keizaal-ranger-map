@@ -184,8 +184,11 @@ textarea {
 .brand p {
   margin: 3px 0 0;
   color: #6e5132;
-  font-size: 0.86rem;
-  font-style: italic;
+  font-size: 0.68rem;
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .topbar-actions,
@@ -462,23 +465,26 @@ textarea {
   font-style: italic;
 }
 
-.help-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0 22px;
+.help-accordion {
   margin-top: 16px;
+  border-top: 1px solid rgba(72, 45, 17, 0.25);
 }
 
 .help-step {
-  padding: 14px 0;
-  border-top: 1px solid rgba(72, 45, 17, 0.25);
+  border-bottom: 1px solid rgba(72, 45, 17, 0.25);
 }
 
 .help-step-heading {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 8px;
+  padding: 11px 2px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.help-step-heading::-webkit-details-marker {
+  display: none;
 }
 
 .help-step-number {
@@ -495,17 +501,48 @@ textarea {
   font-weight: 700;
 }
 
-.help-step h3 {
-  margin: 0;
+.help-step-title {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+  flex: 1 1 auto;
+}
+
+.help-step-title strong {
   color: #3b2816;
-  font-size: 0.86rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-size: 0.92rem;
+  line-height: 1.2;
+}
+
+.help-step-title small {
+  color: #72583a;
+  font-size: 0.76rem;
+  line-height: 1.25;
+}
+
+.help-step-chevron {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  margin: 0 5px 4px 8px;
+  border-right: 1.5px solid #72583a;
+  border-bottom: 1.5px solid #72583a;
+  transform: rotate(45deg);
+  transition: transform 120ms ease;
+}
+
+.help-step[open] .help-step-chevron {
+  margin-bottom: -4px;
+  transform: rotate(225deg);
+}
+
+.help-step-heading:hover {
+  background: rgba(255, 246, 222, 0.32);
 }
 
 .help-step ol {
   margin: 0;
-  padding-left: 22px;
+  padding: 0 36px 14px 42px;
   color: #493520;
   font-size: 0.88rem;
   line-height: 1.42;
@@ -518,6 +555,11 @@ textarea {
 .help-step strong,
 .help-note strong {
   color: #244d33;
+}
+
+.help-step a {
+  color: #245c3d;
+  font-weight: 700;
 }
 
 .help-step kbd {
@@ -645,6 +687,8 @@ textarea {
 
 .workflow-dialog.help-dialog {
   width: min(700px, calc(100vw - 32px));
+  max-height: min(760px, calc(100vh - 32px));
+  overflow: auto;
 }
 
 .workflow-dialog {
@@ -2627,7 +2671,7 @@ html[data-workspace="field"] .poi-marker.is-trailmark.is-nearby {
   }
 
   .brand p {
-    font-size: 0.78rem;
+    font-size: 0.68rem;
   }
 
   .draw-toolbar {
@@ -2661,10 +2705,6 @@ html[data-workspace="field"] .poi-marker.is-trailmark.is-nearby {
   .tool-glyph {
     width: 21px;
     height: 21px;
-  }
-
-  .help-grid {
-    grid-template-columns: 1fr;
   }
 
   .topbar-actions {
@@ -3074,6 +3114,14 @@ html[data-theme="dark"] .receive-confirmation,
 html[data-theme="dark"] .help-step,
 html[data-theme="dark"] .trailmark-presence-list li {
   border-color: rgba(194, 138, 24, 0.2);
+}
+
+html[data-theme="dark"] .help-step-title small {
+  color: #ad9b7b;
+}
+
+html[data-theme="dark"] .help-step-heading:hover {
+  background: rgba(255, 240, 205, 0.06);
 }
 
 html[data-theme="dark"] .workspace {

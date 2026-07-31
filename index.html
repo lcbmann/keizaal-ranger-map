@@ -31,7 +31,7 @@
                 </svg>
               </button>
             </div>
-            <p>Keizaal field copy</p>
+            <p>Keizaal Online</p>
           </div>
         </div>
         <div class="workspace-switch" role="group" aria-label="Atlas workspace">
@@ -243,7 +243,7 @@
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v16M5 9h14M7 20h10" /></svg>
                 <span>Leave Field Drop</span>
               </button>
-              <p class="trailmark-drop-hint">Leave a note for Rangers at this Trailmark through Discord.</p>
+              <p class="trailmark-drop-hint">Leave a note for Rangers at this Trailmark from the Atlas.</p>
               <p id="trailmarkPresenceStatus" class="trailmark-presence-status"></p>
               <ul id="trailmarkPresenceList" class="trailmark-presence-list"></ul>
             </section>
@@ -307,75 +307,94 @@
         <button id="helpCloseBtn" class="field-note-close" type="button" aria-label="Close atlas instructions">&times;</button>
         <p class="field-note-kicker">Atlas Instructions</p>
         <h2>Using the Field Atlas</h2>
-        <p class="help-intro">Choose what you need to do, then follow the short steps. Your atlas saves automatically in this browser.</p>
-        <div class="help-grid">
-          <section class="help-step">
-            <div class="help-step-heading">
+        <p class="help-intro">Open a section for the task you need. Your atlas saves automatically in this browser.</p>
+        <div class="help-accordion">
+          <details class="help-step" open>
+            <summary class="help-step-heading">
               <span class="help-step-number" aria-hidden="true">1</span>
-              <h3>Add Entries</h3>
-            </div>
+              <span class="help-step-title"><strong>Start here</strong><small>The basic map workflow</small></span>
+              <span class="help-step-chevron" aria-hidden="true"></span>
+            </summary>
             <ol>
-              <li>Switch to <strong>Edit Atlas</strong>.</li>
-              <li>Choose <strong>Mark</strong>, <strong>Trail</strong>, or <strong>Range</strong>.</li>
-              <li>Place or draw on the map.</li>
-              <li>Select every category that fits the entry, then fill in confidence and notes.</li>
-              <li>Use the <strong>checkmark beside the entry</strong> to keep it.</li>
-              <li>To reposition a marker, select it and choose <strong>Move</strong>, then confirm or cancel the new position.</li>
+              <li>Use <strong>Field View</strong> to browse and navigate. Use <strong>Edit Atlas</strong> to change your own copy.</li>
+              <li>Enter your name under <strong>Signed As</strong> when creating entries or using Trailmark features.</li>
+              <li>Click a map symbol or open <strong>Browse Atlas</strong> to search, filter, and view details.</li>
+              <li>Use <strong>Settings</strong> to show location names and the moon or sun button to change the theme.</li>
             </ol>
-          </section>
-          <section class="help-step">
-            <div class="help-step-heading">
+          </details>
+          <details class="help-step">
+            <summary class="help-step-heading">
               <span class="help-step-number" aria-hidden="true">2</span>
-              <h3>Find Entries</h3>
-            </div>
+              <span class="help-step-title"><strong>Add and edit entries</strong><small>Marks, trails, ranges, and notes</small></span>
+              <span class="help-step-chevron" aria-hidden="true"></span>
+            </summary>
             <ol>
-              <li>Stay in <strong>Field View</strong> for a read-only map and live Trailmark tools.</li>
-              <li>Open <strong>Browse Atlas</strong> to use Search, Mapped By, and category filters.</li>
-              <li>Select an entry to zoom to it and open its <strong>Details</strong>.</li>
-              <li>Hold <kbd>Ctrl</kbd>, <kbd>Cmd</kbd>, or <kbd>Shift</kbd> while selecting to choose several entries.</li>
-              <li>With several entries selected, use <strong>Delete</strong> in the inspector to remove them together.</li>
-              <li>Press <kbd>Esc</kbd> to clear active filters.</li>
+              <li>Switch to <strong>Edit Atlas</strong>, then choose <strong>Mark</strong>, <strong>Trail</strong>, or <strong>Range</strong>.</li>
+              <li>Place a mark, or click and drag to draw a trail or range boundary.</li>
+              <li>Choose every category that fits, then add a title, confidence level, and useful notes.</li>
+              <li>Use the map <strong>checkmark</strong> to save the new entry or the <strong>X</strong> to discard it.</li>
+              <li>To move an existing entry, select it, choose <strong>Move</strong>, then confirm or cancel the new position.</li>
+              <li>Hold <kbd>Ctrl</kbd>, <kbd>Cmd</kbd>, or <kbd>Shift</kbd> while selecting to select several entries. Use <strong>Delete</strong> in the inspector to remove them together.</li>
             </ol>
-          </section>
-          <section class="help-step">
-            <div class="help-step-heading">
+          </details>
+          <details class="help-step">
+            <summary class="help-step-heading">
               <span class="help-step-number" aria-hidden="true">3</span>
-              <h3>Share Entries</h3>
-            </div>
+              <span class="help-step-title"><strong>Share and receive</strong><small>Move atlas information between Rangers</small></span>
+              <span class="help-step-chevron" aria-hidden="true"></span>
+            </summary>
             <ol>
-              <li>Use the top bar when you need to move atlas information between copies.</li>
-              <li><strong>Share Atlas</strong> creates a code or ready-to-post Field Report.</li>
-              <li><strong>Receive Atlas</strong> reviews an official copy, Skyrim references, or another Ranger's code. The official GUILD copy then refreshes automatically when it changes.</li>
-              <li><strong>Save Map</strong> downloads the current visible map as a PNG.</li>
+              <li><strong>Share Atlas</strong> creates a short code from the entries you choose, or creates a ready-to-post Field Report.</li>
+              <li>Give the code to another Ranger. They open <strong>Receive Atlas</strong>, paste it, review the preview, and choose <strong>Add to My Atlas</strong>.</li>
+              <li>Use <strong>Receive GUILD Atlas</strong> to load the official shared copy. Official entries refresh automatically when the maintained copy changes.</li>
+              <li>Use <strong>Receive SKYRIM Locations</strong> to add or refresh vanilla Skyrim reference markers.</li>
+              <li><strong>Save Map</strong> downloads the currently visible map and labels as a PNG.</li>
             </ol>
-          </section>
-          <section class="help-step">
-            <div class="help-step-heading">
+          </details>
+          <details class="help-step">
+            <summary class="help-step-heading">
               <span class="help-step-number" aria-hidden="true">4</span>
-              <h3>Clean Up</h3>
-            </div>
+              <span class="help-step-title"><strong>Install the game link</strong><small>Optional desktop mod for live position</small></span>
+              <span class="help-step-chevron" aria-hidden="true"></span>
+            </summary>
             <ol>
-              <li><strong>Undo</strong> reverses your most recent change.</li>
-              <li><strong>Clean Up</strong> removes chosen categories from custom entries, Skyrim references, or the entire map.</li>
-              <li>Use <strong>Undo</strong> immediately if you remove the wrong set.</li>
+              <li>Download the latest <strong>Ranger Atlas SKSE</strong> release from the <a href="https://github.com/lcbmann/keizaal-ranger-map/releases/latest" target="_blank" rel="noreferrer">GitHub Releases page</a>.</li>
+              <li>In <strong>Vortex</strong>, open <strong>Mods</strong>, choose <strong>Install From File</strong>, and select the downloaded archive.</li>
+              <li>Enable and deploy the mod in the same Skyrim profile used for Keizaal Online.</li>
+              <li>Launch Skyrim through the normal Keizaal launcher. Keep this Atlas open in a desktop browser while you play.</li>
+              <li>Return to <strong>Field View</strong> and enable <strong>Live position</strong>. The left rail should change to <strong>Skyrim connected</strong>.</li>
+              <li>This game link is for desktop Skyrim. It does not provide live position on a phone or tablet.</li>
             </ol>
-          </section>
-          <section class="help-step">
-            <div class="help-step-heading">
+          </details>
+          <details class="help-step">
+            <summary class="help-step-heading">
               <span class="help-step-number" aria-hidden="true">5</span>
-              <h3>Visit Trailmarks</h3>
-            </div>
+              <span class="help-step-title"><strong>Visit Trailmarks</strong><small>Record visits and leave field drops</small></span>
+              <span class="help-step-chevron" aria-hidden="true"></span>
+            </summary>
             <ol>
-              <li>Use <strong>Field View</strong> and enter your Ranger name under <strong>Signed As</strong>.</li>
-              <li>Enable <strong>Live position</strong> and <strong>Record visits</strong>.</li>
-              <li>Use <strong>Link Discord</strong> once so Wayfinder can prepare nearby Trailmark channels when you arrive.</li>
-              <li>The desktop Ranger Atlas integration must be installed before <strong>Live position</strong> can connect.</li>
-              <li>Remain within roughly <strong>75 metres</strong> of an official Guild Trailmark for 12 seconds to record your visit.</li>
-              <li>After a recorded visit, select that Trailmark and use <strong>Leave Drop</strong> to post into its Discord channel.</li>
+              <li>With Skyrim connected, enable <strong>Record visits</strong>. The visible boundary around official Trailmarks shows the check-in area.</li>
+              <li>Stay inside the boundary for about <strong>12 seconds</strong>. Your visit is recorded automatically and the Trailmark details open.</li>
+              <li>To connect Discord, run <strong>/atlas link</strong> in the Ranger Discord, then enter the one-time code under <strong>Link Discord</strong>.</li>
+              <li>After a visit, click <strong>Leave Field Drop</strong> on the arrival notice or in the Trailmark details. Write the message and submit it through the Atlas.</li>
+              <li>The drop is sent to the Trailmark channel through Wayfinder. Recent visitors and drop status appear in the Trailmark details.</li>
             </ol>
-          </section>
+          </details>
+          <details class="help-step">
+            <summary class="help-step-heading">
+              <span class="help-step-number" aria-hidden="true">6</span>
+              <span class="help-step-title"><strong>Undo and clean up</strong><small>Remove entries without losing control</small></span>
+              <span class="help-step-chevron" aria-hidden="true"></span>
+            </summary>
+            <ol>
+              <li><strong>Undo</strong> reverses your most recent change, including a receive or cleanup action.</li>
+              <li><strong>Clean Up</strong> lets you remove selected categories from custom entries, Skyrim references, or the whole map.</li>
+              <li>Choose the scope and categories carefully, then use <strong>Undo</strong> immediately if you scraped the wrong entries.</li>
+              <li>Default cities and towns are reference points and are not removed when you clean custom entries.</li>
+            </ol>
+          </details>
         </div>
-        <p class="help-note"><strong>Map crowded?</strong> Zoom in for full Skyrim reference symbols, or use the category filters to narrow the view.</p>
+        <p class="help-note"><strong>Game link unavailable?</strong> Make sure the mod is enabled and deployed in Vortex, Skyrim was launched through Keizaal, and the Atlas is open in the same desktop session.</p>
       </div>
     </dialog>
 
