@@ -336,7 +336,11 @@ namespace RangerAtlas::FieldAtlasUI
             if (badge_id.empty()) {
                 return nullptr;
             }
-            const auto key = std::string(badge_id);
+            auto key = std::string(badge_id);
+            constexpr std::string_view legacy_medal_prefix = "medal-the-";
+            if (key.starts_with(legacy_medal_prefix)) {
+                key = "medal-" + key.substr(legacy_medal_prefix.size());
+            }
             if (const auto existing = g_badge_textures.find(key); existing != g_badge_textures.end()) {
                 return existing->second;
             }
@@ -418,24 +422,26 @@ namespace RangerAtlas::FieldAtlasUI
             const auto radians = heading * pi / 180.0F;
             const MenuFramework::Vec2 direction{ std::sin(radians), -std::cos(radians) };
             const MenuFramework::Vec2 right{ std::cos(radians), std::sin(radians) };
-            const MenuFramework::Vec2 outer_tip{ center.x + direction.x * 20.0F * scale, center.y + direction.y * 20.0F * scale };
-            const MenuFramework::Vec2 outer_base{ center.x + direction.x * 2.0F * scale, center.y + direction.y * 2.0F * scale };
-            const MenuFramework::Vec2 outer_left{ outer_base.x - right.x * 9.0F * scale, outer_base.y - right.y * 9.0F * scale };
-            const MenuFramework::Vec2 outer_right{ outer_base.x + right.x * 9.0F * scale, outer_base.y + right.y * 9.0F * scale };
-            const MenuFramework::Vec2 outer_tail{ center.x - direction.x * 13.0F * scale, center.y - direction.y * 13.0F * scale };
-            const MenuFramework::Vec2 outer_shaft_end{ center.x + direction.x * 5.0F * scale, center.y + direction.y * 5.0F * scale };
-            const MenuFramework::Vec2 gold_tip{ center.x + direction.x * 17.0F * scale, center.y + direction.y * 17.0F * scale };
-            const MenuFramework::Vec2 gold_base{ center.x + direction.x * 3.0F * scale, center.y + direction.y * 3.0F * scale };
-            const MenuFramework::Vec2 gold_left{ gold_base.x - right.x * 5.4F * scale, gold_base.y - right.y * 5.4F * scale };
-            const MenuFramework::Vec2 gold_right{ gold_base.x + right.x * 5.4F * scale, gold_base.y + right.y * 5.4F * scale };
-            const MenuFramework::Vec2 gold_tail{ center.x - direction.x * 11.0F * scale, center.y - direction.y * 11.0F * scale };
-            const MenuFramework::Vec2 gold_shaft_end{ center.x + direction.x * 5.5F * scale, center.y + direction.y * 5.5F * scale };
+            const auto point = [&](float forward, float sideways) {
+                return MenuFramework::Vec2{
+                    center.x + (direction.x * forward + right.x * sideways) * scale,
+                    center.y + (direction.y * forward + right.y * sideways) * scale,
+                };
+            };
+            const auto outer_tip = point(22.0F, 0.0F);
+            const auto outer_right = point(-13.0F, 12.0F);
+            const auto outer_notch = point(-5.0F, 1.5F);
+            const auto outer_left = point(-10.0F, -15.0F);
+            const auto inner_tip = point(18.0F, 0.0F);
+            const auto inner_right = point(-9.0F, 8.5F);
+            const auto inner_notch = point(-3.5F, 1.0F);
+            const auto inner_left = point(-7.0F, -10.8F);
 
-            MenuFramework::draw_circle_filled(draw_list, center, 13.0F * scale, rgba(237, 220, 165, 72));
-            MenuFramework::draw_line(draw_list, outer_tail, outer_shaft_end, rgba(31, 23, 13, 255), 7.0F * scale);
-            MenuFramework::draw_triangle_filled(draw_list, outer_tip, outer_left, outer_right, rgba(31, 23, 13, 255));
-            MenuFramework::draw_line(draw_list, gold_tail, gold_shaft_end, rgba(196, 154, 40, 255), 3.5F * scale);
-            MenuFramework::draw_triangle_filled(draw_list, gold_tip, gold_left, gold_right, rgba(196, 154, 40, 255));
+            MenuFramework::draw_circle_filled(draw_list, center, 14.0F * scale, rgba(192, 247, 244, 56));
+            MenuFramework::draw_triangle_filled(draw_list, outer_tip, outer_right, outer_notch, rgba(19, 38, 42, 255));
+            MenuFramework::draw_triangle_filled(draw_list, outer_tip, outer_notch, outer_left, rgba(19, 38, 42, 255));
+            MenuFramework::draw_triangle_filled(draw_list, inner_tip, inner_right, inner_notch, rgba(85, 217, 223, 255));
+            MenuFramework::draw_triangle_filled(draw_list, inner_tip, inner_notch, inner_left, rgba(85, 217, 223, 255));
         }
 
         MenuFramework::Vec2 smooth_player_position(MenuFramework::Vec2 target, float target_heading)
@@ -728,7 +734,7 @@ namespace RangerAtlas::FieldAtlasUI
             const auto summary = std::to_string(trailmark_count) + " Trailmarks  |  " +
                 std::to_string(field_mark_count) + " field marks";
             muted_text(summary.c_str());
-            muted_text("Gold pointer: you  |  Green flags: Trailmarks  |  Gold route: nearest");
+            muted_text("Cyan arrow: you  |  Green flags: Trailmarks  |  Gold route: nearest");
         }
 
         void queue_action(std::string_view type, std::string payload = "{}")
@@ -856,7 +862,10 @@ namespace RangerAtlas::FieldAtlasUI
             const auto distance = static_cast<float>(json_number(nearest, "distance", -1.0));
             if (distance >= 0.0F) {
                 const auto progress = std::clamp(trailmark_radius / (std::max)(trailmark_radius, distance), 0.0F, 1.0F);
-                MenuFramework::progress_bar(progress, { -1.0F, 16.0F }, within_range ? "WITHIN TRAILMARK RADIUS" : nullptr);
+                MenuFramework::progress_bar(
+                    progress,
+                    { field_content_width, 22.0F },
+                    within_range ? "WITHIN TRAILMARK RADIUS" : nullptr);
             }
 
             const auto notes = json_string(nearest, "notes");

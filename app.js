@@ -1496,8 +1496,8 @@
           className: "live-position-leaflet-marker",
           html: `
             <div class="live-position-marker" style="--heading:0deg">
-              <svg class="live-position-arrow" viewBox="0 0 36 40" aria-hidden="true">
-                <path d="M18 2 27 37 18 29 9 37Z" />
+              <svg class="live-position-arrow" viewBox="0 0 100 100" aria-hidden="true">
+                <path d="M49 2Q52 1 54 6L89 92Q91 97 86 95L62 86Q56 84 53 90L50 96Q48 101 45 96L15 84Q10 82 15 78Z" />
               </svg>
             </div>
           `,
@@ -2481,7 +2481,10 @@
   }
 
   function profileBadgeAsset(id) {
-    return `assets/ranger-profile/${id}.png`;
+    const assetId = id.startsWith("medal-the-")
+      ? `medal-${id.slice("medal-the-".length)}`
+      : id;
+    return `assets/ranger-profile/${assetId}.png`;
   }
 
   function renderRangerProfile() {
@@ -2494,6 +2497,7 @@
       image.src = profileBadgeAsset(medal.id);
       image.alt = medal.label;
       image.title = medal.label;
+      image.addEventListener("error", () => image.remove(), { once: true });
       return image;
     }));
   }
