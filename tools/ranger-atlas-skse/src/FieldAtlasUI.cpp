@@ -38,8 +38,10 @@ namespace RangerAtlas::FieldAtlasUI
         constexpr float atlas_map_height = 6144.0F;
         constexpr float trailmark_radius = 96.0F;
         constexpr float atlas_units_to_meters = 0.79F;
-        constexpr MenuFramework::Vec2 interactive_map_size{ 640.0F, 480.0F };
-        constexpr float field_content_width = 630.0F;
+        constexpr MenuFramework::Vec2 interactive_map_size{ 600.0F, 450.0F };
+        constexpr MenuFramework::Vec2 field_console_size{ 646.0F, 900.0F };
+        constexpr float field_content_width = 590.0F;
+        constexpr std::size_t recent_visitor_preview_limit = 3;
         constexpr std::array travel_sizes{
             TravelSizeOption{ "Compact", { 400.0F, 300.0F } },
             TravelSizeOption{ "Standard", { 520.0F, 390.0F } },
@@ -757,7 +759,7 @@ namespace RangerAtlas::FieldAtlasUI
                 "##clipboard-body",
                 g_clipboard_body.data(),
                 g_clipboard_body.size(),
-                { field_content_width, 190.0F });
+                { field_content_width, 170.0F });
             if (title_changed || body_changed) {
                 g_clipboard_dirty = true;
                 g_clipboard_last_edit = std::chrono::steady_clock::now();
@@ -870,7 +872,7 @@ namespace RangerAtlas::FieldAtlasUI
             accent_text("LEAVE A FIELD DROP");
             muted_text("Send a report from this Trailmark directly through Wayfinder.");
             MenuFramework::input_text_multiline(
-                "##field-drop", g_drop_message.data(), g_drop_message.size(), { field_content_width, 80.0F });
+                "##field-drop", g_drop_message.data(), g_drop_message.size(), { field_content_width, 68.0F });
             if (MenuFramework::button("Send Field Drop", { 190.0F, 0.0F })) {
                 const std::string message(g_drop_message.data());
                 if (message.empty()) {
@@ -887,8 +889,13 @@ namespace RangerAtlas::FieldAtlasUI
             if (visitors.empty()) {
                 muted_text("No recent visits recorded.");
             } else {
-                for (const auto& visitor : visitors) {
-                    muted_text(("- " + visitor).c_str());
+                const auto visible_count = (std::min)(recent_visitor_preview_limit, visitors.size());
+                for (std::size_t index = 0; index < visible_count; ++index) {
+                    muted_text(("- " + visitors[index]).c_str());
+                }
+                if (visitors.size() > visible_count) {
+                    const auto remaining = visitors.size() - visible_count;
+                    muted_text(("+ " + std::to_string(remaining) + (remaining == 1 ? " earlier visit" : " earlier visits")).c_str());
                 }
             }
             if (MenuFramework::button("Check In Now")) {
@@ -918,7 +925,7 @@ namespace RangerAtlas::FieldAtlasUI
             }
             accent_text("NOTES");
             MenuFramework::input_text_multiline(
-                "##mark-notes", g_mark_notes.data(), g_mark_notes.size(), { field_content_width, 88.0F });
+                "##mark-notes", g_mark_notes.data(), g_mark_notes.size(), { field_content_width, 76.0F });
             if (MenuFramework::button("Create Field Mark", { 190.0F, 0.0F })) {
                 const std::string title(g_mark_title.data());
                 if (title.empty()) {
@@ -969,7 +976,7 @@ namespace RangerAtlas::FieldAtlasUI
             bool open = true;
             MenuFramework::set_next_window_pos({ 34.0F, 64.0F });
             MenuFramework::set_next_window_size(
-                travel_mode ? MenuFramework::Vec2{ travel_map_size.x + 46.0F, 0.0F } : MenuFramework::Vec2{ 686.0F, 0.0F });
+                travel_mode ? MenuFramework::Vec2{ travel_map_size.x + 46.0F, 0.0F } : field_console_size);
 
             // Retain Menu Framework cursor capture without freezing the multiplayer world.
             if (!travel_mode) {
