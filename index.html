@@ -151,6 +151,10 @@
                 <strong id="fieldConsoleStatus">Ready for the road</strong>
                 <p id="fieldConsoleHint">Enable Live position.</p>
               </div>
+              <div id="awakeRangerCounter" class="awake-ranger-counter" hidden>
+                <span class="awake-ranger-dot" aria-hidden="true"></span>
+                <span id="awakeRangerCountText">Checking Ranger activity...</span>
+              </div>
               <button id="fieldMarkHereBtn" class="button secondary field-console-action" type="button" disabled>
                 Mark Current Position
               </button>
@@ -647,6 +651,6 @@
       crossorigin=""
     ></script>
     <script src="supabase-config.js"></script>
-    <script src="app.js?v=20260801-profile-clipboard"></script>
+    <script src="app.js?v=20260801-awake-rangers"></script>
   </body>
 </html>

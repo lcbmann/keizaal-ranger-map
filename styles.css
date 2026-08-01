@@ -1364,6 +1364,29 @@ html[data-workspace="edit"] .field-workspace-controls {
   font-size: 0.7rem;
 }
 
+.awake-ranger-counter {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 9px;
+  color: var(--ink-muted);
+  font-size: 0.76rem;
+  line-height: 1.2;
+}
+
+.awake-ranger-counter[hidden] {
+  display: none;
+}
+
+.awake-ranger-dot {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 7px;
+  border-radius: 50%;
+  background: #4f8a5b;
+  box-shadow: 0 0 0 2px rgba(79, 138, 91, 0.18);
+}
+
 .field-console-action {
   width: 100%;
   margin-top: 10px;

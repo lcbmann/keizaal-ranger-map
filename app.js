@@ -37,6 +37,7 @@
   const GUILD_ATLAS_CHECK_COOLDOWN_MS = 30 * 1000;
   const LOCAL_POSITION_POLL_INTERVAL_MS = 250;
   const LIVE_POSITION_SHARE_INTERVAL_MS = 10 * 1000;
+  const AWAKE_RANGER_POLL_MS = 15 * 1000;
   const OVERWATCH_POLL_MS = 5 * 1000;
   const TRAILMARK_DROP_POLL_MS = 4 * 1000;
   const TRAILMARK_DROP_POLL_LIMIT = 30;
@@ -132,6 +133,7 @@
     sharePositionEnabled: false,
     sharePositionInFlight: false,
     lastSharedPositionAt: 0,
+    awakeRangerCount: null,
     guildAtlasUpdatedAt: "",
     guildAtlasLocalChanges: false,
     trailmarkVisitsEnabled: false,
@@ -215,6 +217,8 @@
     fieldConsoleStatus: document.getElementById("fieldConsoleStatus"),
     fieldConsoleHint: document.getElementById("fieldConsoleHint"),
     fieldMarkHereBtn: document.getElementById("fieldMarkHereBtn"),
+    awakeRangerCounter: document.getElementById("awakeRangerCounter"),
+    awakeRangerCountText: document.getElementById("awakeRangerCountText"),
     followLivePositionInput: document.getElementById("followLivePositionInput"),
     aboutBtn: document.getElementById("aboutBtn"),
     aboutDialog: document.getElementById("aboutDialog"),
@@ -377,6 +381,7 @@
   let nativeFieldStatePostChain = Promise.resolve();
   let nativeFieldStateKey = "";
   let clipboardSyncTimer = null;
+  let awakeRangerPollTimer = null;
 
   init();
 
@@ -397,6 +402,7 @@
     if (isSupabaseConfigured()) {
       void refreshDiscordLink();
       void refreshOfficialGuildAtlas();
+      void pollAwakeRangerCount();
       guildAtlasRefreshTimer = window.setInterval(
         () => void refreshOfficialGuildAtlas(),
         GUILD_ATLAS_REFRESH_MS,
@@ -975,6 +981,7 @@
       ready: Boolean(state.livePositionEnabled && state.livePositionConnection === "linked" && getCurrentCreatorName()),
       ranger_name: getCurrentCreatorName(),
       ranger_profile: normalizeDiscordProfile(state.discordLink?.profile),
+      awake_ranger_count: state.awakeRangerCount,
       clipboard: {
         title: state.clipboard.title,
         body: state.clipboard.body,
@@ -1554,6 +1561,39 @@
     state.sharePositionEnabled = Boolean(
       state.livePositionEnabled && getCurrentCreatorName() && isSupabaseConfigured(),
     );
+  }
+
+  async function pollAwakeRangerCount() {
+    window.clearTimeout(awakeRangerPollTimer);
+    awakeRangerPollTimer = null;
+    const previousCount = state.awakeRangerCount;
+    try {
+      const count = await callSupabaseRpc("get_atlas_awake_ranger_count", {
+        device_token_input: getOrCreateDiscordDeviceToken(),
+      });
+      state.awakeRangerCount = Math.max(0, Number.parseInt(count, 10) || 0);
+      renderAwakeRangerCount();
+    } catch (error) {
+      state.awakeRangerCount = null;
+      renderAwakeRangerCount();
+      console.debug("Ranger activity count unavailable", error);
+    } finally {
+      if (state.livePositionEnabled && previousCount !== state.awakeRangerCount) {
+        void syncNativeFieldState(true);
+      }
+      awakeRangerPollTimer = window.setTimeout(pollAwakeRangerCount, AWAKE_RANGER_POLL_MS);
+    }
+  }
+
+  function renderAwakeRangerCount() {
+    const count = state.awakeRangerCount;
+    elements.awakeRangerCounter.hidden = !Number.isInteger(count);
+    if (!Number.isInteger(count)) {
+      return;
+    }
+    elements.awakeRangerCountText.textContent = count === 0
+      ? "No other Rangers awake"
+      : `${count} other ${count === 1 ? "Ranger" : "Rangers"} awake`;
   }
 
   async function shareLivePosition(point) {

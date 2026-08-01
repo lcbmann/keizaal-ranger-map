@@ -378,6 +378,21 @@ namespace RangerAtlas::FieldAtlasUI
             }
         }
 
+        void render_awake_ranger_count(std::string_view raw_state)
+        {
+            const auto count = static_cast<int>(json_number(raw_state, "awake_ranger_count", -1.0));
+            if (count < 0) {
+                return;
+            }
+            if (count == 0) {
+                muted_text("No other Rangers awake");
+                return;
+            }
+            const auto label = std::to_string(count) + " other " +
+                (count == 1 ? "Ranger" : "Rangers") + " awake";
+            muted_text(label.c_str());
+        }
+
         MenuFramework::Vec2 map_position(MenuFramework::Vec2 origin, MenuFramework::Vec2 atlas_point, MenuFramework::Vec2 display_size)
         {
             return {
@@ -980,6 +995,7 @@ namespace RangerAtlas::FieldAtlasUI
                 accent_text("RANGER ATLAS / TRAVEL");
                 if (ready) {
                     render_ranger_profile(raw_state, true);
+                    render_awake_ranger_count(raw_state);
                 }
                 muted_text("F7 close  |  F7 again for field controls");
                 MenuFramework::separator();
@@ -1028,6 +1044,7 @@ namespace RangerAtlas::FieldAtlasUI
             }
 
             render_ranger_profile(raw_state, false);
+            render_awake_ranger_count(raw_state);
             render_map(raw_state, interactive_map_size);
             render_map_key(raw_state);
 

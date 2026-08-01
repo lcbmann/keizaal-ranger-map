@@ -161,6 +161,9 @@ The Field Console includes a local working Clipboard. It autosaves through the
 browser Atlas on the same PC and can create a mark at the current Skyrim
 position or send a report after reaching an official Trailmark. Linked Discord
 rank and medal artwork is shown from the packaged badge files.
+The identity area also shows the aggregate number of other Rangers whose live
+position has updated within the active presence window. Names and positions are
+not exposed by this count.
 
 The experimental Platform add-on is kept in the repository under
 `tools/ranger-atlas-platform`, but is deliberately excluded from the supported
