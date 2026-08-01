@@ -38,7 +38,8 @@ namespace RangerAtlas::FieldAtlasUI
         constexpr float atlas_map_height = 6144.0F;
         constexpr float trailmark_radius = 96.0F;
         constexpr float atlas_units_to_meters = 0.79F;
-        constexpr MenuFramework::Vec2 interactive_map_size{ 720.0F, 540.0F };
+        constexpr MenuFramework::Vec2 interactive_map_size{ 640.0F, 480.0F };
+        constexpr float field_content_width = 630.0F;
         constexpr std::array travel_sizes{
             TravelSizeOption{ "Compact", { 400.0F, 300.0F } },
             TravelSizeOption{ "Standard", { 520.0F, 390.0F } },
@@ -746,7 +747,7 @@ namespace RangerAtlas::FieldAtlasUI
         {
             muted_text("Keep working notes here while Skyrim continues around you. Notes stay local until you choose an action.");
             accent_text("TITLE");
-            MenuFramework::set_next_item_width(710.0F);
+            MenuFramework::set_next_item_width(field_content_width);
             const auto title_changed = MenuFramework::input_text(
                 "##clipboard-title",
                 g_clipboard_title.data(),
@@ -756,7 +757,7 @@ namespace RangerAtlas::FieldAtlasUI
                 "##clipboard-body",
                 g_clipboard_body.data(),
                 g_clipboard_body.size(),
-                { 710.0F, 230.0F });
+                { field_content_width, 190.0F });
             if (title_changed || body_changed) {
                 g_clipboard_dirty = true;
                 g_clipboard_last_edit = std::chrono::steady_clock::now();
@@ -868,7 +869,8 @@ namespace RangerAtlas::FieldAtlasUI
             MenuFramework::separator();
             accent_text("LEAVE A FIELD DROP");
             muted_text("Send a report from this Trailmark directly through Wayfinder.");
-            MenuFramework::input_text_multiline("##field-drop", g_drop_message.data(), g_drop_message.size(), { 710.0F, 92.0F });
+            MenuFramework::input_text_multiline(
+                "##field-drop", g_drop_message.data(), g_drop_message.size(), { field_content_width, 80.0F });
             if (MenuFramework::button("Send Field Drop", { 190.0F, 0.0F })) {
                 const std::string message(g_drop_message.data());
                 if (message.empty()) {
@@ -902,7 +904,7 @@ namespace RangerAtlas::FieldAtlasUI
         {
             muted_text("Record this exact outdoor position in your browser Atlas.");
             accent_text("TITLE");
-            MenuFramework::set_next_item_width(710.0F);
+            MenuFramework::set_next_item_width(field_content_width);
             MenuFramework::input_text("##mark-title", g_mark_title.data(), g_mark_title.size());
             accent_text("CATEGORY");
             MenuFramework::set_next_item_width(260.0F);
@@ -915,7 +917,8 @@ namespace RangerAtlas::FieldAtlasUI
                 MenuFramework::end_combo();
             }
             accent_text("NOTES");
-            MenuFramework::input_text_multiline("##mark-notes", g_mark_notes.data(), g_mark_notes.size(), { 710.0F, 100.0F });
+            MenuFramework::input_text_multiline(
+                "##mark-notes", g_mark_notes.data(), g_mark_notes.size(), { field_content_width, 88.0F });
             if (MenuFramework::button("Create Field Mark", { 190.0F, 0.0F })) {
                 const std::string title(g_mark_title.data());
                 if (title.empty()) {
@@ -966,7 +969,7 @@ namespace RangerAtlas::FieldAtlasUI
             bool open = true;
             MenuFramework::set_next_window_pos({ 34.0F, 64.0F });
             MenuFramework::set_next_window_size(
-                travel_mode ? MenuFramework::Vec2{ travel_map_size.x + 46.0F, 0.0F } : MenuFramework::Vec2{ 766.0F, 0.0F });
+                travel_mode ? MenuFramework::Vec2{ travel_map_size.x + 46.0F, 0.0F } : MenuFramework::Vec2{ 686.0F, 0.0F });
 
             // Retain Menu Framework cursor capture without freezing the multiplayer world.
             if (!travel_mode) {
@@ -1000,7 +1003,9 @@ namespace RangerAtlas::FieldAtlasUI
                 MenuFramework::separator();
                 if (ready) {
                     render_map(raw_state, travel_map_size);
-                    render_map_key(raw_state);
+                    if (g_travel_size != 0) {
+                        render_map_key(raw_state);
+                    }
                     MenuFramework::separator();
                     if (!nearest.empty()) {
                         const auto title = json_string(nearest, "title", "Trailmark");
