@@ -22,6 +22,7 @@
   const FIELD_STATE_URL = "http://127.0.0.1:38471/field-state";
   const NATIVE_MARKERS_URL = "http://127.0.0.1:38471/markers";
   const FIELD_ACTION_CURSOR_KEY = "ranger-atlas-field-action-cursor-v1";
+  const LAST_OUTDOOR_POSITION_KEY = "ranger-atlas-last-outdoor-position-v1";
   const SKYRIM_WORLDSPACE_FORM_ID = 0x0000003c;
   const WORLD_TO_ATLAS_X = [73.826813, 0.215295427, 4067.73578];
   const WORLD_TO_ATLAS_Y = [-0.324059025, 74.56657, 3036.85421];
@@ -130,6 +131,8 @@
     livePositionConnection: "off",
     nativeMarkerSyncKey: "",
     livePositionPoint: null,
+    lastOutdoorPosition: null,
+    lastOutdoorPositionPersistedAt: 0,
     livePositionHeading: 0,
     livePositionSnapshot: null,
     fieldActionCursor: Number(window.localStorage.getItem(FIELD_ACTION_CURSOR_KEY)) || 0,
@@ -748,6 +751,7 @@
   }
 
   function loadState() {
+    loadLastOutdoorPosition();
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) {
       state.features = defaultFeatures.map(cloneFeature);
@@ -839,6 +843,56 @@
       features: state.features,
     };
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+  }
+
+  function loadLastOutdoorPosition() {
+    const raw = window.localStorage.getItem(LAST_OUTDOOR_POSITION_KEY);
+    if (!raw) {
+      return;
+    }
+    try {
+      const saved = JSON.parse(raw);
+      if (!Number.isFinite(Number(saved?.x)) || !Number.isFinite(Number(saved?.y))) {
+        return;
+      }
+      state.lastOutdoorPosition = {
+        x: Number(saved.x),
+        y: Number(saved.y),
+        heading: Number(saved.heading) || 0,
+        updatedAtUnixMs: Number(saved.updatedAtUnixMs) || 0,
+        savedAtUnixMs: Number(saved.savedAtUnixMs) || 0,
+        stale: true,
+      };
+      state.livePositionPoint = { ...state.lastOutdoorPosition };
+    } catch (error) {
+      console.warn("Could not load the last outdoor position", error);
+    }
+  }
+
+  function persistLastOutdoorPosition(point) {
+    if (!point || !Number.isFinite(Number(point.x)) || !Number.isFinite(Number(point.y))) {
+      return;
+    }
+    const now = Date.now();
+    const previous = state.lastOutdoorPosition;
+    const moved = !previous || Math.hypot(Number(point.x) - previous.x, Number(point.y) - previous.y) >= 1.5;
+    if (!moved && now - state.lastOutdoorPositionPersistedAt < 1000) {
+      return;
+    }
+    const saved = {
+      x: Number(point.x),
+      y: Number(point.y),
+      heading: Number(point.heading) || 0,
+      updatedAtUnixMs: Number(point.updatedAtUnixMs) || now,
+      savedAtUnixMs: now,
+    };
+    state.lastOutdoorPosition = { ...saved, stale: Boolean(point.stale) };
+    state.lastOutdoorPositionPersistedAt = now;
+    window.localStorage.setItem(LAST_OUTDOOR_POSITION_KEY, JSON.stringify(saved));
+  }
+
+  function getLastKnownOutdoorPoint() {
+    return state.livePositionPoint || state.lastOutdoorPosition;
   }
 
   function applyTheme() {
@@ -940,8 +994,8 @@
     }
   }
 
-  function getNearestOfficialTrailmark(point = state.livePositionPoint) {
-    if (!point || point.stale) {
+  function getNearestOfficialTrailmark(point = getLastKnownOutdoorPoint()) {
+    if (!point || !Number.isFinite(Number(point.x)) || !Number.isFinite(Number(point.y))) {
       return null;
     }
     return state.features
@@ -953,12 +1007,29 @@
       .sort((left, right) => left.distance - right.distance)[0] || null;
   }
 
+  function isTrailmarkWithinLastKnownRange(feature) {
+    if (!state.livePositionEnabled || !isOfficialTrailmark(feature)) {
+      return false;
+    }
+    const point = getLastKnownOutdoorPoint();
+    if (!point) {
+      return false;
+    }
+    return Math.hypot(feature.points[0].x - point.x, feature.points[0].y - point.y) <= TRAILMARK_VISIT_RADIUS;
+  }
+
   function createNativeFieldState() {
     const nearest = getNearestOfficialTrailmark();
     const nearestFeature = nearest?.feature;
     const visits = nearestFeature ? state.trailmarkVisitsByFeature.get(nearestFeature.id) : [];
-    const playerPoint = state.livePositionPoint && !state.livePositionPoint.stale
-      ? { x: state.livePositionPoint.x, y: state.livePositionPoint.y, heading: state.livePositionPoint.heading || 0 }
+    const lastKnownPoint = getLastKnownOutdoorPoint();
+    const playerPoint = lastKnownPoint
+      ? {
+          x: lastKnownPoint.x,
+          y: lastKnownPoint.y,
+          heading: lastKnownPoint.heading || 0,
+          stale: Boolean(lastKnownPoint.stale),
+        }
       : null;
     const officialTrailmarks = playerPoint
       ? state.features
@@ -1197,6 +1268,10 @@
   }
 
   async function recordNearbyTrailmarkVisitFromFieldConsole() {
+    if (!state.livePositionEnabled) {
+      setStatus("Enable Live position before opening a Trailmark");
+      return;
+    }
     const nearest = getNearestOfficialTrailmark();
     if (!nearest || nearest.distance > TRAILMARK_VISIT_RADIUS) {
       setStatus("No official Trailmark is within field range");
@@ -1221,6 +1296,10 @@
   }
 
   async function submitNearbyTrailmarkDropFromFieldConsole(message) {
+    if (!state.livePositionEnabled) {
+      setStatus("Enable Live position before leaving a field drop");
+      return false;
+    }
     const nearest = getNearestOfficialTrailmark();
     const cleanMessage = String(message || "").trim().slice(0, 1800);
     if (!nearest || nearest.distance > TRAILMARK_VISIT_RADIUS) {
@@ -1260,9 +1339,13 @@
   }
 
   async function openNearbyTrailmarkDrop() {
-    const point = state.livePositionPoint;
-    if (!point || point.stale) {
-      setStatus("Connect to Skyrim before opening a Trailmark drop");
+    if (!state.livePositionEnabled) {
+      setStatus("Enable Live position before opening a Trailmark drop");
+      return;
+    }
+    const point = getLastKnownOutdoorPoint();
+    if (!point) {
+      setStatus("No outdoor Skyrim position has been saved yet");
       return;
     }
 
@@ -1412,8 +1495,10 @@
       state.livePositionPoint = {
         ...nextPoint,
         heading: state.livePositionHeading,
+        updatedAtUnixMs: Number(snapshot.updated_at_unix_ms) || Date.now(),
         stale: false,
       };
+      persistLastOutdoorPosition(state.livePositionPoint);
       updateLivePositionStatus("Linked to Skyrim", "linked");
       evaluateTrailmarkProximity(state.livePositionPoint);
       void shareLivePosition(state.livePositionPoint);
@@ -2089,14 +2174,17 @@
 
     elements.trailmarkPresenceList.innerHTML = "";
     const recentVisit = Number(state.trailmarkVisitCooldowns[feature.id] || 0);
+    const withinLastKnownRange = isTrailmarkWithinLastKnownRange(feature);
     const canLeaveDrop =
       Boolean(state.discordLink) &&
-      Date.now() - recentVisit < TRAILMARK_VISIT_COOLDOWN_MS;
+      (Date.now() - recentVisit < TRAILMARK_VISIT_COOLDOWN_MS || withinLastKnownRange);
     elements.trailmarkDropBtn.disabled = !canLeaveDrop;
     elements.trailmarkDropBtn.title = !state.discordLink
       ? "Link Discord before leaving a drop"
-      : canLeaveDrop
+      : Date.now() - recentVisit < TRAILMARK_VISIT_COOLDOWN_MS
         ? "Post a field drop to this Trailmark's Discord channel"
+        : withinLastKnownRange
+          ? "Use your last known outdoor position to access this Trailmark"
         : "Arrive at this Trailmark with Record visits enabled before leaving a drop";
     if (state.trailmarkVisitsLoading.has(feature.id)) {
       elements.trailmarkPresenceStatus.textContent = "Checking the latest field record...";
@@ -2131,7 +2219,7 @@
     });
   }
 
-  function openTrailmarkDropDialog(featureOverride = null) {
+  async function openTrailmarkDropDialog(featureOverride = null) {
     const feature = featureOverride || getSelectedFeature();
     if (!isOfficialTrailmark(feature)) {
       setStatus("Select an official Trailmark first");
@@ -2144,8 +2232,23 @@
     }
     const recentVisit = Number(state.trailmarkVisitCooldowns[feature.id] || 0);
     if (Date.now() - recentVisit >= TRAILMARK_VISIT_COOLDOWN_MS) {
-      setStatus(`Arrive at ${feature.title} with Record visits enabled before leaving a drop`);
-      return;
+      if (!isTrailmarkWithinLastKnownRange(feature)) {
+        setStatus(`Arrive at ${feature.title} with Record visits enabled before leaving a drop`);
+        return;
+      }
+      if (!state.trailmarkVisitsEnabled || !getCurrentCreatorName()) {
+        setStatus("Enable Record visits and enter your name before leaving a drop");
+        return;
+      }
+      if (state.trailmarkVisitInFlight) {
+        setStatus(`Checking in at ${feature.title}`);
+        return;
+      }
+      setStatus(`Recording your arrival at ${feature.title}`);
+      await recordTrailmarkVisit(feature);
+      if (Date.now() - Number(state.trailmarkVisitCooldowns[feature.id] || 0) >= TRAILMARK_VISIT_COOLDOWN_MS) {
+        return;
+      }
     }
 
     window.clearTimeout(trailmarkDropPollTimer);
