@@ -1,4 +1,4 @@
-Ranger Atlas Field Console 0.13.5
+Ranger Atlas Field Console 0.14.0
 
 1. Download the RangerAtlas ZIP. In Vortex, use "Install From File", select
    the ZIP, then enable and deploy the Ranger Atlas mod.

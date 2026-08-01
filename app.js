@@ -34,6 +34,7 @@
   const TRAILMARK_ACCESS_POLL_MS = 4000;
   const TRAILMARK_ACCESS_POLL_LIMIT = 30;
   const GUILD_ATLAS_REFRESH_MS = 5 * 60 * 1000;
+  const DISCORD_PROFILE_REFRESH_MS = 2 * 60 * 1000;
   const GUILD_ATLAS_CHECK_COOLDOWN_MS = 30 * 1000;
   const LOCAL_POSITION_POLL_INTERVAL_MS = 250;
   const LIVE_POSITION_SHARE_INTERVAL_MS = 10 * 1000;
@@ -373,6 +374,7 @@
   let livePositionMarker = null;
   let trailmarkAccessPollTimer = null;
   let guildAtlasRefreshTimer = null;
+  let discordProfileRefreshTimer = null;
   let guildAtlasRefreshInFlight = false;
   let guildAtlasLastCheckedAt = 0;
   let overwatchPollTimer = null;
@@ -409,8 +411,15 @@
         () => void refreshOfficialGuildAtlas(),
         GUILD_ATLAS_REFRESH_MS,
       );
+      discordProfileRefreshTimer = window.setInterval(
+        () => void refreshDiscordLink(),
+        DISCORD_PROFILE_REFRESH_MS,
+      );
     }
-    window.addEventListener("focus", () => void refreshOfficialGuildAtlas());
+    window.addEventListener("focus", () => {
+      void refreshOfficialGuildAtlas();
+      void refreshDiscordLink();
+    });
     if (state.livePositionEnabled) {
       startLivePositionPolling();
       startFieldActionPolling();
@@ -2466,7 +2475,7 @@
       version: 1,
       primary_badge: normalizeBadge(source.primary_badge),
       medals: Array.isArray(source.medals)
-        ? source.medals.map(normalizeBadge).filter(Boolean).slice(0, 12)
+        ? source.medals.map(normalizeBadge).filter(Boolean).slice(0, 32)
         : [],
     };
   }
@@ -2547,6 +2556,7 @@
       console.warn("Could not verify Discord link", error);
     }
     updateTrailmarkVisitControls();
+    void syncNativeFieldState(true);
   }
 
   async function unlinkDiscord() {

@@ -368,14 +368,19 @@ namespace RangerAtlas::FieldAtlasUI
             }
 
             const auto badge_size = compact ? 24.0F : 30.0F;
+            const auto badges_per_row = compact ? 12U : 16U;
             bool drew_badge = false;
+            std::size_t badges_on_row = 0;
             for (const auto& badge_id : badge_ids) {
                 if (const auto texture = badge_texture(badge_id)) {
-                    if (drew_badge) {
+                    if (drew_badge && badges_on_row < badges_per_row) {
                         MenuFramework::same_line();
+                    } else if (badges_on_row >= badges_per_row) {
+                        badges_on_row = 0;
                     }
                     MenuFramework::image(texture, { badge_size, badge_size });
                     drew_badge = true;
+                    badges_on_row += 1;
                 }
             }
         }
