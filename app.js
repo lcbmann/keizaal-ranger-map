@@ -1395,7 +1395,7 @@
         const deltaX = nextPoint.x - previousPoint.x;
         const deltaY = nextPoint.y - previousPoint.y;
         if (Math.hypot(deltaX, deltaY) >= 0.75) {
-          state.livePositionHeading = (Math.atan2(deltaX, -deltaY) * 180) / Math.PI;
+          state.livePositionHeading = (Math.atan2(deltaX, deltaY) * 180) / Math.PI;
         }
       }
       state.livePositionPoint = {

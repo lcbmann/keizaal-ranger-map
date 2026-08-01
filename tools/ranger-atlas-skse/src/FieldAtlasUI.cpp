@@ -413,23 +413,24 @@ namespace RangerAtlas::FieldAtlasUI
             const auto radians = heading * pi / 180.0F;
             const MenuFramework::Vec2 direction{ std::sin(radians), -std::cos(radians) };
             const MenuFramework::Vec2 right{ std::cos(radians), std::sin(radians) };
-            const MenuFramework::Vec2 outer_tip{ center.x + direction.x * 19.0F * scale, center.y + direction.y * 19.0F * scale };
-            const MenuFramework::Vec2 outer_tail{ center.x - direction.x * 11.0F * scale, center.y - direction.y * 11.0F * scale };
-            const MenuFramework::Vec2 outer_left{ outer_tail.x - right.x * 9.0F * scale, outer_tail.y - right.y * 9.0F * scale };
-            const MenuFramework::Vec2 outer_right{ outer_tail.x + right.x * 9.0F * scale, outer_tail.y + right.y * 9.0F * scale };
-            const MenuFramework::Vec2 gold_tip{ center.x + direction.x * 16.0F * scale, center.y + direction.y * 16.0F * scale };
-            const MenuFramework::Vec2 gold_tail{ center.x - direction.x * 7.5F * scale, center.y - direction.y * 7.5F * scale };
-            const MenuFramework::Vec2 gold_left{ gold_tail.x - right.x * 6.2F * scale, gold_tail.y - right.y * 6.2F * scale };
-            const MenuFramework::Vec2 gold_right{ gold_tail.x + right.x * 6.2F * scale, gold_tail.y + right.y * 6.2F * scale };
-            const MenuFramework::Vec2 notch_tip{ center.x - direction.x * 1.0F * scale, center.y - direction.y * 1.0F * scale };
-            const MenuFramework::Vec2 notch_tail{ center.x - direction.x * 8.5F * scale, center.y - direction.y * 8.5F * scale };
-            const MenuFramework::Vec2 notch_left{ notch_tail.x - right.x * 3.0F * scale, notch_tail.y - right.y * 3.0F * scale };
-            const MenuFramework::Vec2 notch_right{ notch_tail.x + right.x * 3.0F * scale, notch_tail.y + right.y * 3.0F * scale };
+            const MenuFramework::Vec2 outer_tip{ center.x + direction.x * 20.0F * scale, center.y + direction.y * 20.0F * scale };
+            const MenuFramework::Vec2 outer_base{ center.x + direction.x * 2.0F * scale, center.y + direction.y * 2.0F * scale };
+            const MenuFramework::Vec2 outer_left{ outer_base.x - right.x * 9.0F * scale, outer_base.y - right.y * 9.0F * scale };
+            const MenuFramework::Vec2 outer_right{ outer_base.x + right.x * 9.0F * scale, outer_base.y + right.y * 9.0F * scale };
+            const MenuFramework::Vec2 outer_tail{ center.x - direction.x * 13.0F * scale, center.y - direction.y * 13.0F * scale };
+            const MenuFramework::Vec2 outer_shaft_end{ center.x + direction.x * 5.0F * scale, center.y + direction.y * 5.0F * scale };
+            const MenuFramework::Vec2 gold_tip{ center.x + direction.x * 17.0F * scale, center.y + direction.y * 17.0F * scale };
+            const MenuFramework::Vec2 gold_base{ center.x + direction.x * 3.0F * scale, center.y + direction.y * 3.0F * scale };
+            const MenuFramework::Vec2 gold_left{ gold_base.x - right.x * 5.4F * scale, gold_base.y - right.y * 5.4F * scale };
+            const MenuFramework::Vec2 gold_right{ gold_base.x + right.x * 5.4F * scale, gold_base.y + right.y * 5.4F * scale };
+            const MenuFramework::Vec2 gold_tail{ center.x - direction.x * 11.0F * scale, center.y - direction.y * 11.0F * scale };
+            const MenuFramework::Vec2 gold_shaft_end{ center.x + direction.x * 5.5F * scale, center.y + direction.y * 5.5F * scale };
 
-            MenuFramework::draw_circle_filled(draw_list, center, 12.0F * scale, rgba(237, 220, 165, 85));
+            MenuFramework::draw_circle_filled(draw_list, center, 13.0F * scale, rgba(237, 220, 165, 72));
+            MenuFramework::draw_line(draw_list, outer_tail, outer_shaft_end, rgba(31, 23, 13, 255), 7.0F * scale);
             MenuFramework::draw_triangle_filled(draw_list, outer_tip, outer_left, outer_right, rgba(31, 23, 13, 255));
+            MenuFramework::draw_line(draw_list, gold_tail, gold_shaft_end, rgba(196, 154, 40, 255), 3.5F * scale);
             MenuFramework::draw_triangle_filled(draw_list, gold_tip, gold_left, gold_right, rgba(196, 154, 40, 255));
-            MenuFramework::draw_triangle_filled(draw_list, notch_tip, notch_left, notch_right, rgba(31, 23, 13, 255));
         }
 
         MenuFramework::Vec2 smooth_player_position(MenuFramework::Vec2 target, float target_heading)
@@ -464,8 +465,8 @@ namespace RangerAtlas::FieldAtlasUI
             constexpr std::array long_names{
                 "north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"
             };
-            // Atlas Y increases southward, so invert its delta for compass bearings.
-            auto degrees = std::atan2(to.x - from.x, from.y - to.y) * 180.0F / pi;
+            // Atlas Y increases northward, matching the map's upward screen direction.
+            auto degrees = std::atan2(to.x - from.x, to.y - from.y) * 180.0F / pi;
             if (degrees < 0.0F) {
                 degrees += 360.0F;
             }
