@@ -36,8 +36,9 @@ namespace RangerAtlas::FieldAtlasUI
 
         constexpr float atlas_map_width = 8192.0F;
         constexpr float atlas_map_height = 6144.0F;
-        constexpr float trailmark_radius = 96.0F;
         constexpr float atlas_units_to_meters = 0.79F;
+        constexpr float trailmark_radius_meters = 20.0F;
+        constexpr float trailmark_radius = trailmark_radius_meters / atlas_units_to_meters;
         constexpr MenuFramework::Vec2 interactive_map_size{ 600.0F, 450.0F };
         constexpr MenuFramework::Vec2 field_console_size{ 646.0F, 900.0F };
         constexpr float field_content_width = 590.0F;

@@ -25,7 +25,7 @@ Discord device token or Supabase credential into the DLL.
 From the Field Console a Ranger can:
 
 - see a bordered Skyrim atlas with a smoothly interpolated, heading-aware live player pointer, distinct Trailmark flags, exact range rings, and a gold route to the nearest Trailmark;
-- read distance in metres and compass direction, with the nearest three Trailmarks listed when travelling outside a Trailmark radius;
+- read distance in metres and compass direction, with the nearest three Trailmarks listed when travelling outside the 20-metre Trailmark radius;
 - see the closest official Trailmark, radius state, its notes, and recent visits;
 - record or refresh a nearby Trailmark visit;
 - write and send a field drop without tabbing out;
