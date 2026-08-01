@@ -16,6 +16,10 @@ The console requires [SKSE Menu Framework](https://www.nexusmods.com/skyrimspeci
 to be installed alongside Ranger Atlas. It is an SKSE DLL dependency, not an
 ESP/ESM/ESL. If it is absent, Ranger Atlas simply shows a notification and does
 not open the console; the rest of the local bridge remains unchanged.
+Install the dependencies listed on Menu Framework's Nexus requirements page
+first. At the time of this release those include SKSE, Address Library, and SSE
+Engine Fixes with its separate Preloader/root-game files. Alt-Tab Stuck Key Fix
+NG is recommended by Menu Framework but is not required by Ranger Atlas.
 
 Keep the Atlas page open in a browser with **Live position** enabled. The page
 remains the local Atlas store and Discord/Supabase session; the in-game console

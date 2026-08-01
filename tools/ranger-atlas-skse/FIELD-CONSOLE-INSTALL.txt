@@ -3,9 +3,14 @@ Ranger Atlas Field Console 0.14.2
 1. Download the RangerAtlas ZIP. In Vortex, use "Install From File", select
    the ZIP, then enable and deploy the Ranger Atlas mod.
 
-2. Install and enable SKSE Menu Framework with Vortex as the only additional
-   dependency:
+2. Install and enable SKSE Menu Framework with Vortex:
    https://www.nexusmods.com/skyrimspecialedition/mods/120352
+
+   Follow its Nexus requirements page first. It currently requires the SKSE
+   version for your Skyrim executable, Address Library for SKSE Plugins, and
+   SSE Engine Fixes (including its separate Preloader/root-game files).
+   Alt-Tab Stuck Key Fix NG is recommended there, but is not required by
+   Ranger Atlas. Keizaal may already provide some of these components.
 
 3. Launch Skyrim normally through Keizaal. Ranger Atlas adds no ESP, ESM, or
    ESL, so no new entry should appear in Vortex's Plugins tab.
