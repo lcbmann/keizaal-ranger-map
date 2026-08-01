@@ -430,19 +430,19 @@ namespace RangerAtlas::FieldAtlasUI
                 };
             };
             const auto outer_tip = point(22.0F, 0.0F);
-            const auto outer_right = point(-13.0F, 12.0F);
-            const auto outer_notch = point(-5.0F, 1.5F);
-            const auto outer_left = point(-10.0F, -15.0F);
+            const auto outer_right = point(-13.0F, 10.0F);
+            const auto outer_notch = point(-5.0F, 0.0F);
+            const auto outer_left = point(-13.0F, -10.0F);
             const auto inner_tip = point(18.0F, 0.0F);
-            const auto inner_right = point(-9.0F, 8.5F);
-            const auto inner_notch = point(-3.5F, 1.0F);
-            const auto inner_left = point(-7.0F, -10.8F);
+            const auto inner_right = point(-9.0F, 7.0F);
+            const auto inner_notch = point(-3.0F, 0.0F);
+            const auto inner_left = point(-9.0F, -7.0F);
 
-            MenuFramework::draw_circle_filled(draw_list, center, 14.0F * scale, rgba(192, 247, 244, 56));
+            MenuFramework::draw_circle_filled(draw_list, center, 14.0F * scale, rgba(255, 224, 130, 48));
             MenuFramework::draw_triangle_filled(draw_list, outer_tip, outer_right, outer_notch, rgba(19, 38, 42, 255));
             MenuFramework::draw_triangle_filled(draw_list, outer_tip, outer_notch, outer_left, rgba(19, 38, 42, 255));
-            MenuFramework::draw_triangle_filled(draw_list, inner_tip, inner_right, inner_notch, rgba(85, 217, 223, 255));
-            MenuFramework::draw_triangle_filled(draw_list, inner_tip, inner_notch, inner_left, rgba(85, 217, 223, 255));
+            MenuFramework::draw_triangle_filled(draw_list, inner_tip, inner_right, inner_notch, rgba(196, 154, 40, 255));
+            MenuFramework::draw_triangle_filled(draw_list, inner_tip, inner_notch, inner_left, rgba(196, 154, 40, 255));
         }
 
         MenuFramework::Vec2 smooth_player_position(MenuFramework::Vec2 target, float target_heading)
@@ -735,7 +735,7 @@ namespace RangerAtlas::FieldAtlasUI
             const auto summary = std::to_string(trailmark_count) + " Trailmarks  |  " +
                 std::to_string(field_mark_count) + " field marks";
             muted_text(summary.c_str());
-            muted_text("Cyan arrow: you  |  Green flags: Trailmarks  |  Gold route: nearest");
+            muted_text("Gold arrow: you  |  Green flags: Trailmarks  |  Gold route: nearest");
         }
 
         void queue_action(std::string_view type, std::string payload = "{}")
