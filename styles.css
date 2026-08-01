@@ -2211,43 +2211,19 @@ html[data-workspace="edit"] .field-workspace-controls {
 }
 
 .ranger-profile-card {
-  display: grid;
-  grid-template-columns: 46px minmax(0, 1fr);
-  align-items: center;
-  gap: 8px;
+  display: block;
   margin-top: 10px;
-  padding: 8px;
+  padding: 6px;
   border: 1px solid var(--rule);
   border-radius: 4px;
   background: rgba(255, 246, 222, 0.34);
 }
 
-.ranger-rank-badge {
-  width: 46px;
-  height: 46px;
-  object-fit: contain;
-}
-
-.ranger-profile-copy {
-  min-width: 0;
-}
-
-.ranger-profile-copy > strong {
-  display: block;
-  overflow: hidden;
-  color: var(--ink);
-  font-size: 0.78rem;
-  line-height: 1.2;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .ranger-medals {
-  min-height: 24px;
   display: flex;
   flex-wrap: wrap;
-  gap: 3px;
-  margin-top: 4px;
+  align-items: center;
+  gap: 4px;
 }
 
 .ranger-medals:empty {
@@ -2255,9 +2231,10 @@ html[data-workspace="edit"] .field-workspace-controls {
 }
 
 .ranger-medals img {
-  width: 24px;
-  height: 24px;
+  width: 32px;
+  height: 32px;
   object-fit: contain;
+  filter: drop-shadow(0 1px 1px rgba(18, 13, 7, 0.42));
 }
 
 .clipboard-dialog {

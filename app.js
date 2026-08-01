@@ -255,8 +255,6 @@
     discordLinkSubmitBtn: document.getElementById("discordLinkSubmitBtn"),
     discordUnlinkBtn: document.getElementById("discordUnlinkBtn"),
     rangerProfileCard: document.getElementById("rangerProfileCard"),
-    rangerRankBadge: document.getElementById("rangerRankBadge"),
-    rangerRankLabel: document.getElementById("rangerRankLabel"),
     rangerMedals: document.getElementById("rangerMedals"),
     trailmarkArrival: document.getElementById("trailmarkArrival"),
     trailmarkArrivalCloseBtn: document.getElementById("trailmarkArrivalCloseBtn"),
@@ -2461,18 +2459,10 @@
 
   function renderRangerProfile() {
     const profile = normalizeDiscordProfile(state.discordLink?.profile);
-    const primary = profile.primary_badge;
-    elements.rangerProfileCard.hidden = !primary && profile.medals.length === 0;
-    elements.rangerRankBadge.hidden = !primary;
-    elements.rangerRankLabel.textContent = primary?.label || "Linked Ranger";
-    if (primary) {
-      elements.rangerRankBadge.src = profileBadgeAsset(primary.id);
-      elements.rangerRankBadge.alt = `${primary.label} badge`;
-    } else {
-      elements.rangerRankBadge.removeAttribute("src");
-      elements.rangerRankBadge.alt = "";
-    }
-    elements.rangerMedals.replaceChildren(...profile.medals.map((medal) => {
+    const badges = [profile.primary_badge, ...profile.medals]
+      .filter((badge, index, all) => badge && all.findIndex((candidate) => candidate?.id === badge.id) === index);
+    elements.rangerProfileCard.hidden = badges.length === 0;
+    elements.rangerMedals.replaceChildren(...badges.map((medal) => {
       const image = document.createElement("img");
       image.src = profileBadgeAsset(medal.id);
       image.alt = medal.label;

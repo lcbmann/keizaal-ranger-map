@@ -349,31 +349,30 @@ namespace RangerAtlas::FieldAtlasUI
             const auto primary = json_object(profile, "primary_badge");
             const auto ranger_name = json_string(raw_state, "ranger_name", "Unnamed Ranger");
             const auto rank_label = json_string(primary, "label");
-            const auto badge_id = json_string(primary, "id");
-            const auto badge_size = compact ? 30.0F : 48.0F;
-
-            if (const auto texture = badge_texture(badge_id)) {
-                MenuFramework::image(texture, { badge_size, badge_size });
-                MenuFramework::same_line();
-            }
             success_text((ranger_name + (rank_label.empty() ? "  |  LIVE" : "  |  " + rank_label)).c_str());
 
-            if (compact) {
-                return;
+            std::vector<std::string> badge_ids;
+            const auto primary_id = json_string(primary, "id");
+            if (!primary_id.empty()) {
+                badge_ids.push_back(primary_id);
             }
             const auto medals = json_object_array(profile, "medals");
-            if (medals.empty()) {
-                return;
-            }
-            accent_text("MEDALS");
-            bool drew_medal = false;
             for (const auto& medal : medals) {
-                if (const auto texture = badge_texture(json_string(medal, "id"))) {
-                    if (drew_medal) {
+                const auto medal_id = json_string(medal, "id");
+                if (!medal_id.empty() && std::find(badge_ids.begin(), badge_ids.end(), medal_id) == badge_ids.end()) {
+                    badge_ids.push_back(medal_id);
+                }
+            }
+
+            const auto badge_size = compact ? 24.0F : 30.0F;
+            bool drew_badge = false;
+            for (const auto& badge_id : badge_ids) {
+                if (const auto texture = badge_texture(badge_id)) {
+                    if (drew_badge) {
                         MenuFramework::same_line();
                     }
-                    MenuFramework::image(texture, { 30.0F, 30.0F });
-                    drew_medal = true;
+                    MenuFramework::image(texture, { badge_size, badge_size });
+                    drew_badge = true;
                 }
             }
         }
