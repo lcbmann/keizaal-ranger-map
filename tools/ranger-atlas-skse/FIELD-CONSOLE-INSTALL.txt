@@ -1,4 +1,4 @@
-Ranger Atlas Field Console 0.12.0
+Ranger Atlas Field Console 0.13.0
 
 1. Download the RangerAtlas ZIP. In Vortex, use "Install From File", select
    the ZIP, then enable and deploy the Ranger Atlas mod.
@@ -25,6 +25,12 @@ Ranger Atlas Field Console 0.12.0
 
 The package includes the compact Atlas map used by the Field Console. Keep the
 Data\\SKSE\\Plugins\\RangerAtlas\\field-map.jpg file installed alongside the DLL.
+It also includes Data\\SKSE\\Plugins\\RangerAtlas\\badges for linked Ranger rank
+and medal artwork. Keep that folder installed alongside the map.
+
+The Clipboard tab saves working notes through the browser Atlas on this PC.
+Keep the Atlas page open while playing. Clipboard notes are not uploaded until
+you explicitly create a field mark or send them as a Trailmark field drop.
 
 The console does not use Skyrim Platform JavaScript. If SKSE Menu Framework is
 missing, Ranger Atlas remains safe and F7 only displays a notification.

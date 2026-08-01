@@ -57,6 +57,12 @@ namespace RangerAtlas::FieldAtlasUI
         }();
         std::array<char, 801> g_mark_notes{};
         std::array<char, 1801> g_drop_message{};
+        std::array<char, 121> g_clipboard_title = [] {
+            std::array<char, 121> value{};
+            std::copy_n("Field notes", 11, value.begin());
+            return value;
+        }();
+        std::array<char, 6001> g_clipboard_body{};
         std::size_t g_mark_category = 0;
         std::size_t g_travel_size = 1;
         std::string g_status = "Ready.";
@@ -64,6 +70,11 @@ namespace RangerAtlas::FieldAtlasUI
         MenuFramework::Vec2 g_displayed_player{ -1.0F, -1.0F };
         float g_displayed_heading = 0.0F;
         std::chrono::steady_clock::time_point g_last_player_render{};
+        std::chrono::steady_clock::time_point g_clipboard_last_edit{};
+        std::string g_clipboard_revision;
+        std::string g_clipboard_last_queued;
+        bool g_clipboard_dirty = false;
+        std::unordered_map<std::string, void*> g_badge_textures;
 
         std::uint32_t rgba(std::uint8_t red, std::uint8_t green, std::uint8_t blue, std::uint8_t alpha = 255)
         {
@@ -273,6 +284,98 @@ namespace RangerAtlas::FieldAtlasUI
                 }
             }
             return values;
+        }
+
+        template <std::size_t Size>
+        void copy_to_buffer(std::array<char, Size>& target, std::string_view source)
+        {
+            target.fill('\0');
+            const auto count = (std::min)(source.size(), Size - 1);
+            std::copy_n(source.begin(), count, target.begin());
+        }
+
+        std::string clipboard_content_key()
+        {
+            return std::string(g_clipboard_title.data()) + "\n" + g_clipboard_body.data();
+        }
+
+        void sync_clipboard_from_state(std::string_view raw_state)
+        {
+            const auto clipboard = json_object(raw_state, "clipboard");
+            if (clipboard.empty()) {
+                return;
+            }
+            const auto title = json_string(clipboard, "title", "Field notes");
+            const auto body = json_string(clipboard, "body");
+            const auto revision = json_string(clipboard, "updated_at");
+            const auto incoming_key = title + "\n" + body;
+
+            if (g_clipboard_dirty) {
+                if (incoming_key == clipboard_content_key() && revision != g_clipboard_revision) {
+                    g_clipboard_dirty = false;
+                    g_clipboard_revision = revision;
+                    g_clipboard_last_queued = incoming_key;
+                }
+                return;
+            }
+            if (revision == g_clipboard_revision && !g_clipboard_revision.empty()) {
+                return;
+            }
+
+            copy_to_buffer(g_clipboard_title, title);
+            copy_to_buffer(g_clipboard_body, body);
+            g_clipboard_revision = revision;
+            g_clipboard_last_queued = incoming_key;
+        }
+
+        void* badge_texture(std::string_view badge_id)
+        {
+            if (badge_id.empty()) {
+                return nullptr;
+            }
+            const auto key = std::string(badge_id);
+            if (const auto existing = g_badge_textures.find(key); existing != g_badge_textures.end()) {
+                return existing->second;
+            }
+            const auto path = "Data/SKSE/Plugins/RangerAtlas/badges/" + key + ".png";
+            const auto texture = MenuFramework::load_texture(path.c_str(), { 128.0F, 128.0F });
+            g_badge_textures.emplace(key, texture);
+            return texture;
+        }
+
+        void render_ranger_profile(std::string_view raw_state, bool compact)
+        {
+            const auto profile = json_object(raw_state, "ranger_profile");
+            const auto primary = json_object(profile, "primary_badge");
+            const auto ranger_name = json_string(raw_state, "ranger_name", "Unnamed Ranger");
+            const auto rank_label = json_string(primary, "label");
+            const auto badge_id = json_string(primary, "id");
+            const auto badge_size = compact ? 30.0F : 48.0F;
+
+            if (const auto texture = badge_texture(badge_id)) {
+                MenuFramework::image(texture, { badge_size, badge_size });
+                MenuFramework::same_line();
+            }
+            success_text((ranger_name + (rank_label.empty() ? "  |  LIVE" : "  |  " + rank_label)).c_str());
+
+            if (compact) {
+                return;
+            }
+            const auto medals = json_object_array(profile, "medals");
+            if (medals.empty()) {
+                return;
+            }
+            accent_text("MEDALS");
+            bool drew_medal = false;
+            for (const auto& medal : medals) {
+                if (const auto texture = badge_texture(json_string(medal, "id"))) {
+                    if (drew_medal) {
+                        MenuFramework::same_line();
+                    }
+                    MenuFramework::image(texture, { 30.0F, 30.0F });
+                    drew_medal = true;
+                }
+            }
         }
 
         MenuFramework::Vec2 map_position(MenuFramework::Vec2 origin, MenuFramework::Vec2 atlas_point, MenuFramework::Vec2 display_size)
@@ -611,6 +714,82 @@ namespace RangerAtlas::FieldAtlasUI
             g_status = "Sent to the Ranger Atlas.";
         }
 
+        void queue_clipboard_save()
+        {
+            const auto content_key = clipboard_content_key();
+            if (content_key == g_clipboard_last_queued) {
+                return;
+            }
+            LocalBridge::QueueFieldAction(
+                "save_clipboard",
+                "{\"title\":\"" + json_escape(g_clipboard_title.data()) +
+                    "\",\"body\":\"" + json_escape(g_clipboard_body.data()) + "\"}");
+            g_clipboard_last_queued = content_key;
+            g_status = "Clipboard saved locally.";
+        }
+
+        void render_clipboard(std::string_view nearest)
+        {
+            muted_text("Keep working notes here while Skyrim continues around you. Notes stay local until you choose an action.");
+            accent_text("TITLE");
+            MenuFramework::set_next_item_width(710.0F);
+            const auto title_changed = MenuFramework::input_text(
+                "##clipboard-title",
+                g_clipboard_title.data(),
+                g_clipboard_title.size());
+            accent_text("NOTES");
+            const auto body_changed = MenuFramework::input_text_multiline(
+                "##clipboard-body",
+                g_clipboard_body.data(),
+                g_clipboard_body.size(),
+                { 710.0F, 230.0F });
+            if (title_changed || body_changed) {
+                g_clipboard_dirty = true;
+                g_clipboard_last_edit = std::chrono::steady_clock::now();
+            }
+            if (g_clipboard_dirty &&
+                std::chrono::steady_clock::now() - g_clipboard_last_edit > std::chrono::milliseconds(650)) {
+                queue_clipboard_save();
+            }
+
+            if (MenuFramework::button("Save Clipboard", { 160.0F, 0.0F })) {
+                g_clipboard_dirty = true;
+                queue_clipboard_save();
+            }
+            MenuFramework::same_line();
+            if (MenuFramework::button("Create Mark Here", { 170.0F, 0.0F })) {
+                const std::string title(g_clipboard_title.data());
+                if (title.empty()) {
+                    g_status = "Give the clipboard note a title first.";
+                } else {
+                    queue_clipboard_save();
+                    queue_action(
+                        "create_mark_at_position",
+                        "{\"title\":\"" + json_escape(title) +
+                            "\",\"notes\":\"" + json_escape(g_clipboard_body.data()) +
+                            "\",\"category\":\"landmark\"}");
+                    g_status = "Clipboard saved as a field mark at your current position.";
+                }
+            }
+            MenuFramework::same_line();
+            if (MenuFramework::button("Send as Field Drop", { 190.0F, 0.0F })) {
+                const auto body = std::string(g_clipboard_body.data());
+                if (body.empty()) {
+                    g_status = "Write clipboard notes before sending a field drop.";
+                } else if (nearest.empty() || !json_bool(nearest, "within_range")) {
+                    g_status = "Reach an official Trailmark before sending this clipboard.";
+                } else {
+                    const auto title = std::string(g_clipboard_title.data());
+                    const auto message = title.empty() ? body : title + "\n\n" + body;
+                    queue_clipboard_save();
+                    queue_action(
+                        "submit_nearby_trailmark_drop",
+                        "{\"message\":\"" + json_escape(message) + "\"}");
+                    g_status = "Clipboard sent as a Trailmark field drop and kept locally.";
+                }
+            }
+        }
+
         void render_nearby_trailmarks(std::string_view raw_state, std::size_t limit)
         {
             const auto trailmarks = json_object_array(raw_state, "official_trailmarks");
@@ -795,12 +974,12 @@ namespace RangerAtlas::FieldAtlasUI
             const auto raw_state = LocalBridge::GetFieldState();
             const auto ready = json_bool(raw_state, "ready");
             const auto nearest = json_object(raw_state, "nearest_trailmark");
+            sync_clipboard_from_state(raw_state);
 
             if (travel_mode) {
                 accent_text("RANGER ATLAS / TRAVEL");
-                const auto ranger_name = json_string(raw_state, "ranger_name", "Unnamed Ranger");
                 if (ready) {
-                    success_text((ranger_name + "  |  LIVE").c_str());
+                    render_ranger_profile(raw_state, true);
                 }
                 muted_text("F7 close  |  F7 again for field controls");
                 MenuFramework::separator();
@@ -848,8 +1027,7 @@ namespace RangerAtlas::FieldAtlasUI
                 return;
             }
 
-            const auto ranger_name = json_string(raw_state, "ranger_name", "Unnamed Ranger");
-            success_text((ranger_name + "  |  LINKED TO SKYRIM").c_str());
+            render_ranger_profile(raw_state, false);
             render_map(raw_state, interactive_map_size);
             render_map_key(raw_state);
 
@@ -873,6 +1051,10 @@ namespace RangerAtlas::FieldAtlasUI
                 }
                 if (MenuFramework::begin_tab_item("Create Field Mark")) {
                     render_mark_form();
+                    MenuFramework::end_tab_item();
+                }
+                if (MenuFramework::begin_tab_item("Clipboard")) {
+                    render_clipboard(nearest);
                     MenuFramework::end_tab_item();
                 }
                 MenuFramework::end_tab_bar();

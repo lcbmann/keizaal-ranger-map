@@ -64,6 +64,12 @@
             </button>
           </div>
           <div class="utility-actions">
+            <button id="clipboardBtn" class="settings-button" type="button" title="Open field clipboard" aria-label="Open field clipboard">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M9 5h6M9 3h6v4H9z" />
+                <path d="M7 5H5v16h14V5h-2M8 11h8M8 15h8" />
+              </svg>
+            </button>
             <button id="themeToggleBtn" class="theme-button" type="button" title="Use dark mode" aria-label="Use dark mode">
               <svg class="theme-icon theme-icon-moon" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M20.2 15.4A8.5 8.5 0 0 1 8.6 3.8 8.5 8.5 0 1 0 20.2 15.4z" />
@@ -120,6 +126,13 @@
               <span>Signed as</span>
               <input id="creatorInput" class="identity-input" type="text" name="username" maxlength="40" placeholder="Your name" autocomplete="username" />
             </label>
+            <div id="rangerProfileCard" class="ranger-profile-card" hidden>
+              <img id="rangerRankBadge" class="ranger-rank-badge" src="" alt="" />
+              <div class="ranger-profile-copy">
+                <strong id="rangerRankLabel"></strong>
+                <div id="rangerMedals" class="ranger-medals" aria-label="Ranger medals"></div>
+              </div>
+            </div>
           </div>
           <div class="tool-rail-section field-workspace-controls">
             <p class="tool-rail-label">Game Link</p>
@@ -418,6 +431,27 @@
           </label>
         </section>
         <p class="settings-note">Use the sun or moon button beside Settings to change the atlas theme.</p>
+      </div>
+    </dialog>
+
+    <dialog id="clipboardDialog" class="field-note workflow-dialog clipboard-dialog">
+      <div class="field-note-inner">
+        <button id="clipboardCloseBtn" class="field-note-close" type="button" aria-label="Close field clipboard">&times;</button>
+        <p class="field-note-kicker">Field Clipboard</p>
+        <h2>Working Notes</h2>
+        <p class="dialog-help">Notes save automatically in this browser and in the linked in-game Field Console. Nothing is shared until you choose an action below.</p>
+        <label class="field-label" for="clipboardTitleInput">Title</label>
+        <input id="clipboardTitleInput" class="text-input" type="text" maxlength="120" placeholder="Field notes" autocomplete="off" />
+        <label class="field-label" for="clipboardBodyInput">Notes</label>
+        <textarea id="clipboardBodyInput" class="clipboard-textarea" maxlength="6000" placeholder="Write observations, names, directions, or a report draft..."></textarea>
+        <div class="clipboard-footer">
+          <p id="clipboardStatus" class="dialog-status" aria-live="polite">Saved locally</p>
+          <div class="dialog-actions">
+            <button id="clipboardMarkBtn" class="button secondary" type="button">Create Mark Here</button>
+            <button id="clipboardDropBtn" class="button primary" type="button">Send as Field Drop</button>
+            <button id="clipboardDoneBtn" class="button secondary" type="button">Done</button>
+          </div>
+        </div>
       </div>
     </dialog>
 

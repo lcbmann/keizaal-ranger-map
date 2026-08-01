@@ -152,7 +152,15 @@ channel. The DLL itself still makes no outbound requests.
 SKSE/
   Plugins/
     RangerAtlas.dll
+    RangerAtlas/
+      field-map.jpg
+      badges/
 ```
+
+The Field Console includes a local working Clipboard. It autosaves through the
+browser Atlas on the same PC and can create a mark at the current Skyrim
+position or send a report after reaching an official Trailmark. Linked Discord
+rank and medal artwork is shown from the packaged badge files.
 
 The experimental Platform add-on is kept in the repository under
 `tools/ranger-atlas-platform`, but is deliberately excluded from the supported

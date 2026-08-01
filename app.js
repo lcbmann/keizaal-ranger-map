@@ -147,6 +147,11 @@
     trailmarkVisitsLoading: new Set(),
     trailmarkVisitErrors: new Map(),
     discordLink: null,
+    clipboard: {
+      title: "Field notes",
+      body: "",
+      updatedAt: "",
+    },
     overwatchEnabled: false,
     overwatchPassphrase: "",
     overwatchPositions: [],
@@ -217,10 +222,19 @@
     helpBtn: document.getElementById("helpBtn"),
     themeToggleBtn: document.getElementById("themeToggleBtn"),
     settingsBtn: document.getElementById("settingsBtn"),
+    clipboardBtn: document.getElementById("clipboardBtn"),
     helpDialog: document.getElementById("helpDialog"),
     helpCloseBtn: document.getElementById("helpCloseBtn"),
     settingsDialog: document.getElementById("settingsDialog"),
     settingsCloseBtn: document.getElementById("settingsCloseBtn"),
+    clipboardDialog: document.getElementById("clipboardDialog"),
+    clipboardCloseBtn: document.getElementById("clipboardCloseBtn"),
+    clipboardDoneBtn: document.getElementById("clipboardDoneBtn"),
+    clipboardTitleInput: document.getElementById("clipboardTitleInput"),
+    clipboardBodyInput: document.getElementById("clipboardBodyInput"),
+    clipboardStatus: document.getElementById("clipboardStatus"),
+    clipboardMarkBtn: document.getElementById("clipboardMarkBtn"),
+    clipboardDropBtn: document.getElementById("clipboardDropBtn"),
     showLabelsInput: document.getElementById("showLabelsInput"),
     livePositionInput: document.getElementById("livePositionInput"),
     livePositionStatus: document.getElementById("livePositionStatus"),
@@ -236,6 +250,10 @@
     discordLinkSummary: document.getElementById("discordLinkSummary"),
     discordLinkSubmitBtn: document.getElementById("discordLinkSubmitBtn"),
     discordUnlinkBtn: document.getElementById("discordUnlinkBtn"),
+    rangerProfileCard: document.getElementById("rangerProfileCard"),
+    rangerRankBadge: document.getElementById("rangerRankBadge"),
+    rangerRankLabel: document.getElementById("rangerRankLabel"),
+    rangerMedals: document.getElementById("rangerMedals"),
     trailmarkArrival: document.getElementById("trailmarkArrival"),
     trailmarkArrivalCloseBtn: document.getElementById("trailmarkArrivalCloseBtn"),
     trailmarkArrivalTitle: document.getElementById("trailmarkArrivalTitle"),
@@ -358,6 +376,7 @@
   let nativeMarkerPostChain = Promise.resolve();
   let nativeFieldStatePostChain = Promise.resolve();
   let nativeFieldStateKey = "";
+  let clipboardSyncTimer = null;
 
   init();
 
@@ -431,6 +450,14 @@
     elements.settingsBtn.addEventListener("click", () => elements.settingsDialog.showModal());
     elements.settingsCloseBtn.addEventListener("click", () => elements.settingsDialog.close());
     closeDialogOnBackdrop(elements.settingsDialog);
+    elements.clipboardBtn.addEventListener("click", openClipboardDialog);
+    elements.clipboardCloseBtn.addEventListener("click", closeClipboardDialog);
+    elements.clipboardDoneBtn.addEventListener("click", closeClipboardDialog);
+    elements.clipboardTitleInput.addEventListener("input", saveClipboardFromDialog);
+    elements.clipboardBodyInput.addEventListener("input", saveClipboardFromDialog);
+    elements.clipboardMarkBtn.addEventListener("click", createClipboardMarkHere);
+    elements.clipboardDropBtn.addEventListener("click", sendClipboardFieldDrop);
+    closeDialogOnBackdrop(elements.clipboardDialog);
     elements.themeToggleBtn.addEventListener("click", () => {
       state.darkMode = !state.darkMode;
       applyTheme();
@@ -747,6 +774,9 @@
       state.sharePositionEnabled = state.livePositionEnabled;
       state.trailmarkVisitsEnabled = saved.trailmarkVisitsEnabled === true && Boolean(state.creatorName);
       elements.trailmarkVisitsInput.checked = state.trailmarkVisitsEnabled;
+      if (saved.clipboard && typeof saved.clipboard === "object") {
+        state.clipboard = normalizeClipboard(saved.clipboard);
+      }
       if (saved.trailmarkVisitCooldowns && typeof saved.trailmarkVisitCooldowns === "object") {
         const oldestUsefulVisit = Date.now() - TRAILMARK_VISIT_COOLDOWN_MS;
         state.trailmarkVisitCooldowns = Object.fromEntries(
@@ -784,6 +814,7 @@
       guildAtlasLocalChanges: state.guildAtlasLocalChanges,
       trailmarkVisitsEnabled: state.trailmarkVisitsEnabled,
       trailmarkVisitCooldowns: state.trailmarkVisitCooldowns,
+      clipboard: state.clipboard,
       creatorName: state.creatorName,
       features: state.features,
     };
@@ -943,6 +974,12 @@
       version: 1,
       ready: Boolean(state.livePositionEnabled && state.livePositionConnection === "linked" && getCurrentCreatorName()),
       ranger_name: getCurrentCreatorName(),
+      ranger_profile: normalizeDiscordProfile(state.discordLink?.profile),
+      clipboard: {
+        title: state.clipboard.title,
+        body: state.clipboard.body,
+        updated_at: state.clipboard.updatedAt,
+      },
       game_link: state.livePositionConnection === "linked" ? "Connected to Skyrim" : "Waiting for Skyrim",
       player_point: playerPoint,
       official_trailmarks: officialTrailmarks,
@@ -1068,6 +1105,15 @@
       createFieldMarkFromConsole(event);
       return;
     }
+    if (event.type === "save_clipboard") {
+      state.clipboard = normalizeClipboard(event.payload);
+      saveState();
+      if (!elements.clipboardDialog.open) {
+        syncClipboardDialogInputs();
+      }
+      scheduleNativeClipboardSync();
+      return;
+    }
     if (event.type !== "mark_here") {
       return;
     }
@@ -1158,25 +1204,25 @@
     const cleanMessage = String(message || "").trim().slice(0, 1800);
     if (!nearest || nearest.distance > TRAILMARK_VISIT_RADIUS) {
       setStatus("No official Trailmark is within field-drop range");
-      return;
+      return false;
     }
     if (!cleanMessage) {
       setStatus("Write a field drop before sending it");
-      return;
+      return false;
     }
     if (!state.discordLink || !getStoredDiscordDeviceToken()) {
       setStatus("Link Discord in the Atlas before leaving a field drop");
-      return;
+      return false;
     }
     if (Date.now() - Number(state.trailmarkVisitCooldowns[nearest.feature.id] || 0) >= TRAILMARK_VISIT_COOLDOWN_MS) {
       if (!state.trailmarkVisitsEnabled || !getCurrentCreatorName()) {
         setStatus("Enable Record visits before leaving a field drop");
-        return;
+        return false;
       }
       await recordTrailmarkVisit(nearest.feature);
     }
     if (Date.now() - Number(state.trailmarkVisitCooldowns[nearest.feature.id] || 0) >= TRAILMARK_VISIT_COOLDOWN_MS) {
-      return;
+      return false;
     }
     try {
       const result = await callSupabaseRpc("submit_atlas_trailmark_drop", {
@@ -1185,8 +1231,10 @@
         message_input: cleanMessage,
       });
       setStatus(result?.drop_id ? "Field drop sent to Wayfinder" : "Wayfinder did not return a drop receipt");
+      return Boolean(result?.drop_id);
     } catch (error) {
       setStatus(getReadableError(error, "The Trailmark drop could not be sent."));
+      return false;
     }
   }
 
@@ -1706,6 +1754,7 @@
     elements.trailmarkVisitsInput.checked = state.trailmarkVisitsEnabled;
     elements.discordLinkBtn.textContent = state.discordLink ? "Discord linked" : "Link Discord";
     elements.discordLinkBtn.classList.toggle("is-linked", Boolean(state.discordLink));
+    renderRangerProfile();
 
     if (!state.trailmarkVisitsEnabled) {
       updateTrailmarkVisitStatus("Off", "off");
@@ -2264,6 +2313,132 @@
     if (isOfficialTrailmark(selectedFeature)) {
       renderTrailmarkPresence(selectedFeature);
     }
+  }
+
+  function normalizeClipboard(value) {
+    const source = value && typeof value === "object" ? value : {};
+    return {
+      title: String(source.title || "Field notes").trim().slice(0, 120) || "Field notes",
+      body: String(source.body || "").slice(0, 6000),
+      updatedAt: String(source.updated_at || source.updatedAt || "").slice(0, 40),
+    };
+  }
+
+  function syncClipboardDialogInputs() {
+    elements.clipboardTitleInput.value = state.clipboard.title;
+    elements.clipboardBodyInput.value = state.clipboard.body;
+  }
+
+  function openClipboardDialog() {
+    syncClipboardDialogInputs();
+    elements.clipboardStatus.textContent = state.clipboard.updatedAt
+      ? "Saved locally"
+      : "Start writing to save this clipboard locally.";
+    elements.clipboardDialog.showModal();
+    window.setTimeout(() => elements.clipboardBodyInput.focus(), 0);
+  }
+
+  function closeClipboardDialog() {
+    elements.clipboardDialog.close();
+  }
+
+  function saveClipboardFromDialog() {
+    state.clipboard = normalizeClipboard({
+      title: elements.clipboardTitleInput.value,
+      body: elements.clipboardBodyInput.value,
+      updated_at: new Date().toISOString(),
+    });
+    saveState();
+    elements.clipboardStatus.textContent = "Saved locally";
+    scheduleNativeClipboardSync();
+  }
+
+  function scheduleNativeClipboardSync() {
+    window.clearTimeout(clipboardSyncTimer);
+    clipboardSyncTimer = window.setTimeout(() => {
+      clipboardSyncTimer = null;
+      if (state.livePositionEnabled) {
+        void syncNativeFieldState(true);
+      }
+    }, 250);
+  }
+
+  function clipboardMessage() {
+    const title = state.clipboard.title.trim();
+    const body = state.clipboard.body.trim();
+    return [title, body].filter(Boolean).join("\n\n").slice(0, 1800);
+  }
+
+  function createClipboardMarkHere() {
+    if (!state.livePositionPoint || state.livePositionPoint.stale) {
+      elements.clipboardStatus.textContent = "Connect to Skyrim outdoors before creating a mark here.";
+      return;
+    }
+    createFieldMarkFromConsole({
+      payload: {
+        title: state.clipboard.title,
+        notes: state.clipboard.body,
+        category: "landmark",
+      },
+    });
+    elements.clipboardStatus.textContent = "Field mark created at your current position.";
+  }
+
+  async function sendClipboardFieldDrop() {
+    const message = clipboardMessage();
+    if (!message) {
+      elements.clipboardStatus.textContent = "Write a note before sending a field drop.";
+      return;
+    }
+    elements.clipboardDropBtn.disabled = true;
+    elements.clipboardStatus.textContent = "Sending through Wayfinder...";
+    const sent = await submitNearbyTrailmarkDropFromFieldConsole(message);
+    elements.clipboardDropBtn.disabled = false;
+    elements.clipboardStatus.textContent = sent
+      ? "Field drop sent. Your clipboard was kept."
+      : "Field drop could not be sent. Check the Atlas status message.";
+  }
+
+  function normalizeDiscordProfile(value) {
+    const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const normalizeBadge = (badge) => {
+      const id = String(badge?.id || "").toLowerCase();
+      const label = String(badge?.label || "").trim().slice(0, 60);
+      return /^[a-z0-9-]+$/.test(id) && label ? { id, label } : null;
+    };
+    return {
+      version: 1,
+      primary_badge: normalizeBadge(source.primary_badge),
+      medals: Array.isArray(source.medals)
+        ? source.medals.map(normalizeBadge).filter(Boolean).slice(0, 12)
+        : [],
+    };
+  }
+
+  function profileBadgeAsset(id) {
+    return `assets/ranger-profile/${id}.png`;
+  }
+
+  function renderRangerProfile() {
+    const profile = normalizeDiscordProfile(state.discordLink?.profile);
+    const primary = profile.primary_badge;
+    elements.rangerProfileCard.hidden = !primary && profile.medals.length === 0;
+    elements.rangerRankBadge.hidden = !primary;
+    elements.rangerRankLabel.textContent = primary?.label || "Linked Ranger";
+    if (primary) {
+      elements.rangerRankBadge.src = profileBadgeAsset(primary.id);
+      elements.rangerRankBadge.alt = `${primary.label} badge`;
+    } else {
+      elements.rangerRankBadge.removeAttribute("src");
+      elements.rangerRankBadge.alt = "";
+    }
+    elements.rangerMedals.replaceChildren(...profile.medals.map((medal) => {
+      const image = document.createElement("img");
+      image.src = profileBadgeAsset(medal.id);
+      image.alt = medal.label;
+      image.title = medal.label;
+      return image;
+    }));
   }
 
   async function claimDiscordLink(event) {

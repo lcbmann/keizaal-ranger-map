@@ -2187,6 +2187,95 @@ html[data-workspace="edit"] .field-workspace-controls {
   width: min(520px, calc(100vw - 28px));
 }
 
+.ranger-profile-card {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 8px;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  background: rgba(255, 246, 222, 0.34);
+}
+
+.ranger-rank-badge {
+  width: 46px;
+  height: 46px;
+  object-fit: contain;
+}
+
+.ranger-profile-copy {
+  min-width: 0;
+}
+
+.ranger-profile-copy > strong {
+  display: block;
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 0.78rem;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ranger-medals {
+  min-height: 24px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin-top: 4px;
+}
+
+.ranger-medals:empty {
+  display: none;
+}
+
+.ranger-medals img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.clipboard-dialog {
+  width: min(720px, calc(100vw - 28px));
+}
+
+.clipboard-textarea {
+  width: 100%;
+  min-height: min(42vh, 360px);
+  resize: vertical;
+  padding: 12px;
+  border: 1px solid rgba(76, 51, 24, 0.4);
+  border-radius: 3px;
+  color: var(--ink);
+  background: rgba(255, 249, 229, 0.86);
+  line-height: 1.45;
+}
+
+.clipboard-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.clipboard-footer .dialog-status {
+  margin: 0;
+}
+
+@media (max-width: 720px) {
+  .clipboard-footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .clipboard-footer .dialog-actions {
+    display: grid;
+  }
+}
+
 .discord-link-form {
   margin-top: 14px;
 }
@@ -3151,6 +3240,21 @@ html[data-theme="dark"] .tooltip-meta,
 html[data-theme="dark"] .feature-creator,
 html[data-theme="dark"] .trailmark-presence-list time {
   color: #ad9b7b;
+}
+
+html[data-theme="dark"] .ranger-profile-card {
+  border-color: rgba(194, 138, 24, 0.28);
+  background: rgba(255, 240, 205, 0.04);
+}
+
+html[data-theme="dark"] .ranger-profile-copy > strong {
+  color: #eee3cd;
+}
+
+html[data-theme="dark"] .clipboard-textarea {
+  border-color: rgba(194, 138, 24, 0.32);
+  color: #eee3cd;
+  background: #15130f;
 }
 
 html[data-theme="dark"] .button,
