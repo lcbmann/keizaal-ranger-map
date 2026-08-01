@@ -149,6 +149,7 @@
     trailmarkVisitsLoading: new Set(),
     trailmarkVisitErrors: new Map(),
     discordLink: null,
+    discordRelinking: false,
     clipboard: {
       title: "Field notes",
       body: "",
@@ -249,10 +250,13 @@
     discordLinkCloseBtn: document.getElementById("discordLinkCloseBtn"),
     discordLinkCancelBtn: document.getElementById("discordLinkCancelBtn"),
     discordLinkForm: document.getElementById("discordLinkForm"),
+    discordLinkTitle: document.getElementById("discordLinkTitle"),
+    discordLinkCodeFields: document.getElementById("discordLinkCodeFields"),
     discordLinkCodeInput: document.getElementById("discordLinkCodeInput"),
     discordLinkStatus: document.getElementById("discordLinkStatus"),
     discordLinkSummary: document.getElementById("discordLinkSummary"),
     discordLinkSubmitBtn: document.getElementById("discordLinkSubmitBtn"),
+    discordRelinkBtn: document.getElementById("discordRelinkBtn"),
     discordUnlinkBtn: document.getElementById("discordUnlinkBtn"),
     rangerProfileCard: document.getElementById("rangerProfileCard"),
     rangerMedals: document.getElementById("rangerMedals"),
@@ -530,6 +534,7 @@
     elements.discordLinkCloseBtn.addEventListener("click", closeDiscordLinkDialog);
     elements.discordLinkCancelBtn.addEventListener("click", closeDiscordLinkDialog);
     elements.discordLinkForm.addEventListener("submit", claimDiscordLink);
+    elements.discordRelinkBtn.addEventListener("click", beginDiscordRelink);
     elements.discordUnlinkBtn.addEventListener("click", unlinkDiscord);
     closeDialogOnBackdrop(elements.discordLinkDialog);
     elements.trailmarkArrivalCloseBtn.addEventListener("click", hideTrailmarkArrival);
@@ -2323,6 +2328,7 @@
   }
 
   function openDiscordLinkDialog() {
+    elements.discordLinkStatus.textContent = "";
     renderDiscordLinkDialog();
     elements.discordLinkDialog.showModal();
     if (!state.discordLink) {
@@ -2331,26 +2337,38 @@
   }
 
   function closeDiscordLinkDialog() {
+    state.discordRelinking = false;
+    elements.discordLinkCodeInput.value = "";
+    elements.discordLinkStatus.textContent = "";
     elements.discordLinkDialog.close();
   }
 
   function renderDiscordLinkDialog() {
     const linked = Boolean(state.discordLink);
+    const relinking = linked && state.discordRelinking;
+    elements.discordLinkTitle.textContent = linked ? "Discord Connected" : "Link Discord";
     elements.discordLinkSummary.hidden = !linked;
     elements.discordLinkSummary.innerHTML = linked
       ? `<strong>Linked to ${escapeHtml(state.discordLink.discord_display_name || "Discord")}</strong><br />Trailmark arrivals can now request temporary channel access.`
       : "";
-    elements.discordLinkCodeInput.disabled = linked;
-    elements.discordLinkSubmitBtn.hidden = linked;
+    elements.discordLinkCodeFields.hidden = linked && !relinking;
+    elements.discordLinkCodeInput.disabled = linked && !relinking;
+    elements.discordLinkSubmitBtn.hidden = linked && !relinking;
+    elements.discordLinkSubmitBtn.textContent = relinking ? "Update Discord Link" : "Link Discord";
+    elements.discordRelinkBtn.hidden = !linked || relinking;
     elements.discordUnlinkBtn.hidden = !linked;
-    if (!linked) {
-      elements.discordLinkStatus.textContent = "";
-    }
     updateTrailmarkVisitControls();
     const selectedFeature = getSelectedFeature();
     if (isOfficialTrailmark(selectedFeature)) {
       renderTrailmarkPresence(selectedFeature);
     }
+  }
+
+  function beginDiscordRelink() {
+    state.discordRelinking = true;
+    renderDiscordLinkDialog();
+    elements.discordLinkStatus.textContent = "Run /atlas link in Discord, then enter the new one-time code.";
+    window.setTimeout(() => elements.discordLinkCodeInput.focus(), 0);
   }
 
   function normalizeClipboard(value) {
@@ -2473,6 +2491,7 @@
 
   async function claimDiscordLink(event) {
     event.preventDefault();
+    const relinking = state.discordRelinking;
     const rangerName = getCurrentCreatorName();
     if (!rangerName) {
       elements.discordLinkStatus.textContent = "Enter your name under Signed As first.";
@@ -2498,8 +2517,9 @@
         device_token: deviceToken,
         ranger_name: rangerName,
       });
+      state.discordRelinking = false;
       elements.discordLinkCodeInput.value = "";
-      elements.discordLinkStatus.textContent = "Discord linked.";
+      elements.discordLinkStatus.textContent = relinking ? "Discord link updated." : "Discord linked.";
       renderDiscordLinkDialog();
       setStatus(`Discord linked to ${state.discordLink.discord_display_name || "your account"}`);
     } catch (error) {

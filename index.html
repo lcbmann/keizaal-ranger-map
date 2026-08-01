@@ -459,26 +459,29 @@
       <div class="field-note-inner">
         <button id="discordLinkCloseBtn" class="field-note-close" type="button" aria-label="Close Discord link">&times;</button>
         <p class="field-note-kicker">Trailmark Access</p>
-        <h2>Link Discord</h2>
+        <h2 id="discordLinkTitle">Link Discord</h2>
         <p class="dialog-help">
           Run <strong>/atlas link</strong> in the Ranger Discord, then enter the one-time code below. This only tells Wayfinder which Discord account should receive temporary Trailmark channel access.
         </p>
         <div id="discordLinkSummary" class="discord-link-summary" hidden></div>
         <form id="discordLinkForm" class="discord-link-form">
-          <label class="field-label" for="discordLinkCodeInput">One-time code</label>
-          <input
-            id="discordLinkCodeInput"
-            class="text-input discord-link-code"
-            type="text"
-            maxlength="12"
-            placeholder="ABCD2345"
-            autocomplete="off"
-            autocapitalize="characters"
-            spellcheck="false"
-          />
+          <div id="discordLinkCodeFields">
+            <label class="field-label" for="discordLinkCodeInput">One-time code</label>
+            <input
+              id="discordLinkCodeInput"
+              class="text-input discord-link-code"
+              type="text"
+              maxlength="12"
+              placeholder="ABCD2345"
+              autocomplete="off"
+              autocapitalize="characters"
+              spellcheck="false"
+            />
+          </div>
           <p id="discordLinkStatus" class="dialog-status" aria-live="polite"></p>
           <div class="dialog-actions">
             <button id="discordLinkSubmitBtn" class="button primary" type="submit">Link Discord</button>
+            <button id="discordRelinkBtn" class="button secondary" type="button" hidden>Relink Discord</button>
             <button id="discordUnlinkBtn" class="button danger" type="button" hidden>Unlink</button>
             <button id="discordLinkCancelBtn" class="button secondary" type="button">Close</button>
           </div>
@@ -647,6 +650,6 @@
       crossorigin=""
     ></script>
     <script src="supabase-config.js"></script>
-    <script src="app.js?v=20260801-badge-ribbon"></script>
+    <script src="app.js?v=20260801-discord-relink"></script>
   </body>
 </html>
