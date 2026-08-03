@@ -5868,6 +5868,21 @@
       if (existing && !isPersonalFeature(existing)) {
         return;
       }
+      map.setView([point.y, point.x], Math.max(map.getZoom(), 0));
+      return;
+    }
+
+    const latLngs = feature.points.map((point) => [point.y, point.x]);
+    map.fitBounds(L.latLngBounds(latLngs).pad(0.2));
+  }
+
+  function mergePersonalFeatures(current, incoming) {
+    const byId = new Map(current.map((feature) => [feature.id, feature]));
+    incoming.forEach((feature) => {
+      const existing = byId.get(feature.id);
+      if (existing && !isPersonalFeature(existing)) {
+        return;
+      }
       byId.set(feature.id, feature);
     });
     return applyDefaultFeatures(Array.from(byId.values()));
@@ -6140,3 +6155,4 @@
       .replace(/'/g, "&#039;");
   }
 })();
+
