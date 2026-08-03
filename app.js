@@ -26,6 +26,9 @@
   const SKYRIM_WORLDSPACE_FORM_ID = 0x0000003c;
   const WORLD_TO_ATLAS_X = [73.826813, 0.215295427, 4067.73578];
   const WORLD_TO_ATLAS_Y = [-0.324059025, 74.56657, 3036.85421];
+  // Initial visual calibration for the game-linked layer. Hand-drawn atlas
+  // entries remain fixed; live positions and official Trailmarks share this shift.
+  const GAME_LINK_ATLAS_OFFSET = { x: -128, y: 0 };
   const DISCORD_DEVICE_TOKEN_STORAGE_KEY = "ranger-atlas-discord-device-token-v1";
   const ATLAS_UNITS_TO_METERS = 0.79;
   const TRAILMARK_VISIT_RADIUS_METERS = 20;
@@ -1000,10 +1003,15 @@
     }
     return state.features
       .filter(isOfficialTrailmark)
-      .map((feature) => ({
-        feature,
-        distance: Math.hypot(feature.points[0].x - point.x, feature.points[0].y - point.y),
-      }))
+      .map((feature) => {
+        const trailmarkPoint = getOfficialTrailmarkMapPoint(feature);
+        return {
+          feature,
+          distance: trailmarkPoint
+            ? Math.hypot(trailmarkPoint.x - point.x, trailmarkPoint.y - point.y)
+            : Infinity,
+        };
+      })
       .sort((left, right) => left.distance - right.distance)[0] || null;
   }
 
@@ -1015,7 +1023,11 @@
     if (!point) {
       return false;
     }
-    return Math.hypot(feature.points[0].x - point.x, feature.points[0].y - point.y) <= TRAILMARK_VISIT_RADIUS;
+    const trailmarkPoint = getOfficialTrailmarkMapPoint(feature);
+    return Boolean(
+      trailmarkPoint &&
+        Math.hypot(trailmarkPoint.x - point.x, trailmarkPoint.y - point.y) <= TRAILMARK_VISIT_RADIUS,
+    );
   }
 
   function createNativeFieldState() {
@@ -1034,14 +1046,22 @@
     const officialTrailmarks = playerPoint
       ? state.features
         .filter(isOfficialTrailmark)
-        .map((feature) => ({
-          id: feature.id,
-          title: feature.title || "Trailmark",
-          x: feature.points[0]?.x,
-          y: feature.points[0]?.y,
-          distance: Math.hypot(feature.points[0].x - playerPoint.x, feature.points[0].y - playerPoint.y),
-          within_range: Math.hypot(feature.points[0].x - playerPoint.x, feature.points[0].y - playerPoint.y) <= TRAILMARK_VISIT_RADIUS,
-        }))
+        .map((feature) => {
+          const trailmarkPoint = getOfficialTrailmarkMapPoint(feature);
+          return {
+            id: feature.id,
+            title: feature.title || "Trailmark",
+            x: trailmarkPoint?.x,
+            y: trailmarkPoint?.y,
+            distance: trailmarkPoint
+              ? Math.hypot(trailmarkPoint.x - playerPoint.x, trailmarkPoint.y - playerPoint.y)
+              : Infinity,
+            within_range: Boolean(
+              trailmarkPoint &&
+                Math.hypot(trailmarkPoint.x - playerPoint.x, trailmarkPoint.y - playerPoint.y) <= TRAILMARK_VISIT_RADIUS,
+            ),
+          };
+        })
         .filter((feature) => Number.isFinite(feature.x) && Number.isFinite(feature.y))
         .sort((left, right) => left.distance - right.distance)
       : [];
@@ -1081,7 +1101,7 @@
             id: nearestFeature.id,
             title: nearestFeature.title || "Trailmark",
             notes: nearestFeature.notes || "",
-            point: nearestFeature.points[0] ? { x: nearestFeature.points[0].x, y: nearestFeature.points[0].y } : null,
+            point: getOfficialTrailmarkMapPoint(nearestFeature),
             distance: nearest.distance,
             within_range: nearest.distance <= TRAILMARK_VISIT_RADIUS,
             recent_visits: Array.isArray(visits)
@@ -1351,10 +1371,15 @@
 
     const nearest = state.features
       .filter(isOfficialTrailmark)
-      .map((feature) => ({
-        feature,
-        distance: Math.hypot(feature.points[0].x - point.x, feature.points[0].y - point.y),
-      }))
+      .map((feature) => {
+        const trailmarkPoint = getOfficialTrailmarkMapPoint(feature);
+        return {
+          feature,
+          distance: trailmarkPoint
+            ? Math.hypot(trailmarkPoint.x - point.x, trailmarkPoint.y - point.y)
+            : Infinity,
+        };
+      })
       .filter((candidate) => candidate.distance <= TRAILMARK_VISIT_RADIUS)
       .sort((left, right) => left.distance - right.distance)[0];
 
@@ -1538,7 +1563,7 @@
   function worldPositionToAtlasPoint(worldX, worldY) {
     const cellX = worldX / 4096;
     const cellY = worldY / 4096;
-    return {
+    return applyGameLinkAtlasOffset({
       x: clampNumber(
         WORLD_TO_ATLAS_X[0] * cellX + WORLD_TO_ATLAS_X[1] * cellY + WORLD_TO_ATLAS_X[2],
         0,
@@ -1549,7 +1574,34 @@
         0,
         MAP_HEIGHT,
       ),
+    });
+  }
+
+  function applyGameLinkAtlasOffset(point) {
+    if (!point) {
+      return null;
+    }
+    return {
+      x: clampNumber(point.x + GAME_LINK_ATLAS_OFFSET.x, 0, MAP_WIDTH),
+      y: clampNumber(point.y + GAME_LINK_ATLAS_OFFSET.y, 0, MAP_HEIGHT),
     };
+  }
+
+  function removeGameLinkAtlasOffset(point) {
+    if (!point) {
+      return null;
+    }
+    return {
+      x: clampNumber(point.x - GAME_LINK_ATLAS_OFFSET.x, 0, MAP_WIDTH),
+      y: clampNumber(point.y - GAME_LINK_ATLAS_OFFSET.y, 0, MAP_HEIGHT),
+    };
+  }
+
+  function getOfficialTrailmarkMapPoint(feature) {
+    if (!feature?.points?.[0]) {
+      return null;
+    }
+    return applyGameLinkAtlasOffset(feature.points[0]);
   }
 
   function clampNumber(value, minimum, maximum) {
@@ -1616,7 +1668,10 @@
     state.features
       .filter(isOfficialTrailmark)
       .forEach((feature) => {
-        const trailmarkPoint = feature.points[0];
+        const trailmarkPoint = getOfficialTrailmarkMapPoint(feature);
+        if (!trailmarkPoint) {
+          return;
+        }
         const boundary = Array.from({ length: 48 }, (_, index) => {
           const angle = (index / 48) * Math.PI * 2;
           return [
@@ -1940,10 +1995,15 @@
 
     const nearest = state.features
       .filter(isOfficialTrailmark)
-      .map((feature) => ({
-        feature,
-        distance: Math.hypot(feature.points[0].x - point.x, feature.points[0].y - point.y),
-      }))
+      .map((feature) => {
+        const trailmarkPoint = getOfficialTrailmarkMapPoint(feature);
+        return {
+          feature,
+          distance: trailmarkPoint
+            ? Math.hypot(trailmarkPoint.x - point.x, trailmarkPoint.y - point.y)
+            : Infinity,
+        };
+      })
       .filter((candidate) => candidate.distance <= TRAILMARK_VISIT_RADIUS)
       .sort((left, right) => left.distance - right.distance)[0];
 
@@ -3058,10 +3118,13 @@
   function createFeatureLabelLayer(feature) {
     const category = categoryById[feature.category] || categoryById.landmark;
     const point = feature.type === "marker"
-      ? feature.points[0]
+      ? (isOfficialTrailmark(feature) ? getOfficialTrailmarkMapPoint(feature) : feature.points[0])
       : feature.type === "range"
         ? getPolygonCentroid(feature.points)
         : getLineMidpoint(feature.points);
+    if (!point) {
+      return null;
+    }
     const title = truncate(feature.title || category.label, 60);
     const sourceClass = isCanonFeature(feature) ? " is-canon" : isGuildFeature(feature) ? " is-guild" : "";
     return L.marker([point.y, point.x], {
@@ -3082,7 +3145,10 @@
     const selected = isFeatureSelected(feature.id);
 
     if (feature.type === "marker") {
-      const point = feature.points[0];
+      const point = isOfficialTrailmark(feature) ? getOfficialTrailmarkMapPoint(feature) : feature.points[0];
+      if (!point) {
+        return null;
+      }
       const mixed = getFeatureCategories(feature).length > 1;
       const draggable = canRepositionMarker(feature);
       const marker = L.marker([point.y, point.x], {
@@ -3102,11 +3168,11 @@
           marker.closeTooltip();
         });
         marker.on("dragend", (event) => {
-          const point = clampPoint(event.target.getLatLng());
-          if (!point) {
+          const displayedPoint = clampPoint(event.target.getLatLng());
+          if (!displayedPoint) {
             return;
           }
-          feature.points = [point];
+          feature.points = [isOfficialTrailmark(feature) ? removeGameLinkAtlasOffset(displayedPoint) : displayedPoint];
           state.selectedId = feature.id;
           state.selectedIds = [feature.id];
           lastDragEndedAt = Date.now();
@@ -3179,7 +3245,10 @@
   }
 
   function createMoveMapControl(feature) {
-    const point = feature.points[0];
+    const point = isOfficialTrailmark(feature) ? getOfficialTrailmarkMapPoint(feature) : feature.points[0];
+    if (!point) {
+      return null;
+    }
     const control = L.marker([point.y, point.x], {
       interactive: true,
       zIndexOffset: 1800,
@@ -4172,7 +4241,11 @@
   }
 
   function drawExportMarker(ctx, feature, category, bounds, width, height, scale) {
-    const point = mapPointToExport(feature.points[0], bounds, width, height);
+    const mapPoint = isOfficialTrailmark(feature) ? getOfficialTrailmarkMapPoint(feature) : feature.points[0];
+    if (!mapPoint) {
+      return;
+    }
+    const point = mapPointToExport(mapPoint, bounds, width, height);
     const selected = isFeatureSelected(feature.id);
     const radius = (isDefaultFeature(feature) ? 6 : selected ? 11 : 9) * scale;
     ctx.save();
@@ -4334,7 +4407,10 @@
 
   function featureIntersectsBounds(feature, bounds) {
     if (feature.type === "marker") {
-      const point = feature.points[0];
+      const point = isOfficialTrailmark(feature) ? getOfficialTrailmarkMapPoint(feature) : feature.points[0];
+      if (!point) {
+        return false;
+      }
       return point.x >= bounds.west && point.x <= bounds.east && point.y >= bounds.south && point.y <= bounds.north;
     }
 
@@ -5773,7 +5849,10 @@
 
   function zoomToFeature(feature) {
     if (feature.type === "marker") {
-      const point = feature.points[0];
+      const point = isOfficialTrailmark(feature) ? getOfficialTrailmarkMapPoint(feature) : feature.points[0];
+      if (!point) {
+        return;
+      }
       map.setView([point.y, point.x], Math.max(map.getZoom(), 0));
       return;
     }
