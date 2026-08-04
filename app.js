@@ -298,6 +298,7 @@
     clipboardDropBtn: document.getElementById("clipboardDropBtn"),
     showLabelsInput: document.getElementById("showLabelsInput"),
     mapViewInput: document.getElementById("mapViewInput"),
+    mapArtworkCredit: document.getElementById("mapArtworkCredit"),
     mapDetailScaleInput: document.getElementById("mapDetailScaleInput"),
     livePositionInput: document.getElementById("livePositionInput"),
     livePositionStatus: document.getElementById("livePositionStatus"),
@@ -687,6 +688,7 @@
     elements.mapViewInput.value = view.id;
     mapImageLayer.setUrl(view.image);
     map.getContainer().classList.toggle("map-view-illustrated", view.id === "illustrated");
+    elements.mapArtworkCredit.hidden = view.id !== "illustrated";
     applyMapDetailScale();
   }
 

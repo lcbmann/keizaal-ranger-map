@@ -738,6 +738,18 @@ textarea {
   line-height: 1.5;
 }
 
+.artwork-credit {
+  color: var(--ink-soft);
+  font-size: 0.88rem;
+  font-style: italic;
+}
+
+.artwork-credit a {
+  color: var(--green-deep);
+  font-style: normal;
+  font-weight: 700;
+}
+
 .workflow-dialog {
   width: min(600px, calc(100vw - 32px));
 }
@@ -2152,6 +2164,27 @@ html[data-workspace="edit"] .field-workspace-controls {
   border: 1px solid rgba(238, 210, 151, 0.22);
   background: #19140d;
   box-shadow: var(--shadow);
+}
+
+.map-artwork-credit {
+  position: absolute;
+  z-index: 900;
+  right: 28px;
+  bottom: 28px;
+  max-width: min(420px, calc(100% - 56px));
+  padding: 7px 10px;
+  color: #f7ebd0;
+  background: rgba(28, 20, 12, 0.88);
+  border: 1px solid rgba(238, 210, 151, 0.72);
+  box-shadow: 0 4px 12px rgba(24, 15, 7, 0.35);
+  font-size: 0.78rem;
+  line-height: 1.35;
+  text-align: right;
+}
+
+.map-artwork-credit a {
+  color: #f1ca68;
+  font-weight: 700;
 }
 
 .leaflet-container {
