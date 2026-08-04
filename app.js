@@ -44,7 +44,7 @@
   ]);
   const STORAGE_KEY = "keizaal-ranger-map-state-v1";
   const ILLUSTRATED_NOTICE_KEY = "ranger-atlas-illustrated-notice-v1";
-  const HELP_HINT_KEY = "ranger-atlas-help-hint-seen-v1";
+  const HELP_HINT_KEY = "ranger-atlas-help-hint-seen-v2";
   const DEFAULT_FEATURES_VERSION = 2;
   const SUPABASE_CONFIG = window.RANGER_ATLAS_SUPABASE || {};
   const SUPABASE_URL = SUPABASE_CONFIG.url || "https://qmuuqnfpbfncwacrrmri.supabase.co";
