@@ -144,25 +144,28 @@ textarea {
 }
 
 .help-button.is-attention {
-  animation: help-button-ping 1.8s ease-in-out infinite;
+  position: relative;
+  z-index: 2;
+  animation: help-button-ping 1.45s ease-in-out infinite;
 }
 
 @keyframes help-button-ping {
   0%,
-  58%,
   100% {
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22), 0 0 0 2px rgba(194, 138, 24, 0.88), 0 0 0 2px rgba(194, 138, 24, 0.32);
+    transform: scale(1);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22), 0 0 0 3px #e7b83f, 0 0 0 7px rgba(231, 184, 63, 0.42), 0 0 16px rgba(231, 184, 63, 0.72);
   }
 
-  72% {
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22), 0 0 0 2px rgba(194, 138, 24, 0.92), 0 0 0 10px rgba(194, 138, 24, 0);
+  50% {
+    transform: scale(1.1);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.34), 0 0 0 4px #ffe18a, 0 0 0 13px rgba(231, 184, 63, 0.12), 0 0 24px rgba(255, 214, 91, 0.94);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .help-button.is-attention {
     animation: none;
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22), 0 0 0 2px rgba(194, 138, 24, 0.92);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22), 0 0 0 4px #ffe18a, 0 0 0 9px rgba(231, 184, 63, 0.42);
   }
 }
 
