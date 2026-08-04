@@ -4,7 +4,46 @@
   const MAP_IMAGE = "SR-map-Skyrim.jpg";
   const MAP_WIDTH = 8192;
   const MAP_HEIGHT = 6144;
+  const MAP_VIEWS = Object.freeze({
+    parchment: Object.freeze({
+      id: "parchment",
+      label: "Field parchment",
+      image: MAP_IMAGE,
+    }),
+    illustrated: Object.freeze({
+      id: "illustrated",
+      label: "Illustrated Skyrim",
+      image: "Skyrim-illustrated-map.jpg",
+    }),
+  });
+  // The illustrated artwork is a different drawing of Skyrim, not a scaled
+  // version of the parchment. Keep one canonical coordinate system and apply
+  // the built-in reference alignment only when rendering that artwork.
+  const MAP_VIEW_CALIBRATION = Object.freeze({
+    parchment: Object.freeze({ anchorX: MAP_WIDTH / 2, anchorY: MAP_HEIGHT / 2, scaleX: 1, scaleY: 1 }),
+    illustrated: Object.freeze({ anchorX: MAP_WIDTH / 2, anchorY: MAP_HEIGHT / 2, scaleX: 1, scaleY: 1 }),
+  });
+  const ILLUSTRATED_CALIBRATION_VERSION = 1;
+  const ILLUSTRATED_CALIBRATION_PRESET = Object.freeze([
+    { id: "default-dawnstar", x: 4349, y: 4936 },
+    { id: "default-winterhold", x: 6121, y: 5109 },
+    { id: "default-windhelm", x: 6231, y: 3785 },
+    { id: "default-riften", x: 7272, y: 1071 },
+    { id: "default-falkreath", x: 3326, y: 1217 },
+    { id: "default-markarth", x: 786, y: 2935 },
+    { id: "default-solitude", x: 2604, y: 5201 },
+    { id: "default-morthal", x: 3252, y: 4141 },
+    { id: "default-whiterun", x: 4321, y: 2825 },
+    { id: "default-dragon-bridge", x: 1946, y: 4643 },
+    { id: "default-karthwasten", x: 1498, y: 3711 },
+    { id: "default-rorikstead", x: 2448, y: 2981 },
+    { id: "default-helgen", x: 4221, y: 1400 },
+    { id: "default-ivarstead", x: 5317, y: 1820 },
+    { id: "default-shors-stone", x: 6752, y: 2040 },
+    { id: "default-riverwood", x: 4303, y: 1957 },
+  ]);
   const STORAGE_KEY = "keizaal-ranger-map-state-v1";
+  const ILLUSTRATED_NOTICE_KEY = "ranger-atlas-illustrated-notice-v1";
   const DEFAULT_FEATURES_VERSION = 2;
   const SUPABASE_CONFIG = window.RANGER_ATLAS_SUPABASE || {};
   const SUPABASE_URL = SUPABASE_CONFIG.url || "https://qmuuqnfpbfncwacrrmri.supabase.co";
@@ -118,6 +157,10 @@
     features: [],
     filters: Object.fromEntries(categories.map((category) => [category.id, true])),
     showLabels: false,
+    mapView: "parchment",
+    illustratedCalibration: ILLUSTRATED_CALIBRATION_PRESET.map((entry) => ({ ...entry })),
+    illustratedCalibrationVersion: ILLUSTRATED_CALIBRATION_VERSION,
+    mapDetailScale: 0.85,
     darkMode: window.matchMedia?.("(prefers-color-scheme: dark)").matches === true,
     search: "",
     creatorFilter: "",
@@ -197,7 +240,7 @@
     [MAP_HEIGHT, MAP_WIDTH],
   ];
 
-  L.imageOverlay(MAP_IMAGE, bounds).addTo(map);
+  const mapImageLayer = L.imageOverlay(MAP_VIEWS.parchment.image, bounds).addTo(map);
   map.fitBounds(bounds);
   map.setMaxBounds([
     [-240, -240],
@@ -241,6 +284,10 @@
     helpCloseBtn: document.getElementById("helpCloseBtn"),
     settingsDialog: document.getElementById("settingsDialog"),
     settingsCloseBtn: document.getElementById("settingsCloseBtn"),
+    illustratedNoticeDialog: document.getElementById("illustratedNoticeDialog"),
+    illustratedNoticeCloseBtn: document.getElementById("illustratedNoticeCloseBtn"),
+    illustratedNoticeTryBtn: document.getElementById("illustratedNoticeTryBtn"),
+    illustratedNoticeKeepBtn: document.getElementById("illustratedNoticeKeepBtn"),
     clipboardDialog: document.getElementById("clipboardDialog"),
     clipboardCloseBtn: document.getElementById("clipboardCloseBtn"),
     clipboardDoneBtn: document.getElementById("clipboardDoneBtn"),
@@ -250,6 +297,8 @@
     clipboardMarkBtn: document.getElementById("clipboardMarkBtn"),
     clipboardDropBtn: document.getElementById("clipboardDropBtn"),
     showLabelsInput: document.getElementById("showLabelsInput"),
+    mapViewInput: document.getElementById("mapViewInput"),
+    mapDetailScaleInput: document.getElementById("mapDetailScaleInput"),
     livePositionInput: document.getElementById("livePositionInput"),
     livePositionStatus: document.getElementById("livePositionStatus"),
     trailmarkVisitsInput: document.getElementById("trailmarkVisitsInput"),
@@ -401,6 +450,7 @@
     prepareSearchInputAgainstAutofill();
     loadState();
     applyTheme();
+    applyMapDetailScale();
     updateWorkspaceUI();
     renderFilters();
     renderAll();
@@ -409,6 +459,7 @@
     syncViewInputsFromState();
     [0, 100, 500, 1500, 3000].forEach((delay) => window.setTimeout(clearRestoredSearchInput, delay));
     setStatus("Ready");
+    maybeShowIllustratedNotice();
     updateTrailmarkVisitControls();
     updateSharePositionControls();
     if (isSupabaseConfigured()) {
@@ -455,6 +506,203 @@
     input.addEventListener("focus", unlockSearch, { once: true });
   }
 
+  function getMapView(viewId = state.mapView) {
+    return MAP_VIEWS[viewId] || MAP_VIEWS.parchment;
+  }
+
+  function getMapViewCalibration(viewId = state.mapView) {
+    return MAP_VIEW_CALIBRATION[viewId] || MAP_VIEW_CALIBRATION.parchment;
+  }
+
+  function transformPointWithMapViewBase(point, viewId = state.mapView) {
+    if (!point) {
+      return null;
+    }
+    const calibration = getMapViewCalibration(viewId);
+    return {
+      x: calibration.anchorX + (Number(point.x) - calibration.anchorX) * calibration.scaleX,
+      y: calibration.anchorY + (Number(point.y) - calibration.anchorY) * calibration.scaleY,
+    };
+  }
+
+  function inverseTransformPointWithMapViewBase(point, viewId = state.mapView) {
+    if (!point) {
+      return null;
+    }
+    const calibration = getMapViewCalibration(viewId);
+    return {
+      x: calibration.anchorX + (Number(point.x) - calibration.anchorX) / calibration.scaleX,
+      y: calibration.anchorY + (Number(point.y) - calibration.anchorY) / calibration.scaleY,
+    };
+  }
+
+  function getIllustratedCalibrationReferences() {
+    return defaultFeatures.filter((feature) => feature.type === "marker");
+  }
+
+  function normalizeIllustratedCalibration(entries) {
+    const validIds = new Set(getIllustratedCalibrationReferences().map((feature) => feature.id));
+    const pointsById = new Map();
+    (Array.isArray(entries) ? entries : []).forEach((entry) => {
+      if (!entry || !validIds.has(entry.id)) {
+        return;
+      }
+      const x = Number(entry.x);
+      const y = Number(entry.y);
+      if (!Number.isFinite(x) || !Number.isFinite(y)) {
+        return;
+      }
+      pointsById.set(entry.id, {
+        id: entry.id,
+        x: Math.round(Math.min(MAP_WIDTH, Math.max(0, x))),
+        y: Math.round(Math.min(MAP_HEIGHT, Math.max(0, y))),
+      });
+    });
+    return Array.from(pointsById.values());
+  }
+
+  function getIllustratedCalibrationControlPoints() {
+    if (!state.illustratedCalibration.length) {
+      return [];
+    }
+    const targetsById = new Map(state.illustratedCalibration.map((entry) => [entry.id, entry]));
+    return getIllustratedCalibrationReferences()
+      .map((feature) => {
+        const target = targetsById.get(feature.id);
+        if (!target) {
+          return null;
+        }
+        const source = transformPointWithMapViewBase(feature.points[0], "illustrated");
+        return { source, target };
+      })
+      .filter(Boolean);
+  }
+
+  function getIllustratedCalibrationOffset(point) {
+    const controls = getIllustratedCalibrationControlPoints();
+    if (!controls.length) {
+      return { x: 0, y: 0 };
+    }
+
+    let weightTotal = 0;
+    let offsetX = 0;
+    let offsetY = 0;
+    for (const control of controls) {
+      const dx = point.x - control.source.x;
+      const dy = point.y - control.source.y;
+      const distanceSquared = dx * dx + dy * dy;
+      if (distanceSquared < 4) {
+        return {
+          x: control.target.x - control.source.x,
+          y: control.target.y - control.source.y,
+        };
+      }
+      // Nearby reference points dominate, while distant points keep the
+      // adjustment continuous across the artwork.
+      const weight = 1 / Math.max(6400, distanceSquared);
+      weightTotal += weight;
+      offsetX += (control.target.x - control.source.x) * weight;
+      offsetY += (control.target.y - control.source.y) * weight;
+    }
+
+    return weightTotal ? { x: offsetX / weightTotal, y: offsetY / weightTotal } : { x: 0, y: 0 };
+  }
+
+  function transformPointForMapView(point, viewId = state.mapView) {
+    const basePoint = transformPointWithMapViewBase(point, viewId);
+    if (!basePoint || viewId !== "illustrated") {
+      return basePoint;
+    }
+    const offset = getIllustratedCalibrationOffset(basePoint);
+    return {
+      x: Math.min(MAP_WIDTH, Math.max(0, basePoint.x + offset.x)),
+      y: Math.min(MAP_HEIGHT, Math.max(0, basePoint.y + offset.y)),
+    };
+  }
+
+  function inverseTransformPointForMapView(point, viewId = state.mapView) {
+    if (!point || viewId !== "illustrated" || !state.illustratedCalibration.length) {
+      return inverseTransformPointWithMapViewBase(point, viewId);
+    }
+
+    let candidate = inverseTransformPointWithMapViewBase(point, viewId);
+    for (let iteration = 0; iteration < 10; iteration += 1) {
+      const projected = transformPointForMapView(candidate, viewId);
+      const projectedX = transformPointForMapView({ x: candidate.x + 1, y: candidate.y }, viewId);
+      const projectedY = transformPointForMapView({ x: candidate.x, y: candidate.y + 1 }, viewId);
+      const a = projectedX.x - projected.x;
+      const b = projectedY.x - projected.x;
+      const c = projectedX.y - projected.y;
+      const d = projectedY.y - projected.y;
+      const determinant = a * d - b * c;
+      const errorX = point.x - projected.x;
+      const errorY = point.y - projected.y;
+      if (Math.abs(determinant) < 0.0001 || Math.max(Math.abs(errorX), Math.abs(errorY)) < 0.25) {
+        break;
+      }
+      candidate = {
+        x: candidate.x + (d * errorX - b * errorY) / determinant,
+        y: candidate.y + (-c * errorX + a * errorY) / determinant,
+      };
+    }
+    return clampPoint(candidate);
+  }
+
+  function transformPointsForMapView(points, viewId = state.mapView) {
+    return (Array.isArray(points) ? points : []).map((point) => transformPointForMapView(point, viewId));
+  }
+
+  function getFeatureDisplayPoints(feature, viewId = state.mapView) {
+    const points = feature?.type === "marker"
+      ? [isOfficialTrailmark(feature) ? getOfficialTrailmarkMapPoint(feature) : feature.points[0]]
+      : feature?.points;
+    return transformPointsForMapView(points, viewId).filter(Boolean);
+  }
+
+  function setMapView(viewId) {
+    state.mapView = getMapView(viewId).id;
+    applyMapView();
+    saveState();
+    renderAll();
+    renderDraft();
+    renderLivePosition();
+    renderTrailmarkVisitRadii();
+    setStatus(`Map view: ${getMapView().label}`);
+  }
+
+  function maybeShowIllustratedNotice() {
+    if (window.localStorage.getItem(ILLUSTRATED_NOTICE_KEY) === "1" || elements.illustratedNoticeDialog.open) {
+      return;
+    }
+    window.setTimeout(() => {
+      if (!elements.illustratedNoticeDialog.open) {
+        elements.illustratedNoticeDialog.showModal();
+      }
+    }, 700);
+  }
+
+  function applyMapView() {
+    const view = getMapView();
+    state.mapView = view.id;
+    elements.mapViewInput.value = view.id;
+    mapImageLayer.setUrl(view.image);
+    map.getContainer().classList.toggle("map-view-illustrated", view.id === "illustrated");
+    applyMapDetailScale();
+  }
+
+  function getMapDetailScale() {
+    return clampNumber(Number(state.mapDetailScale) || 1, 0.65, 1.2);
+  }
+
+  function applyMapDetailScale() {
+    const scale = getMapDetailScale();
+    state.mapDetailScale = scale;
+    map.getContainer().style.setProperty("--map-detail-scale", scale.toString());
+    if (elements.mapDetailScaleInput) {
+      elements.mapDetailScaleInput.value = scale.toString();
+    }
+  }
+
   function bindEvents() {
     elements.workspaceModeButtons.forEach((button) => {
       button.addEventListener("click", () => setWorkspaceMode(button.dataset.workspaceMode));
@@ -475,6 +723,26 @@
     elements.settingsBtn.addEventListener("click", () => elements.settingsDialog.showModal());
     elements.settingsCloseBtn.addEventListener("click", () => elements.settingsDialog.close());
     closeDialogOnBackdrop(elements.settingsDialog);
+    elements.illustratedNoticeCloseBtn.addEventListener("click", () => elements.illustratedNoticeDialog.close());
+    elements.illustratedNoticeKeepBtn.addEventListener("click", () => elements.illustratedNoticeDialog.close());
+    elements.illustratedNoticeTryBtn.addEventListener("click", () => {
+      setMapView("illustrated");
+      elements.illustratedNoticeDialog.close();
+    });
+    closeDialogOnBackdrop(elements.illustratedNoticeDialog);
+    elements.illustratedNoticeDialog.addEventListener("close", () => {
+      window.localStorage.setItem(ILLUSTRATED_NOTICE_KEY, "1");
+    });
+    elements.mapDetailScaleInput.addEventListener("change", (event) => {
+      state.mapDetailScale = clampNumber(Number(event.target.value) || 1, 0.65, 1.2);
+      applyMapDetailScale();
+      saveState();
+      renderAll();
+      renderDraft();
+      renderLivePosition();
+      renderTrailmarkVisitRadii();
+      setStatus(`Map detail scale: ${Math.round(state.mapDetailScale * 100)}%`);
+    });
     elements.clipboardBtn.addEventListener("click", openClipboardDialog);
     elements.clipboardCloseBtn.addEventListener("click", closeClipboardDialog);
     elements.clipboardDoneBtn.addEventListener("click", closeClipboardDialog);
@@ -495,6 +763,9 @@
       renderAll();
       renderDraft();
       setStatus(state.showLabels ? "Location names shown" : "Location names hidden");
+    });
+    elements.mapViewInput.addEventListener("change", (event) => {
+      setMapView(event.target.value);
     });
     elements.livePositionInput.addEventListener("change", (event) => {
       const enabled = event.target.checked;
@@ -779,6 +1050,14 @@
       }
       state.showLabels = saved.showLabels === true;
       elements.showLabelsInput.checked = state.showLabels;
+      state.mapView = getMapView(saved.mapView).id;
+      state.illustratedCalibration = saved.illustratedCalibrationVersion === ILLUSTRATED_CALIBRATION_VERSION
+        ? normalizeIllustratedCalibration(saved.illustratedCalibration)
+        : ILLUSTRATED_CALIBRATION_PRESET.map((entry) => ({ ...entry }));
+      state.illustratedCalibrationVersion = ILLUSTRATED_CALIBRATION_VERSION;
+      state.mapDetailScale = clampNumber(Number(saved.mapDetailScale) || 0.85, 0.65, 1.2);
+      elements.mapViewInput.value = state.mapView;
+      applyMapView();
       if (typeof saved.darkMode === "boolean") {
         state.darkMode = saved.darkMode;
       }
@@ -833,6 +1112,10 @@
       defaultsVersion: DEFAULT_FEATURES_VERSION,
       filters: state.filters,
       showLabels: state.showLabels,
+      mapView: state.mapView,
+      illustratedCalibration: state.illustratedCalibration,
+      illustratedCalibrationVersion: ILLUSTRATED_CALIBRATION_VERSION,
+      mapDetailScale: getMapDetailScale(),
       darkMode: state.darkMode,
       livePositionEnabled: state.livePositionEnabled,
       followLivePosition: state.followLivePosition,
@@ -1622,7 +1905,7 @@
       return;
     }
 
-    const point = state.livePositionPoint;
+    const point = transformPointForMapView(state.livePositionPoint);
     if (!livePositionMarker) {
       livePositionMarker = L.marker([point.y, point.x], {
         // Keep the player arrow visible above Trailmarks without blocking
@@ -1668,15 +1951,19 @@
     state.features
       .filter(isOfficialTrailmark)
       .forEach((feature) => {
-        const trailmarkPoint = getOfficialTrailmarkMapPoint(feature);
-        if (!trailmarkPoint) {
+        const canonicalPoint = getOfficialTrailmarkMapPoint(feature);
+        if (!canonicalPoint) {
           return;
         }
         const boundary = Array.from({ length: 48 }, (_, index) => {
           const angle = (index / 48) * Math.PI * 2;
+          const point = transformPointForMapView({
+            x: canonicalPoint.x + Math.cos(angle) * TRAILMARK_VISIT_RADIUS,
+            y: canonicalPoint.y + Math.sin(angle) * TRAILMARK_VISIT_RADIUS,
+          });
           return [
-            trailmarkPoint.y + Math.sin(angle) * TRAILMARK_VISIT_RADIUS,
-            trailmarkPoint.x + Math.cos(angle) * TRAILMARK_VISIT_RADIUS,
+            point.y,
+            point.x,
           ];
         });
         L.polygon(boundary, {
@@ -1699,7 +1986,7 @@
     if (!state.followLivePosition || !state.livePositionPoint || state.livePositionPoint.stale) {
       return;
     }
-    const point = state.livePositionPoint;
+    const point = transformPointForMapView(state.livePositionPoint);
     const targetZoom = zoomIn ? Math.max(map.getZoom(), 0.75) : Math.max(map.getZoom(), 0.25);
     map.stop();
     map.flyTo([point.y, point.x], targetZoom, {
@@ -2933,7 +3220,7 @@
       return;
     }
 
-    const point = clampPoint(event.latlng);
+    const point = inverseTransformPointForMapView(clampPoint(event.latlng));
     if (!point) {
       setStatus("Could not read that map position");
       return;
@@ -2979,10 +3266,10 @@
     if (!state.freehandDrawing) {
       state.freehandDrawing = true;
       pushUndo(`draft ${state.mode === "range" ? "range" : "trail"} sketch`);
-      addDrawPoint(clampPoint(state.pointerStart.latlng));
+      addDrawPoint(inverseTransformPointForMapView(clampPoint(state.pointerStart.latlng)));
     }
 
-    const point = clampPoint(event.latlng);
+    const point = inverseTransformPointForMapView(clampPoint(event.latlng));
     if (!point) {
       return;
     }
@@ -3009,8 +3296,10 @@
   function addDrawPoint(point, minPixelDistance = 0) {
     const previous = state.drawPoints[state.drawPoints.length - 1];
     if (previous && minPixelDistance) {
-      const previousLayerPoint = map.latLngToLayerPoint([previous.y, previous.x]);
-      const nextLayerPoint = map.latLngToLayerPoint([point.y, point.x]);
+      const previousDisplay = transformPointForMapView(previous);
+      const nextDisplay = transformPointForMapView(point);
+      const previousLayerPoint = map.latLngToLayerPoint([previousDisplay.y, previousDisplay.x]);
+      const nextLayerPoint = map.latLngToLayerPoint([nextDisplay.y, nextDisplay.x]);
       if (previousLayerPoint.distanceTo(nextLayerPoint) < minPixelDistance) {
         return;
       }
@@ -3117,11 +3406,12 @@
 
   function createFeatureLabelLayer(feature) {
     const category = categoryById[feature.category] || categoryById.landmark;
+    const displayPoints = getFeatureDisplayPoints(feature);
     const point = feature.type === "marker"
-      ? (isOfficialTrailmark(feature) ? getOfficialTrailmarkMapPoint(feature) : feature.points[0])
+      ? displayPoints[0]
       : feature.type === "range"
-        ? getPolygonCentroid(feature.points)
-        : getLineMidpoint(feature.points);
+        ? getPolygonCentroid(displayPoints)
+        : getLineMidpoint(displayPoints);
     if (!point) {
       return null;
     }
@@ -3145,7 +3435,7 @@
     const selected = isFeatureSelected(feature.id);
 
     if (feature.type === "marker") {
-      const point = isOfficialTrailmark(feature) ? getOfficialTrailmarkMapPoint(feature) : feature.points[0];
+      const point = getFeatureDisplayPoints(feature)[0];
       if (!point) {
         return null;
       }
@@ -3168,7 +3458,7 @@
           marker.closeTooltip();
         });
         marker.on("dragend", (event) => {
-          const displayedPoint = clampPoint(event.target.getLatLng());
+          const displayedPoint = inverseTransformPointForMapView(clampPoint(event.target.getLatLng()));
           if (!displayedPoint) {
             return;
           }
@@ -3186,7 +3476,8 @@
         : marker;
     }
 
-    const latLngs = feature.points.map((point) => [point.y, point.x]);
+    const displayPoints = getFeatureDisplayPoints(feature);
+    const latLngs = displayPoints.map((point) => [point.y, point.x]);
     if (feature.type === "route") {
       return createRouteLayer(latLngs, category, selected, feature);
     }
@@ -3194,7 +3485,7 @@
     const rangeColor = getFeatureColor(feature, category);
     const layer = L.polygon(latLngs, {
       color: rangeColor,
-      weight: selected ? 4 : 2.5,
+      weight: (selected ? 4 : 2.5) * getMapDetailScale(),
       opacity: selected ? 0.95 : 0.78,
       fillColor: rangeColor,
       fillOpacity: selected ? 0.18 : 0.12,
@@ -3203,7 +3494,7 @@
     });
     layer.on("click", (event) => selectFeature(feature.id, isAdditiveSelectionEvent(event.originalEvent)));
     layer.bindTooltip(getFeatureTooltip(feature, category));
-    const symbol = createGeometrySymbolLayer(feature, getPolygonCentroid(feature.points), selected);
+    const symbol = createGeometrySymbolLayer(feature, getPolygonCentroid(displayPoints), selected);
     return L.layerGroup([layer, symbol]);
   }
 
@@ -3211,14 +3502,14 @@
     const routeColor = getFeatureColor(feature, category);
     const underlay = L.polyline(latLngs, {
       color: "#f5e8c9",
-      weight: selected ? 13 : 11,
+      weight: (selected ? 13 : 11) * getMapDetailScale(),
       opacity: 0.72,
       lineCap: "round",
       lineJoin: "round",
     });
     const ink = L.polyline(latLngs, {
       color: routeColor,
-      weight: selected ? 5 : 4,
+      weight: (selected ? 5 : 4) * getMapDetailScale(),
       opacity: selected ? 0.98 : 0.92,
       dashArray: "24 12 5 12",
       lineCap: "round",
@@ -3228,7 +3519,7 @@
       layer.on("click", (event) => selectFeature(feature.id, isAdditiveSelectionEvent(event.originalEvent)));
       layer.bindTooltip(getFeatureTooltip(feature, category));
     });
-    const symbol = createGeometrySymbolLayer(feature, getLineMidpoint(feature.points), selected);
+    const symbol = createGeometrySymbolLayer(feature, getLineMidpoint(getFeatureDisplayPoints(feature)), selected);
     const group = L.layerGroup([underlay, ink, symbol]);
     return group;
   }
@@ -3245,7 +3536,7 @@
   }
 
   function createMoveMapControl(feature) {
-    const point = isOfficialTrailmark(feature) ? getOfficialTrailmarkMapPoint(feature) : feature.points[0];
+    const point = getFeatureDisplayPoints(feature)[0];
     if (!point) {
       return null;
     }
@@ -3366,10 +3657,11 @@
     const draft = getDraftFeature();
     const draftIsMarker = state.mode === "marker" || draft?.type === "marker";
     const category = state.mode === "range" ? categoryById.range : categoryById.route;
-    const latLngs = state.drawPoints.map((point) => [point.y, point.x]);
+    const displayDrawPoints = transformPointsForMapView(state.drawPoints);
+    const latLngs = displayDrawPoints.map((point) => [point.y, point.x]);
 
     if (draftIsMarker && draft) {
-      const point = draft.points[0];
+      const point = transformPointForMapView(draft.points[0]);
       L.marker([point.y, point.x], {
         icon: L.divIcon({
           className: "",
@@ -3391,7 +3683,7 @@
         ? [state.drawPoints[0], state.drawPoints[state.drawPoints.length - 1]]
         : state.drawPoints;
 
-    visibleDraftPoints.forEach((point) => {
+    transformPointsForMapView(visibleDraftPoints).forEach((point) => {
       L.circleMarker([point.y, point.x], {
         radius: state.drawPoints.length > 20 ? 4 : 5,
         color: "#3c2816",
@@ -3401,7 +3693,7 @@
       }).addTo(draftLayer);
     });
 
-    addDraftMapControls(state.drawPoints[state.drawPoints.length - 1]);
+    addDraftMapControls(transformPointForMapView(state.drawPoints[state.drawPoints.length - 1]));
 
     if (state.drawPoints.length > 1) {
       const draftGeometry = {
@@ -3417,14 +3709,14 @@
           ? L.layerGroup([
               L.polygon(latLngs, {
                 color: category.color,
-                weight: 2.5,
+                weight: 2.5 * getMapDetailScale(),
                 fillColor: category.color,
                 fillOpacity: 0.14,
                 dashArray: "8 10",
                 lineCap: "round",
                 lineJoin: "round",
               }),
-              createGeometrySymbolLayer(draftGeometry, getPolygonCentroid(state.drawPoints), true),
+              createGeometrySymbolLayer(draftGeometry, getPolygonCentroid(displayDrawPoints), true),
               ...(state.showLabels ? [createFeatureLabelLayer(draftGeometry)] : []),
             ])
           : L.layerGroup([
@@ -4048,7 +4340,7 @@
     setStatus("Preparing map image...");
 
     try {
-      const image = await loadImage(MAP_IMAGE);
+      const image = await loadImage(getMapView().image);
       const canvas = renderVisibleMapToCanvas(image);
       const blob = await canvasToBlob(canvas);
       downloadBlob(blob, `ranger-corps-field-atlas-${formatDateForFilename(new Date())}.png`);
@@ -4132,7 +4424,8 @@
   }
 
   function drawExportRange(ctx, feature, category, bounds, width, height, scale) {
-    const points = feature.points.map((point) => mapPointToExport(point, bounds, width, height));
+    const displayPoints = getFeatureDisplayPoints(feature);
+    const points = displayPoints.map((point) => mapPointToExport(point, bounds, width, height));
     if (points.length < 2) {
       return;
     }
@@ -4155,7 +4448,7 @@
     ctx.lineWidth = (isFeatureSelected(feature.id) ? 4 : 2.5) * scale;
     ctx.lineJoin = "round";
     ctx.stroke();
-    const labelPoint = mapPointToExport(getPolygonCentroid(feature.points), bounds, width, height);
+    const labelPoint = mapPointToExport(getPolygonCentroid(displayPoints), bounds, width, height);
     drawExportGeometrySymbol(ctx, feature, labelPoint, scale);
     if (state.showLabels) {
       drawExportLabel(ctx, feature.title || category.label, labelPoint.x, labelPoint.y - 18 * scale, scale);
@@ -4164,7 +4457,8 @@
   }
 
   function drawExportRoute(ctx, feature, category, bounds, width, height, scale) {
-    const points = feature.points.map((point) => mapPointToExport(point, bounds, width, height));
+    const displayPoints = getFeatureDisplayPoints(feature);
+    const points = displayPoints.map((point) => mapPointToExport(point, bounds, width, height));
     if (points.length < 2) {
       return;
     }
@@ -4184,7 +4478,7 @@
     ctx.lineWidth = (isFeatureSelected(feature.id) ? 5 : 4) * scale;
     ctx.setLineDash([24 * scale, 12 * scale, 5 * scale, 12 * scale]);
     ctx.stroke();
-    const labelPoint = mapPointToExport(getLineMidpoint(feature.points), bounds, width, height);
+    const labelPoint = mapPointToExport(getLineMidpoint(displayPoints), bounds, width, height);
     drawExportGeometrySymbol(ctx, feature, labelPoint, scale);
     if (state.showLabels) {
       drawExportLabel(ctx, feature.title || category.label, labelPoint.x, labelPoint.y - 18 * scale, scale);
@@ -4241,7 +4535,7 @@
   }
 
   function drawExportMarker(ctx, feature, category, bounds, width, height, scale) {
-    const mapPoint = isOfficialTrailmark(feature) ? getOfficialTrailmarkMapPoint(feature) : feature.points[0];
+    const mapPoint = getFeatureDisplayPoints(feature)[0];
     if (!mapPoint) {
       return;
     }
@@ -4294,17 +4588,18 @@
 
   function drawExportLivePosition(ctx, bounds, width, height, scale) {
     const livePoint = state.livePositionEnabled ? state.livePositionPoint : null;
+    const displayPoint = transformPointForMapView(livePoint);
     if (
-      !livePoint ||
-      livePoint.x < bounds.west ||
-      livePoint.x > bounds.east ||
-      livePoint.y < bounds.south ||
-      livePoint.y > bounds.north
+      !displayPoint ||
+      displayPoint.x < bounds.west ||
+      displayPoint.x > bounds.east ||
+      displayPoint.y < bounds.south ||
+      displayPoint.y > bounds.north
     ) {
       return;
     }
 
-    const point = mapPointToExport(livePoint, bounds, width, height);
+    const point = mapPointToExport(displayPoint, bounds, width, height);
     const radius = 13 * scale;
     ctx.save();
     ctx.globalAlpha = livePoint.stale ? 0.68 : 1;
@@ -4406,15 +4701,16 @@
   }
 
   function featureIntersectsBounds(feature, bounds) {
+    const displayPoints = getFeatureDisplayPoints(feature);
     if (feature.type === "marker") {
-      const point = isOfficialTrailmark(feature) ? getOfficialTrailmarkMapPoint(feature) : feature.points[0];
+      const point = displayPoints[0];
       if (!point) {
         return false;
       }
       return point.x >= bounds.west && point.x <= bounds.east && point.y >= bounds.south && point.y <= bounds.north;
     }
 
-    const featureBounds = feature.points.reduce(
+    const featureBounds = displayPoints.reduce(
       (accumulator, point) => ({
         west: Math.min(accumulator.west, point.x),
         east: Math.max(accumulator.east, point.x),
@@ -5849,7 +6145,7 @@
 
   function zoomToFeature(feature) {
     if (feature.type === "marker") {
-      const point = isOfficialTrailmark(feature) ? getOfficialTrailmarkMapPoint(feature) : feature.points[0];
+      const point = getFeatureDisplayPoints(feature)[0];
       if (!point) {
         return;
       }
@@ -5857,7 +6153,7 @@
       return;
     }
 
-    const latLngs = feature.points.map((point) => [point.y, point.x]);
+    const latLngs = getFeatureDisplayPoints(feature).map((point) => [point.y, point.x]);
     map.fitBounds(L.latLngBounds(latLngs).pad(0.2));
   }
 

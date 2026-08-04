@@ -11,7 +11,7 @@
       integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
       crossorigin=""
     />
-    <link rel="stylesheet" href="styles.css?v=20260801-radius-20m" />
+    <link rel="stylesheet" href="styles.css?v=20260805-illustrated-view" />
   </head>
   <body>
     <div class="app-shell">
@@ -82,8 +82,8 @@
             <button id="helpBtn" class="help-button" type="button" title="How to use the atlas" aria-label="How to use the atlas">?</button>
             <button id="settingsBtn" class="settings-button" type="button" title="Atlas settings" aria-label="Atlas settings">
               <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7z" />
-                <path d="M19 13.5v-3l-2-.6a5.5 5.5 0 0 0-.6-1.4l.9-1.9-2.1-2.1-1.9.9a5.5 5.5 0 0 0-1.4-.6l-.6-2h-3l-.6 2a5.5 5.5 0 0 0-1.4.6l-1.9-.9-2.1 2.1.9 1.9a5.5 5.5 0 0 0-.6 1.4l-2 .6v3l2 .6c.1.5.3 1 .6 1.4l-.9 1.9 2.1 2.1 1.9-.9c.4.3.9.5 1.4.6l.6 2h3l.6-2c.5-.1 1-.3 1.4-.6l1.9.9 2.1-2.1-.9-1.9c.3-.4.5-.9.6-1.4l2-.6z" />
+                <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.09a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+                <circle cx="12" cy="12" r="3" />
               </svg>
             </button>
           </div>
@@ -414,6 +414,22 @@
       </div>
     </dialog>
 
+    <dialog id="illustratedNoticeDialog" class="field-note workflow-dialog illustrated-notice-dialog">
+      <div class="field-note-inner">
+        <button id="illustratedNoticeCloseBtn" class="field-note-close" type="button" aria-label="Close map artwork notice">&times;</button>
+        <p class="field-note-kicker">New Atlas Artwork</p>
+        <h2>Try the illustrated Skyrim map</h2>
+        <p>
+          A new illustrated view is available as an experimental alternative to the familiar field parchment.
+          Your entries and tools work in both views, while the parchment remains the default.
+        </p>
+        <div class="dialog-actions">
+          <button id="illustratedNoticeTryBtn" class="button primary" type="button">Try Illustrated Map</button>
+          <button id="illustratedNoticeKeepBtn" class="button secondary" type="button">Keep Parchment</button>
+        </div>
+      </div>
+    </dialog>
+
     <dialog id="settingsDialog" class="field-note workflow-dialog settings-dialog">
       <div class="field-note-inner">
         <button id="settingsCloseBtn" class="field-note-close" type="button" aria-label="Close atlas settings">&times;</button>
@@ -422,12 +438,35 @@
         <section class="settings-panel" aria-labelledby="map-display-title">
           <div>
             <p class="settings-panel-kicker">Map Display</p>
-            <h3 id="map-display-title">Location names</h3>
-            <p>Show the names of visible entries above their map symbols. Labels are also included when you use <strong>Save Map</strong>.</p>
+            <h3 id="map-display-title">Map detail</h3>
+            <p>Adjust the size of symbols, labels, and drawn routes without changing the map or the rest of the page.</p>
           </div>
           <label class="setting-toggle" for="showLabelsInput">
             <input id="showLabelsInput" type="checkbox" />
             <span>Show location names</span>
+          </label>
+          <label class="settings-select" for="mapDetailScaleInput">
+            <span>Symbol and route scale</span>
+            <select id="mapDetailScaleInput">
+              <option value="0.7">Compact · 70%</option>
+              <option value="0.85">Reduced · 85%</option>
+              <option value="1">Standard · 100%</option>
+              <option value="1.15">Large · 115%</option>
+            </select>
+          </label>
+        </section>
+        <section class="settings-panel" aria-labelledby="map-artwork-title">
+          <div>
+            <p class="settings-panel-kicker">Map Artwork</p>
+            <h3 id="map-artwork-title">Atlas view</h3>
+            <p>Choose the artwork shown beneath the shared Atlas. Illustrated Skyrim is an experimental alternative; parchment remains the default field view.</p>
+          </div>
+          <label class="settings-select" for="mapViewInput">
+            <span>Map view</span>
+            <select id="mapViewInput">
+              <option value="parchment">Field parchment</option>
+              <option value="illustrated">Illustrated Skyrim (Experimental)</option>
+            </select>
           </label>
         </section>
         <p class="settings-note">Use the sun or moon button beside Settings to change the atlas theme.</p>

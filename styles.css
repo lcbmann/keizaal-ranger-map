@@ -154,6 +154,7 @@ textarea {
 .about-button svg,
 .theme-button svg,
 .settings-button svg {
+  display: block;
   width: 18px;
   height: 18px;
   fill: none;
@@ -644,6 +645,26 @@ textarea {
   accent-color: #2b5c3e;
 }
 
+.settings-select {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 220px);
+  align-items: center;
+  gap: 12px;
+  color: #332111;
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.settings-select select {
+  min-height: 36px;
+  padding: 7px 10px;
+  border: 1px solid rgba(72, 45, 17, 0.4);
+  border-radius: 3px;
+  background: rgba(255, 249, 229, 0.9);
+  color: #332111;
+  font: inherit;
+}
+
 .settings-dialog {
   width: min(520px, calc(100vw - 32px));
 }
@@ -678,11 +699,28 @@ textarea {
   font-size: 0.86rem;
 }
 
+.settings-panel-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.settings-panel-actions span {
+  color: #6b5135;
+  font-size: 0.78rem;
+  font-style: italic;
+}
+
 .settings-note {
   margin: 14px 0 0 !important;
   color: #6b5135 !important;
   font-size: 0.82rem;
   font-style: italic;
+}
+
+#map.map-view-illustrated {
+  background: #75aeb4;
 }
 
 .workflow-dialog.help-dialog {
@@ -691,12 +729,107 @@ textarea {
   overflow: auto;
 }
 
+.illustrated-notice-dialog {
+  width: min(520px, calc(100vw - 32px));
+}
+
+.illustrated-notice-dialog p:not(.field-note-kicker) {
+  max-width: 44rem;
+  line-height: 1.5;
+}
+
 .workflow-dialog {
   width: min(600px, calc(100vw - 32px));
 }
 
 .workflow-dialog.receive-dialog {
   width: min(680px, calc(100vw - 32px));
+}
+
+.workflow-dialog.map-calibration-dialog {
+  width: min(960px, calc(100vw - 32px));
+  max-height: min(900px, calc(100vh - 32px));
+  overflow: auto;
+}
+
+.map-calibration-controls {
+  display: grid;
+  grid-template-columns: minmax(150px, 1fr) minmax(160px, 230px) auto;
+  align-items: end;
+  gap: 10px;
+  margin: 16px 0 12px;
+}
+
+.map-calibration-controls .field-label {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+.map-calibration-progress {
+  margin: 0 !important;
+  color: #6d4e2e !important;
+  font-size: 0.82rem;
+  font-style: italic;
+}
+
+.map-calibration-canvas {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border: 2px solid rgba(72, 45, 17, 0.62);
+  background: #75aeb4;
+  box-shadow: inset 0 0 0 1px rgba(255, 249, 229, 0.45);
+  cursor: crosshair;
+}
+
+.map-calibration-canvas:focus-visible {
+  outline: 3px solid #2b5c3e;
+  outline-offset: 3px;
+}
+
+.map-calibration-canvas img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  user-select: none;
+  pointer-events: none;
+}
+
+.map-calibration-markers {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.map-calibration-marker {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  transform: translate(-50%, -50%);
+  border: 2px solid #fff2bc;
+  border-radius: 50%;
+  background: #2d6243;
+  box-shadow: 0 1px 0 #1d3427, 0 0 0 2px rgba(29, 52, 39, 0.42);
+  color: #fff7dd;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.map-calibration-marker.is-selected {
+  width: 27px;
+  height: 27px;
+  border-color: #f5c24d;
+  background: #7f5120;
+}
+
+.map-calibration-hint {
+  margin: 12px 0 0 !important;
+  color: #5c4227 !important;
+  font-size: 0.88rem;
 }
 
 .code-input {
@@ -936,6 +1069,10 @@ textarea {
 }
 
 @media (max-width: 480px) {
+  .settings-select {
+    grid-template-columns: 1fr;
+  }
+
   .workflow-dialog.receive-dialog {
     width: min(100% - 20px, 680px);
   }
@@ -1213,7 +1350,8 @@ html[data-workspace="edit"] .field-workspace-controls {
   position: relative;
   width: 38px;
   height: 42px;
-  transform: rotate(var(--heading, 0deg));
+  transform: rotate(var(--heading, 0deg)) scale(var(--map-detail-scale, 1));
+  transform-origin: 50% 50%;
   transition: transform 180ms linear;
 }
 
@@ -2379,6 +2517,7 @@ html[data-workspace="edit"] .field-workspace-controls {
     inset 0 0 0 2px rgba(255, 250, 231, 0.65),
     0 2px 7px rgba(31, 19, 7, 0.38);
   transition: transform 140ms ease, filter 140ms ease;
+  transform: scale(var(--map-detail-scale, 1));
 }
 
 .geometry-symbol-range {
@@ -2414,6 +2553,7 @@ html[data-workspace="edit"] .field-workspace-controls {
   box-shadow:
     inset 0 0 0 2px rgba(255, 240, 199, 0.18),
     0 3px 8px rgba(31, 19, 7, 0.36);
+  transform: scale(var(--map-detail-scale, 1));
   transform-origin: 50% 100%;
   transition: opacity 140ms ease, transform 140ms ease, filter 140ms ease;
 }
@@ -2440,7 +2580,7 @@ html[data-workspace="edit"] .field-workspace-controls {
 }
 
 html[data-workspace="field"] .poi-marker.is-trailmark {
-  transform: scale(1.12);
+  transform: scale(calc(var(--map-detail-scale, 1) * 1.12));
   box-shadow:
     inset 0 0 0 2px rgba(255, 240, 199, 0.24),
     0 0 0 4px rgba(91, 137, 75, 0.3),
@@ -2493,18 +2633,18 @@ html[data-workspace="field"] .poi-marker.is-trailmark.is-nearby {
 #map.map-density-overview .poi-marker.is-canon:not(.is-selected) {
   opacity: 0.48;
   filter: saturate(0.55);
-  transform: scale(0.48);
+  transform: scale(calc(var(--map-detail-scale, 1) * 0.48));
 }
 
 #map.map-density-overview .poi-marker.is-canon.marker-city:not(.is-selected),
 #map.map-density-overview .poi-marker.is-canon.marker-town:not(.is-selected) {
   opacity: 0.62;
-  transform: scale(0.68);
+  transform: scale(calc(var(--map-detail-scale, 1) * 0.68));
 }
 
 #map.map-density-mid .poi-marker.is-canon:not(.is-selected) {
   opacity: 0.62;
-  transform: scale(0.72);
+  transform: scale(calc(var(--map-detail-scale, 1) * 0.72));
 }
 
 .poi-marker::after {
@@ -2586,7 +2726,8 @@ html[data-workspace="field"] .poi-marker.is-trailmark.is-nearby {
   text-align: center;
   text-overflow: ellipsis;
   white-space: nowrap;
-  transform: translate(-50%, calc(-100% - 8px));
+  transform: translate(-50%, calc(-100% - 8px)) scale(var(--map-detail-scale, 1));
+  transform-origin: 50% 100%;
 }
 
 .map-location-label::after {
@@ -3377,6 +3518,12 @@ html[data-theme="dark"] .receive-preview-facts strong {
   color: #7fb08e !important;
 }
 
+html[data-theme="dark"] .settings-panel-actions span,
+html[data-theme="dark"] .map-calibration-progress,
+html[data-theme="dark"] .map-calibration-hint {
+  color: #cfc1a7 !important;
+}
+
 html[data-theme="dark"] .help-step kbd,
 html[data-theme="dark"] .receive-preview-facts span,
 html[data-theme="dark"] .receive-preview {
@@ -3433,5 +3580,10 @@ html[data-theme="dark"] textarea {
   html[data-theme="dark"] .tool-rail,
   html[data-theme="dark"] .panel {
     border-color: rgba(181, 122, 11, 0.38);
+  }
+
+  .map-calibration-controls {
+    grid-template-columns: 1fr;
+    align-items: stretch;
   }
 }
