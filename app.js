@@ -44,6 +44,7 @@
   ]);
   const STORAGE_KEY = "keizaal-ranger-map-state-v1";
   const ILLUSTRATED_NOTICE_KEY = "ranger-atlas-illustrated-notice-v1";
+  const HELP_HINT_KEY = "ranger-atlas-help-hint-seen-v1";
   const DEFAULT_FEATURES_VERSION = 2;
   const SUPABASE_CONFIG = window.RANGER_ATLAS_SUPABASE || {};
   const SUPABASE_URL = SUPABASE_CONFIG.url || "https://qmuuqnfpbfncwacrrmri.supabase.co";
@@ -461,6 +462,7 @@
     [0, 100, 500, 1500, 3000].forEach((delay) => window.setTimeout(clearRestoredSearchInput, delay));
     setStatus("Ready");
     maybeShowIllustratedNotice();
+    applyHelpHint();
     updateTrailmarkVisitControls();
     updateSharePositionControls();
     if (isSupabaseConfigured()) {
@@ -671,6 +673,12 @@
     setStatus(`Map view: ${getMapView().label}`);
   }
 
+  function applyHelpHint() {
+    if (window.localStorage.getItem(HELP_HINT_KEY) !== "1") {
+      elements.helpBtn.classList.add("is-attention");
+    }
+  }
+
   function maybeShowIllustratedNotice() {
     if (window.localStorage.getItem(ILLUSTRATED_NOTICE_KEY) === "1" || elements.illustratedNoticeDialog.open) {
       return;
@@ -719,7 +727,11 @@
     elements.aboutBtn.addEventListener("click", () => elements.aboutDialog.showModal());
     elements.aboutCloseBtn.addEventListener("click", () => elements.aboutDialog.close());
     closeDialogOnBackdrop(elements.aboutDialog);
-    elements.helpBtn.addEventListener("click", () => elements.helpDialog.showModal());
+    elements.helpBtn.addEventListener("click", () => {
+      elements.helpBtn.classList.remove("is-attention");
+      window.localStorage.setItem(HELP_HINT_KEY, "1");
+      elements.helpDialog.showModal();
+    });
     elements.helpCloseBtn.addEventListener("click", () => elements.helpDialog.close());
     closeDialogOnBackdrop(elements.helpDialog);
     elements.settingsBtn.addEventListener("click", () => elements.settingsDialog.showModal());
