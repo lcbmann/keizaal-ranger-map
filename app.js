@@ -105,6 +105,8 @@
     { id: "trailmark", label: "Trailmark", color: "#4f6535" },
     { id: "station", label: "Station", color: "#5b6f4a" },
     { id: "landmark", label: "Landmark", color: "#5d5950" },
+    // Keep new categories appended so existing compact share codes remain stable.
+    { id: "dungeon", label: "Dungeon", color: "#5b4b70" },
   ];
 
   const categoryById = Object.fromEntries(categories.map((category) => [category.id, category]));
@@ -6408,6 +6410,7 @@
       camp: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19 12 5l8 14z"/><path d="M12 5v14"/><path d="M7 19h10"/></svg>',
       city: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V8l3 2 4-4 4 4 3-2v12z"/><path d="M9 20v-5h6v5"/><path d="M8 12h1M15 12h1"/></svg>',
       contact: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3"/><path d="M6 20c1-4 11-4 12 0"/></svg>',
+      dungeon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V9a7 7 0 0 1 14 0v11"/><path d="M9 20v-8a3 3 0 0 1 6 0v8"/><path d="M12 15h.01"/></svg>',
       hunting: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 19 5"/><path d="M7 5h6v6"/><path d="M5 7l4 4"/><path d="M14 16l3 3"/></svg>',
       ingredient: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20V9"/><path d="M12 12c-4 0-6-2-6-5 4 0 6 2 6 5z"/><path d="M12 15c4 0 6-2 6-5-4 0-6 2-6 5z"/></svg>',
       landmark: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4 19 20H5z"/><path d="M9 20h6"/></svg>',
