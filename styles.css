@@ -1994,18 +1994,34 @@ html[data-workspace="edit"] .field-workspace-controls {
   font-size: 0.7rem;
 }
 
-.awake-ranger-counter {
-  display: flex;
-  align-items: center;
-  gap: 7px;
+.ranger-presence-summary {
+  display: grid;
+  gap: 4px;
   margin-top: 9px;
   color: var(--ink-muted);
   font-size: 0.76rem;
   line-height: 1.2;
 }
 
-.awake-ranger-counter[hidden] {
+.ranger-presence-summary[hidden],
+.ranger-presence-row[hidden] {
   display: none;
+}
+
+.ranger-presence-row {
+  display: grid;
+  grid-template-columns: 7px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 7px;
+}
+
+.ranger-presence-label {
+  min-width: 0;
+}
+
+.ranger-presence-row strong {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
 }
 
 .awake-ranger-dot {
@@ -2015,6 +2031,15 @@ html[data-workspace="edit"] .field-workspace-controls {
   border-radius: 50%;
   background: #4f8a5b;
   box-shadow: 0 0 0 2px rgba(79, 138, 91, 0.18);
+}
+
+.discord-online-dot {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 7px;
+  border-radius: 50%;
+  background: #5865f2;
+  box-shadow: 0 0 0 2px rgba(88, 101, 242, 0.18);
 }
 
 .field-console-action {

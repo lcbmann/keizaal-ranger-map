@@ -11,7 +11,7 @@
       integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
       crossorigin=""
     />
-    <link rel="stylesheet" href="styles.css?v=20260827-official-illustrated-map" />
+    <link rel="stylesheet" href="styles.css?v=20260827-ranger-presence" />
   </head>
   <body>
     <div class="app-shell">
@@ -153,9 +153,17 @@
                 <strong id="fieldConsoleStatus">Ready for the road</strong>
                 <p id="fieldConsoleHint">Enable Live position.</p>
               </div>
-              <div id="awakeRangerCounter" class="awake-ranger-counter" hidden>
-                <span class="awake-ranger-dot" aria-hidden="true"></span>
-                <span id="awakeRangerCountText">Checking Ranger activity...</span>
+              <div id="awakeRangerCounter" class="ranger-presence-summary" hidden aria-live="polite">
+                <div class="ranger-presence-row">
+                  <span class="awake-ranger-dot" aria-hidden="true"></span>
+                  <span class="ranger-presence-label">In Skyrim</span>
+                  <strong id="awakeRangerCountText">0</strong>
+                </div>
+                <div id="discordOnlineCounter" class="ranger-presence-row" hidden>
+                  <span class="discord-online-dot" aria-hidden="true"></span>
+                  <span class="ranger-presence-label">On Discord</span>
+                  <strong id="discordOnlineCountText">0</strong>
+                </div>
               </div>
               <button id="fieldMarkHereBtn" class="button secondary field-console-action" type="button" disabled>
                 Mark Current Position
@@ -854,6 +862,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
     <script src="deployment-config.js"></script>
     <script src="supabase-config.js"></script>
-    <script src="app.js?v=20260827-cumulative-calibration"></script>
+    <script src="app.js?v=20260827-ranger-presence"></script>
   </body>
 </html>

@@ -205,6 +205,8 @@
     sharePositionInFlight: false,
     lastSharedPositionAt: 0,
     awakeRangerCount: null,
+    inSkyrimRangerCount: null,
+    discordOnlineCount: null,
     guildAtlasUpdatedAt: "",
     guildAtlasLocalChanges: false,
     officialTrailmarksLoaded: false,
@@ -313,6 +315,8 @@
     fieldMarkHereBtn: document.getElementById("fieldMarkHereBtn"),
     awakeRangerCounter: document.getElementById("awakeRangerCounter"),
     awakeRangerCountText: document.getElementById("awakeRangerCountText"),
+    discordOnlineCounter: document.getElementById("discordOnlineCounter"),
+    discordOnlineCountText: document.getElementById("discordOnlineCountText"),
     followLivePositionInput: document.getElementById("followLivePositionInput"),
     aboutBtn: document.getElementById("aboutBtn"),
     aboutDialog: document.getElementById("aboutDialog"),
@@ -3546,15 +3550,31 @@
     awakeRangerPollTimer = null;
     const previousCount = state.awakeRangerCount;
     try {
-      const count = await callSupabaseRpc("get_atlas_awake_ranger_count", {
+      const summary = await callSupabaseRpc("get_atlas_presence_summary", {
         device_token_input: getOrCreateDiscordDeviceToken(),
       });
-      state.awakeRangerCount = Math.max(0, Number.parseInt(count, 10) || 0);
+      state.awakeRangerCount = normalizePresenceCount(summary?.other_in_skyrim_count);
+      state.inSkyrimRangerCount = normalizePresenceCount(summary?.in_skyrim_count);
+      state.discordOnlineCount = normalizePresenceCount(summary?.discord_online_count);
       renderAwakeRangerCount();
     } catch (error) {
-      state.awakeRangerCount = null;
-      renderAwakeRangerCount();
-      console.debug("Ranger activity count unavailable", error);
+      try {
+        const count = await callSupabaseRpc("get_atlas_awake_ranger_count", {
+          device_token_input: getOrCreateDiscordDeviceToken(),
+        });
+        state.awakeRangerCount = normalizePresenceCount(count);
+        state.inSkyrimRangerCount = state.awakeRangerCount === null
+          ? null
+          : state.awakeRangerCount + (state.livePositionEnabled ? 1 : 0);
+        state.discordOnlineCount = null;
+        renderAwakeRangerCount();
+      } catch (fallbackError) {
+        state.awakeRangerCount = null;
+        state.inSkyrimRangerCount = null;
+        state.discordOnlineCount = null;
+        renderAwakeRangerCount();
+        console.debug("Ranger activity count unavailable", fallbackError, error);
+      }
     } finally {
       if (state.livePositionEnabled && previousCount !== state.awakeRangerCount) {
         void syncNativeFieldState(true);
@@ -3563,15 +3583,28 @@
     }
   }
 
-  function renderAwakeRangerCount() {
-    const count = state.awakeRangerCount;
-    elements.awakeRangerCounter.hidden = !Number.isInteger(count);
-    if (!Number.isInteger(count)) {
-      return;
+  function normalizePresenceCount(value) {
+    if (value === null || value === undefined || value === "") {
+      return null;
     }
-    elements.awakeRangerCountText.textContent = count === 0
-      ? "No other Rangers awake"
-      : `${count} other ${count === 1 ? "Ranger" : "Rangers"} awake`;
+    const count = Number.parseInt(value, 10);
+    return Number.isFinite(count) ? Math.max(0, count) : null;
+  }
+
+  function renderAwakeRangerCount() {
+    const inSkyrimCount = state.inSkyrimRangerCount;
+    const discordOnlineCount = state.discordOnlineCount;
+    elements.awakeRangerCounter.hidden = !Number.isInteger(inSkyrimCount)
+      && !Number.isInteger(discordOnlineCount);
+    if (Number.isInteger(inSkyrimCount)) {
+      elements.awakeRangerCountText.textContent = String(inSkyrimCount);
+      elements.awakeRangerCountText.title = `${inSkyrimCount} ${inSkyrimCount === 1 ? "Ranger has" : "Rangers have"} an active Atlas game link.`;
+    }
+    elements.discordOnlineCounter.hidden = !Number.isInteger(discordOnlineCount);
+    if (Number.isInteger(discordOnlineCount)) {
+      elements.discordOnlineCountText.textContent = String(discordOnlineCount);
+      elements.discordOnlineCountText.title = `${discordOnlineCount} ${discordOnlineCount === 1 ? "Ranger is" : "Rangers are"} currently online in the Ranger Discord.`;
+    }
   }
 
   async function shareLivePosition(point) {
