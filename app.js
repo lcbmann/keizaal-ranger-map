@@ -4034,8 +4034,16 @@
         (
           isOfficialTrailmarkFeatureSource(feature) ||
           (!state.officialTrailmarksLoaded && isGuildFeature(feature))
-        ),
+      ),
     );
+  }
+
+  function isHeadquartersTrailmark(feature) {
+    if (!isOfficialTrailmark(feature)) {
+      return false;
+    }
+    const title = String(feature.title || "");
+    return /\bheadquarters\b/i.test(title) || /\bHQ\b/i.test(title);
   }
 
   async function refreshTrailmarkVisits(feature, force = false) {
@@ -5527,13 +5535,14 @@
       }
       const mixed = getFeatureCategories(feature).length > 1;
       const draggable = canRepositionMarker(feature);
+      const headquarters = isHeadquartersTrailmark(feature);
       const marker = L.marker([point.y, point.x], {
         draggable,
         pane: isOfficialTrailmark(feature) ? "trailmark-pane" : "markerPane",
         zIndexOffset: getFeatureZIndexOffset(feature, selected),
         icon: L.divIcon({
           className: "",
-          html: `<div class="poi-marker marker-${escapeHtml(feature.category)}${mixed ? " is-mixed" : ""}${isGuildFeature(feature) ? " is-guild" : ""}${isCanonFeature(feature) ? " is-canon" : ""}${isOfficialTrailmark(feature) ? " is-trailmark" : ""}${state.nearbyTrailmarkId === feature.id ? " is-nearby" : ""}${selected ? " is-selected" : ""}${draggable ? " is-draggable" : ""}" style="${getFeatureMarkerStyle(feature)}">${getFeatureMarkerIcon(feature)}</div>`,
+          html: `<div class="poi-marker marker-${escapeHtml(feature.category)}${mixed ? " is-mixed" : ""}${isGuildFeature(feature) ? " is-guild" : ""}${isCanonFeature(feature) ? " is-canon" : ""}${isOfficialTrailmark(feature) ? " is-trailmark" : ""}${headquarters ? " is-headquarters" : ""}${state.nearbyTrailmarkId === feature.id ? " is-nearby" : ""}${selected ? " is-selected" : ""}${draggable ? " is-draggable" : ""}" style="${getFeatureMarkerStyle(feature)}">${getFeatureMarkerIcon(feature)}${headquarters ? getHeadquartersMarkerBadge() : ""}</div>`,
           iconSize: [32, 32],
           iconAnchor: [16, 32],
         }),
@@ -9292,6 +9301,10 @@
       .join("");
     const remaining = featureCategories.length > 2 ? `<b class="mixed-marker-count">+${featureCategories.length - 2}</b>` : "";
     return `<span class="mixed-marker-icons">${icons}</span>${remaining}`;
+  }
+
+  function getHeadquartersMarkerBadge() {
+    return '<span class="headquarters-marker-badge" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m12 3 2.5 5.7 6.2.5-4.7 4 1.5 6-5.5-3.2-5.5 3.2 1.5-6-4.7-4 6.2-.5z"/></svg></span>';
   }
 
   function truncate(value, length) {

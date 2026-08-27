@@ -3268,6 +3268,40 @@ html[data-workspace="edit"] .field-workspace-controls {
     0 3px 8px rgba(31, 19, 7, 0.36);
 }
 
+.poi-marker.is-headquarters {
+  border-color: #e7c45d;
+  transform: scale(calc(var(--map-detail-scale, 1) * 1.12));
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 245, 204, 0.3),
+    0 0 0 3px rgba(177, 126, 26, 0.56),
+    0 0 13px rgba(219, 179, 70, 0.48),
+    0 3px 8px rgba(31, 19, 7, 0.4);
+}
+
+.headquarters-marker-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 15px;
+  height: 15px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #fff0b1;
+  border-radius: 50%;
+  color: #fff4c7;
+  background: #7a5012;
+  box-shadow: 0 1px 4px rgba(31, 19, 7, 0.5);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.poi-marker .headquarters-marker-badge svg {
+  width: 10px;
+  height: 10px;
+  fill: currentColor;
+  stroke: none;
+}
+
 html[data-workspace="field"] .poi-marker.is-trailmark {
   transform: scale(calc(var(--map-detail-scale, 1) * 1.12));
   box-shadow:
@@ -3275,6 +3309,15 @@ html[data-workspace="field"] .poi-marker.is-trailmark {
     0 0 0 4px rgba(91, 137, 75, 0.3),
     0 0 18px rgba(115, 164, 87, 0.5),
     0 3px 8px rgba(31, 19, 7, 0.36);
+}
+
+html[data-workspace="field"] .poi-marker.is-trailmark.is-headquarters {
+  transform: scale(calc(var(--map-detail-scale, 1) * 1.2));
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 245, 204, 0.32),
+    0 0 0 4px rgba(190, 142, 38, 0.5),
+    0 0 19px rgba(228, 190, 82, 0.62),
+    0 3px 9px rgba(31, 19, 7, 0.42);
 }
 
 html[data-workspace="field"] .poi-marker.is-trailmark::before {
