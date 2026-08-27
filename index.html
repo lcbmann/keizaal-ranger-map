@@ -668,7 +668,7 @@
         </section>
         <section id="mapCalibrationSection" class="admin-recovery map-calibration-admin" hidden>
           <h3>Map Calibration</h3>
-          <p>Pair exact outdoor Skyrim positions with the matching points on the illustrated map. The survey remains private to this browser until you preview and publish the calculated projection.</p>
+          <p>Pair exact outdoor Skyrim positions with matching points on the illustrated map. Published control points load into this survey automatically, and imported backups merge with them. New observations remain private to this browser until you preview and publish the combined projection.</p>
 
           <div class="calibration-survey" aria-labelledby="calibrationSurveyHeading">
             <div class="calibration-survey-heading">
@@ -728,13 +728,13 @@
               <button id="calibrationSurveyRevertBtn" class="button secondary" type="button" hidden>Revert Preview</button>
               <button id="calibrationSurveyPrepareBtn" class="button primary" type="button" disabled>Prepare Publish Draft</button>
               <button id="calibrationSurveyCopyBtn" class="button secondary" type="button">Copy Survey Backup</button>
-              <button id="calibrationSurveyClearBtn" class="button danger" type="button" disabled>Clear Survey</button>
+              <button id="calibrationSurveyClearBtn" class="button danger" type="button" disabled>Reset to Published</button>
             </div>
 
             <details class="calibration-survey-import">
-              <summary>Restore a survey backup</summary>
+              <summary>Merge a survey backup</summary>
               <textarea id="calibrationSurveyImportInput" class="text-input textarea calibration-import-json" rows="5" spellcheck="false" placeholder="Paste a survey backup here"></textarea>
-              <button id="calibrationSurveyImportBtn" class="button secondary" type="button">Import Backup</button>
+              <button id="calibrationSurveyImportBtn" class="button secondary" type="button">Merge Backup</button>
             </details>
           </div>
 
@@ -854,6 +854,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
     <script src="deployment-config.js"></script>
     <script src="supabase-config.js"></script>
-    <script src="app.js?v=20260827-official-illustrated-map"></script>
+    <script src="app.js?v=20260827-cumulative-calibration"></script>
   </body>
 </html>

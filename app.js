@@ -809,6 +809,9 @@
           { ...illustratedWorld.transform, version: illustratedWorld.version },
           illustratedWorld.control_points,
         );
+        const addedPublishedSurveyPoints = normalized
+          ? mergePublishedCalibrationIntoSurvey(normalized)
+          : 0;
         const current = normalizeIllustratedWorldCalibration(
           calibrationSurveyPreviewBase || state.illustratedWorldCalibration,
         );
@@ -823,6 +826,13 @@
             state.illustratedWorldCalibration = normalized;
           }
           changed = true;
+        }
+        if (
+          addedPublishedSurveyPoints
+          && elements.guildPublishDialog.open
+          && canManageTrailmarks()
+        ) {
+          elements.calibrationSurveyStatus.textContent = `${addedPublishedSurveyPoints} published calibration point${addedPublishedSurveyPoints === 1 ? " was" : "s were"} added to this survey.`;
         }
       }
 
@@ -2364,10 +2374,11 @@
 
   function createEmptyCalibrationSurvey() {
     return {
-      version: 2,
+      version: 3,
       customTarget: null,
       label: "",
       observations: [],
+      excludedObservationIds: [],
     };
   }
 
@@ -2421,11 +2432,76 @@
       byId.set(observation.id, observation);
     });
     return {
-      version: 2,
+      version: 3,
       customTarget: normalizeCalibrationSurveyTarget(source.customTarget || source.custom_target),
       label: String(source.label || "").trim().slice(0, 80),
       observations: Array.from(byId.values()),
+      excludedObservationIds: Array.from(new Set(
+        (Array.isArray(source.excludedObservationIds)
+          ? source.excludedObservationIds
+          : source.excluded_observation_ids || [])
+          .map((id) => String(id || "").trim().slice(0, 120))
+          .filter(Boolean),
+      )),
     };
+  }
+
+  function getCalibrationObservationPositionKey(observation) {
+    return [
+      Math.round(observation.gamePosition.x),
+      Math.round(observation.gamePosition.y),
+      Number(observation.gamePosition.worldspaceFormId) || SKYRIM_WORLDSPACE_FORM_ID,
+    ].join(":");
+  }
+
+  function mergeCalibrationSurveyObservations(existing, incoming, excludedIds = []) {
+    const excluded = new Set(excludedIds);
+    const byId = new Map();
+    const byPosition = new Map();
+    [...existing, ...incoming]
+      .map(normalizeCalibrationSurveyObservation)
+      .filter(Boolean)
+      .filter((observation) => !excluded.has(observation.id))
+      .forEach((observation) => {
+        const positionKey = getCalibrationObservationPositionKey(observation);
+        const previous = byId.get(observation.id) || byPosition.get(positionKey);
+        if (
+          previous
+          && Date.parse(previous.capturedAt) > Date.parse(observation.capturedAt)
+        ) {
+          return;
+        }
+        if (previous) {
+          byId.delete(previous.id);
+          byPosition.delete(getCalibrationObservationPositionKey(previous));
+        }
+        byId.set(observation.id, observation);
+        byPosition.set(positionKey, observation);
+      });
+    return Array.from(byId.values()).sort(
+      (left, right) => Date.parse(left.capturedAt) - Date.parse(right.capturedAt),
+    );
+  }
+
+  function mergePublishedCalibrationIntoSurvey(calibration) {
+    const published = normalizeWorldCalibrationControlPoints(calibration?.controlPoints)
+      .map(normalizeCalibrationSurveyObservation)
+      .filter(Boolean);
+    if (!published.length) {
+      return 0;
+    }
+    const before = calibrationSurvey.observations.length;
+    const merged = mergeCalibrationSurveyObservations(
+      published,
+      calibrationSurvey.observations,
+      calibrationSurvey.excludedObservationIds,
+    );
+    if (JSON.stringify(merged) === JSON.stringify(calibrationSurvey.observations)) {
+      return 0;
+    }
+    calibrationSurvey.observations = merged;
+    saveCalibrationSurvey();
+    return Math.max(0, merged.length - before);
   }
 
   function loadCalibrationSurvey() {
@@ -2785,12 +2861,16 @@
       revertCalibrationSurveyPreview(false);
     }
     const observationId = button.dataset.calibrationRemove;
+    calibrationSurvey.excludedObservationIds = Array.from(new Set([
+      ...calibrationSurvey.excludedObservationIds,
+      observationId,
+    ]));
     calibrationSurvey.observations = calibrationSurvey.observations.filter(
       (observation) => observation.id !== observationId,
     );
     saveCalibrationSurvey();
     renderCalibrationSurvey();
-    elements.calibrationSurveyStatus.textContent = "Calibration point removed. Official Trailmarks were not changed.";
+    elements.calibrationSurveyStatus.textContent = "Calibration point removed from the next published version. Official Trailmarks were not changed.";
   }
 
   function renderWorldCalibrationChange() {
@@ -2900,36 +2980,45 @@
       elements.calibrationSurveyStatus.textContent = "That backup contains no valid survey stops.";
       return;
     }
-    if (
-      calibrationSurvey.observations.length
-      && !window.confirm(`Replace the ${calibrationSurvey.observations.length} survey stops currently saved in this browser?`)
-    ) {
-      return;
-    }
     if (calibrationSurveyPreviewBase) {
       revertCalibrationSurveyPreview(false);
     }
-    calibrationSurvey = imported;
+    const before = calibrationSurvey.observations.length;
+    calibrationSurvey.observations = mergeCalibrationSurveyObservations(
+      calibrationSurvey.observations,
+      imported.observations,
+      calibrationSurvey.excludedObservationIds,
+    );
+    calibrationSurvey.customTarget = imported.customTarget || calibrationSurvey.customTarget;
+    calibrationSurvey.label = imported.label || calibrationSurvey.label;
     saveCalibrationSurvey();
     elements.calibrationSurveyImportInput.value = "";
     renderCalibrationSurvey();
-    elements.calibrationSurveyStatus.textContent = `Restored ${calibrationSurvey.observations.length} survey stops.`;
+    const added = Math.max(0, calibrationSurvey.observations.length - before);
+    elements.calibrationSurveyStatus.textContent = `Merged the backup: ${added} new calibration point${added === 1 ? "" : "s"} added, ${calibrationSurvey.observations.length} total.`;
   }
 
   function clearCalibrationSurvey() {
     if (!calibrationSurvey.observations.length) {
       return;
     }
-    if (!window.confirm("Clear every locally recorded illustrated calibration point? Official Trailmarks will not be changed.")) {
+    if (!window.confirm("Discard unpublished survey additions and restore the currently published calibration points?")) {
       return;
     }
     if (calibrationSurveyPreviewBase) {
       revertCalibrationSurveyPreview(false);
     }
+    const published = normalizeIllustratedWorldCalibration(state.illustratedWorldCalibration);
     calibrationSurvey = createEmptyCalibrationSurvey();
+    calibrationSurvey.observations = mergeCalibrationSurveyObservations(
+      [],
+      published?.controlPoints || [],
+    );
     saveCalibrationSurvey();
     renderCalibrationSurvey();
-    elements.calibrationSurveyStatus.textContent = "Local survey cleared. Official Trailmarks and the published calibration were left unchanged.";
+    elements.calibrationSurveyStatus.textContent = published
+      ? `Survey reset to ${calibrationSurvey.observations.length} currently published calibration points.`
+      : "No published calibration was available, so the local survey was cleared.";
   }
 
   async function syncSelectedTrailmarkToLivePosition() {
@@ -3098,13 +3187,27 @@
       return;
     }
     let calibration;
+    let draft;
     try {
+      draft = JSON.parse(elements.mapCalibrationJson.value);
       calibration = validateMapCalibrationDraft(
-        JSON.parse(elements.mapCalibrationJson.value),
+        draft,
         elements.mapCalibrationSelect.value,
       );
     } catch (error) {
       elements.mapCalibrationStatus.textContent = getReadableError(error, "Invalid calibration JSON.");
+      return;
+    }
+
+    await refreshMapCalibrations();
+    const activeVersion = Number(
+      state.activeMapCalibrations[calibration.mapId]?.version,
+    ) || 0;
+    const draftVersion = Number(draft.active_version) || 0;
+    if (activeVersion !== draftVersion) {
+      renderCalibrationSurvey();
+      elements.mapCalibrationStatus.textContent =
+        `Version ${activeVersion} was published after this draft was prepared. Its control points were merged into your survey; preview and prepare the draft again.`;
       return;
     }
 
