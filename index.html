@@ -11,7 +11,7 @@
       integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
       crossorigin=""
     />
-    <link rel="stylesheet" href="styles.css?v=20260827-authoritative-atlas" />
+    <link rel="stylesheet" href="styles.css?v=20260827-official-illustrated-map" />
   </head>
   <body>
     <div class="app-shell">
@@ -179,9 +179,8 @@
         <section class="map-stage" aria-label="Interactive Skyrim map">
           <div id="map"></div>
           <div id="mapArtworkCredit" class="map-artwork-credit" hidden>
-            Illustrated Skyrim map · Artwork by
+            Official illustrated Skyrim map · Artwork by
             <a href="https://www.instagram.com/islor/" target="_blank" rel="noopener noreferrer">@islor</a>
-            · Experimental web view, not in the Nexus release yet
           </div>
           <div id="statusBar" class="status-bar">Ready</div>
           <section id="trailmarkArrival" class="trailmark-arrival" aria-live="polite" hidden>
@@ -432,19 +431,18 @@
     <dialog id="illustratedNoticeDialog" class="field-note workflow-dialog illustrated-notice-dialog">
       <div class="field-note-inner">
         <button id="illustratedNoticeCloseBtn" class="field-note-close" type="button" aria-label="Close map artwork notice">&times;</button>
-        <p class="field-note-kicker">Illustrated Field Atlas</p>
-        <h2>The illustrated map is now the Atlas</h2>
+        <p class="field-note-kicker">Official Ranger Atlas Map</p>
+        <h2>Welcome to the illustrated Ranger Atlas</h2>
         <p>
-          Ranger locations, live Skyrim positions, and Marshal calibration now use this illustrated artwork directly.
-          The old parchment projection is retained only behind the scenes for compatibility with older entries.
+          The illustrated map is now the official and default Ranger Atlas. Ranger locations, live Skyrim positions,
+          and Marshal calibration all use this view directly. The old parchment remains available in Settings for
+          Rangers who specifically prefer it.
         </p>
         <p class="artwork-credit">
-          Amazing artwork for the map by <a href="https://www.instagram.com/islor/" target="_blank" rel="noopener noreferrer">@islor</a>.
-          It has not been added to the Nexus mod release and is here only in experimental form while I try to get permission or licensing to use it.
-          It might be removed if I am unsuccessful, so do not get too used to it!
+          Illustrated Skyrim artwork by <a href="https://www.instagram.com/islor/" target="_blank" rel="noopener noreferrer">@islor</a>.
         </p>
         <div class="dialog-actions">
-          <button id="illustratedNoticeTryBtn" class="button primary" type="button">Open Illustrated Atlas</button>
+          <button id="illustratedNoticeTryBtn" class="button primary" type="button">Continue to Atlas</button>
         </div>
       </div>
     </dialog>
@@ -477,14 +475,16 @@
         <section class="settings-panel" aria-labelledby="map-artwork-title">
           <div>
             <p class="settings-panel-kicker">Map Artwork</p>
-            <h3 id="map-artwork-title">Illustrated Skyrim</h3>
-            <p>The illustrated map is now the Ranger Atlas coordinate surface. Marks, Trailmarks, live position, and calibration all use this same view.</p>
-            <p class="artwork-credit"><strong>Artwork credit:</strong> amazing artwork for the map by <a href="https://www.instagram.com/islor/" target="_blank" rel="noopener noreferrer">@islor</a>. It is not in the Nexus mod release yet and is here experimentally while I try to get permission or licensing to use it. It might be removed if I am unsuccessful, so do not get too used to it!</p>
+            <h3 id="map-artwork-title">Official Illustrated Skyrim</h3>
+            <p>The illustrated map is the official Ranger Atlas coordinate surface. Marks, Trailmarks, live position, and calibration all use this same view.</p>
+            <p>The legacy parchment remains available below for Rangers who specifically prefer it.</p>
+            <p class="artwork-credit"><strong>Artwork credit:</strong> illustrated Skyrim map by <a href="https://www.instagram.com/islor/" target="_blank" rel="noopener noreferrer">@islor</a>.</p>
           </div>
           <label class="settings-select" for="mapViewInput">
             <span>Map view</span>
             <select id="mapViewInput">
-              <option value="illustrated">Illustrated Skyrim</option>
+              <option value="illustrated">Illustrated Skyrim · Official</option>
+              <option value="parchment">Legacy field parchment</option>
             </select>
           </label>
         </section>
@@ -854,6 +854,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
     <script src="deployment-config.js"></script>
     <script src="supabase-config.js"></script>
-    <script src="app.js?v=20260827-authoritative-atlas"></script>
+    <script src="app.js?v=20260827-official-illustrated-map"></script>
   </body>
 </html>

@@ -13,7 +13,7 @@
   const MAP_VIEWS = Object.freeze({
     parchment: Object.freeze({
       id: "parchment",
-      label: "Field parchment",
+      label: "Legacy field parchment",
       image: MAP_IMAGE,
     }),
     illustrated: Object.freeze({
@@ -50,7 +50,8 @@
   ]);
   const STORAGE_KEY = "keizaal-ranger-map-state-v1";
   const CALIBRATION_SURVEY_STORAGE_KEY = "ranger-atlas-illustrated-calibration-survey-v2";
-  const ILLUSTRATED_NOTICE_KEY = "ranger-atlas-illustrated-notice-v1";
+  const MAP_VIEW_PREFERENCE_KEY = "ranger-atlas-map-view-preference-v2";
+  const ILLUSTRATED_NOTICE_KEY = "ranger-atlas-illustrated-notice-v2";
   const HELP_HINT_KEY = "ranger-atlas-help-hint-seen-v2";
   const CLIPBOARD_MAX_PAGES = 24;
   const DEFAULT_FEATURES_VERSION = 2;
@@ -641,6 +642,12 @@
     return MAP_VIEWS[viewId] || MAP_VIEWS.illustrated;
   }
 
+  function getStoredMapViewPreference() {
+    return window.localStorage.getItem(MAP_VIEW_PREFERENCE_KEY) === "parchment"
+      ? "parchment"
+      : "illustrated";
+  }
+
   function getMapViewCalibration(viewId = state.mapView) {
     return MAP_VIEW_CALIBRATION[viewId] || MAP_VIEW_CALIBRATION.illustrated;
   }
@@ -1068,7 +1075,9 @@
       setStatus(state.showLabels ? "Location names shown" : "Location names hidden");
     });
     elements.mapViewInput.addEventListener("change", (event) => {
-      setMapView(event.target.value);
+      const viewId = getMapView(event.target.value).id;
+      window.localStorage.setItem(MAP_VIEW_PREFERENCE_KEY, viewId);
+      setMapView(viewId);
     });
     elements.livePositionInput.addEventListener("change", (event) => {
       const enabled = event.target.checked;
@@ -1364,12 +1373,14 @@
 
   function loadState() {
     loadLastOutdoorPosition();
+    state.mapView = getStoredMapViewPreference();
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) {
       state.features = defaultFeatures.map(cloneFeature);
       state.clipboardPages = normalizeClipboardPages([], state.clipboard);
       state.activeClipboardId = state.clipboardPages[0].id;
       state.clipboard = normalizeClipboard(state.clipboardPages[0]);
+      applyMapView();
       saveState();
       return;
     }
@@ -1391,7 +1402,7 @@
       }
       state.showLabels = saved.showLabels === true;
       elements.showLabelsInput.checked = state.showLabels;
-      state.mapView = "illustrated";
+      state.mapView = getStoredMapViewPreference();
       const savedIllustratedCalibration = normalizeIllustratedCalibration(saved.illustratedCalibration);
       state.illustratedCalibration = savedIllustratedCalibration.length
         ? savedIllustratedCalibration
@@ -8845,6 +8856,7 @@
     elements.showLabelsInput.checked = false;
     state.mapDetailScale = 0.85;
     state.mapView = "illustrated";
+    window.localStorage.setItem(MAP_VIEW_PREFERENCE_KEY, state.mapView);
     applyMapView();
     saveState();
     renderAll();
