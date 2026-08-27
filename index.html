@@ -11,7 +11,7 @@
       integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
       crossorigin=""
     />
-    <link rel="stylesheet" href="styles.css?v=20260805-help-hint-strong" />
+    <link rel="stylesheet" href="styles.css?v=20260827-authoritative-atlas" />
   </head>
   <body>
     <div class="app-shell">
@@ -121,11 +121,17 @@
               </button>
             </div>
           </div>
-          <div class="tool-rail-section">
+          <div class="tool-rail-section identity-section">
+            <div class="identity-heading">
+              <p class="tool-rail-label">Ranger identity</p>
+              <span id="discordIdentityBadge" class="identity-status-badge">Not signed in</span>
+            </div>
             <label class="identity-field" for="creatorInput">
-              <span>Signed as</span>
+              <span>Ranger name</span>
               <input id="creatorInput" class="identity-input" type="text" name="username" maxlength="40" placeholder="Your name" autocomplete="username" />
             </label>
+            <small id="discordIdentityHint" class="identity-status-hint">Sign in with Discord to verify your Ranger account.</small>
+            <button id="discordLinkBtn" class="rail-link-button" type="button">Sign in with Discord</button>
             <div id="rangerProfileCard" class="ranger-profile-card" hidden>
               <div id="rangerMedals" class="ranger-medals" aria-label="Ranger rank and medals"></div>
             </div>
@@ -164,7 +170,6 @@
               <span class="toggle-switch" aria-hidden="true"></span>
             </label>
             <small id="trailmarkVisitsStatus" class="live-position-status" aria-live="polite">Off</small>
-            <button id="discordLinkBtn" class="rail-link-button" type="button">Link Discord</button>
           </div>
           <div class="tool-rail-section edit-workspace-controls">
             <button id="undoBtn" class="button secondary" type="button" title="Undo last change (Ctrl+Z)" disabled>Undo</button>
@@ -241,6 +246,9 @@
               <div class="editor-actions">
                 <button id="saveFeatureBtn" class="button primary" type="submit" disabled>Save</button>
                 <button id="moveFeatureBtn" class="button secondary" type="button" disabled>Move</button>
+                <button id="syncTrailmarkPositionBtn" class="button secondary" type="button" title="Bind this official Trailmark to your current outdoor Skyrim position" hidden disabled>
+                  Set Current Skyrim Position
+                </button>
                 <button id="deleteFeatureBtn" class="button danger" type="button" disabled>Delete</button>
               </div>
               <div id="moveFeatureActions" class="move-feature-actions" hidden>
@@ -338,7 +346,7 @@
             </summary>
             <ol>
               <li>Use <strong>Field View</strong> to browse and navigate. Use <strong>Edit Atlas</strong> to change your own copy.</li>
-              <li>Enter your name under <strong>Signed As</strong> when creating entries or using Trailmark features.</li>
+              <li>Use <strong>Sign in with Discord</strong> to verify Ranger membership. Your verified Ranger name is then filled in automatically.</li>
               <li>Click a map symbol or open <strong>Browse Atlas</strong> to search, filter, and view details.</li>
               <li>Use <strong>Settings</strong> to show location names and the moon or sun button to change the theme.</li>
             </ol>
@@ -356,6 +364,7 @@
               <li>Use the map <strong>checkmark</strong> to save the new entry or the <strong>X</strong> to discard it.</li>
               <li>To move an existing entry, select it, choose <strong>Move</strong>, then confirm or cancel the new position.</li>
               <li>Hold <kbd>Ctrl</kbd>, <kbd>Cmd</kbd>, or <kbd>Shift</kbd> while selecting to select several entries. Use <strong>Delete</strong> in the inspector to remove them together.</li>
+              <li><strong>Trailmark</strong>, <strong>City</strong>, and <strong>Town</strong> are protected categories. Only verified Ranger Marshals and higher officers can create or edit these official locations.</li>
             </ol>
           </details>
           <details class="help-step">
@@ -367,7 +376,8 @@
             <ol>
               <li><strong>Share Atlas</strong> creates a short code from the entries you choose, or creates a ready-to-post Field Report.</li>
               <li>Give the code to another Ranger. They open <strong>Receive Atlas</strong>, paste it, review the preview, and choose <strong>Add to My Atlas</strong>.</li>
-              <li>Use <strong>Receive GUILD Atlas</strong> to load the official shared copy. Official entries refresh automatically when the maintained copy changes.</li>
+              <li>Official Trailmarks, Cities, and Towns are always present and refresh automatically. They are not included in share codes and cannot be replaced or deleted.</li>
+              <li><strong>Review Official Atlas</strong> refreshes any other maintained GUILD entries while keeping your personal notes.</li>
               <li>Use <strong>Receive SKYRIM Locations</strong> to add or refresh vanilla Skyrim reference markers.</li>
               <li><strong>Save Map</strong> downloads the currently visible map and labels as a PNG.</li>
             </ol>
@@ -396,7 +406,7 @@
             <ol>
               <li>With Skyrim connected, enable <strong>Record visits</strong>. The visible boundary around official Trailmarks shows the check-in area.</li>
               <li>Stay inside the boundary for about <strong>12 seconds</strong>. Your visit is recorded automatically and the Trailmark details open.</li>
-              <li>To connect Discord, run <strong>/atlas link</strong> in the Ranger Discord, then enter the one-time code under <strong>Link Discord</strong>.</li>
+              <li>Open <strong>Link Discord</strong> and choose <strong>Sign in with Discord</strong>. Wayfinder verifies your Ranger membership and any officer permissions. A one-time <strong>/atlas link</strong> code remains available as a fallback.</li>
               <li>After a visit, click <strong>Leave Field Drop</strong> on the arrival notice or in the Trailmark details. Write the message and submit it through the Atlas.</li>
               <li>The drop is sent to the Trailmark channel through Wayfinder. Recent visitors and drop status appear in the Trailmark details.</li>
             </ol>
@@ -411,7 +421,7 @@
               <li><strong>Undo</strong> reverses your most recent change, including a receive or cleanup action.</li>
               <li><strong>Clean Up</strong> lets you remove selected categories from custom entries, Skyrim references, or the whole map.</li>
               <li>Choose the scope and categories carefully, then use <strong>Undo</strong> immediately if you scraped the wrong entries.</li>
-              <li>Default cities and towns are reference points and are not removed when you clean custom entries.</li>
+              <li>Official Cities, Towns, and Trailmarks are retained when you clean your own entries. Use their category filters when you want to hide them.</li>
             </ol>
           </details>
         </div>
@@ -422,11 +432,11 @@
     <dialog id="illustratedNoticeDialog" class="field-note workflow-dialog illustrated-notice-dialog">
       <div class="field-note-inner">
         <button id="illustratedNoticeCloseBtn" class="field-note-close" type="button" aria-label="Close map artwork notice">&times;</button>
-        <p class="field-note-kicker">New Atlas Artwork</p>
-        <h2>Try the illustrated Skyrim map</h2>
+        <p class="field-note-kicker">Illustrated Field Atlas</p>
+        <h2>The illustrated map is now the Atlas</h2>
         <p>
-          A new illustrated view is available as an experimental alternative to the familiar field parchment.
-          Your entries and tools work in both views, while the parchment remains the default.
+          Ranger locations, live Skyrim positions, and Marshal calibration now use this illustrated artwork directly.
+          The old parchment projection is retained only behind the scenes for compatibility with older entries.
         </p>
         <p class="artwork-credit">
           Amazing artwork for the map by <a href="https://www.instagram.com/islor/" target="_blank" rel="noopener noreferrer">@islor</a>.
@@ -434,8 +444,7 @@
           It might be removed if I am unsuccessful, so do not get too used to it!
         </p>
         <div class="dialog-actions">
-          <button id="illustratedNoticeTryBtn" class="button primary" type="button">Try Illustrated Map</button>
-          <button id="illustratedNoticeKeepBtn" class="button secondary" type="button">Keep Parchment</button>
+          <button id="illustratedNoticeTryBtn" class="button primary" type="button">Open Illustrated Atlas</button>
         </div>
       </div>
     </dialog>
@@ -468,19 +477,21 @@
         <section class="settings-panel" aria-labelledby="map-artwork-title">
           <div>
             <p class="settings-panel-kicker">Map Artwork</p>
-            <h3 id="map-artwork-title">Atlas view</h3>
-            <p>Choose the artwork shown beneath the shared Atlas. Illustrated Skyrim is an experimental alternative; parchment remains the default field view.</p>
+            <h3 id="map-artwork-title">Illustrated Skyrim</h3>
+            <p>The illustrated map is now the Ranger Atlas coordinate surface. Marks, Trailmarks, live position, and calibration all use this same view.</p>
             <p class="artwork-credit"><strong>Artwork credit:</strong> amazing artwork for the map by <a href="https://www.instagram.com/islor/" target="_blank" rel="noopener noreferrer">@islor</a>. It is not in the Nexus mod release yet and is here experimentally while I try to get permission or licensing to use it. It might be removed if I am unsuccessful, so do not get too used to it!</p>
           </div>
           <label class="settings-select" for="mapViewInput">
             <span>Map view</span>
             <select id="mapViewInput">
-              <option value="parchment">Field parchment</option>
-              <option value="illustrated">Illustrated Skyrim (Experimental)</option>
+              <option value="illustrated">Illustrated Skyrim</option>
             </select>
           </label>
         </section>
-        <p class="settings-note">Use the sun or moon button beside Settings to change the atlas theme.</p>
+        <div class="settings-footer">
+          <p class="settings-note">Display choices save automatically on this device.</p>
+          <button id="resetDisplaySettingsBtn" class="button secondary" type="button">Reset Display</button>
+        </div>
       </div>
     </dialog>
 
@@ -489,11 +500,27 @@
         <button id="clipboardCloseBtn" class="field-note-close" type="button" aria-label="Close field clipboard">&times;</button>
         <p class="field-note-kicker">Field Clipboard</p>
         <h2>Working Notes</h2>
-        <p class="dialog-help">Notes save automatically in this browser and in the linked in-game Field Console. Nothing is shared until you choose an action below.</p>
-        <label class="field-label" for="clipboardTitleInput">Title</label>
-        <input id="clipboardTitleInput" class="text-input" type="text" maxlength="120" placeholder="Field notes" autocomplete="off" />
-        <label class="field-label" for="clipboardBodyInput">Notes</label>
-        <textarea id="clipboardBodyInput" class="clipboard-textarea" maxlength="6000" placeholder="Write observations, names, directions, or a report draft..."></textarea>
+        <p class="dialog-help">Pages save automatically in this browser. The open page is also synchronized with the linked in-game Field Console.</p>
+        <div class="clipboard-workspace">
+          <aside class="clipboard-pages" aria-label="Clipboard pages">
+            <div class="clipboard-pages-heading">
+              <strong>Pages</strong>
+              <button id="clipboardNewBtn" class="quiet-action" type="button">New</button>
+            </div>
+            <div id="clipboardPageList" class="clipboard-page-list"></div>
+          </aside>
+          <div class="clipboard-editor">
+            <label class="field-label" for="clipboardTitleInput">Title</label>
+            <input id="clipboardTitleInput" class="text-input" type="text" maxlength="120" placeholder="Field notes" autocomplete="off" />
+            <label class="field-label" for="clipboardBodyInput">Notes</label>
+            <textarea id="clipboardBodyInput" class="clipboard-textarea" maxlength="6000" placeholder="Write observations, names, directions, or a report draft..."></textarea>
+            <div class="clipboard-editor-meta">
+              <span id="clipboardWordCount">0 words</span>
+              <button id="clipboardCopyBtn" class="quiet-action" type="button">Copy Notes</button>
+              <button id="clipboardDeleteBtn" class="quiet-action is-danger" type="button">Delete Page</button>
+            </div>
+          </div>
+        </div>
         <div class="clipboard-footer">
           <p id="clipboardStatus" class="dialog-status" aria-live="polite">Saved locally</p>
           <div class="dialog-actions">
@@ -511,10 +538,23 @@
         <p class="field-note-kicker">Trailmark Access</p>
         <h2 id="discordLinkTitle">Link Discord</h2>
         <p class="dialog-help">
-          Run <strong>/atlas link</strong> in the Ranger Discord, then enter the one-time code below. This only tells Wayfinder which Discord account should receive temporary Trailmark channel access.
+          Sign in with Discord to verify Ranger membership and permissions. This also links the current browser to Wayfinder for Trailmark access.
         </p>
+        <section id="discordOauthPanel" class="discord-oauth-panel">
+          <div>
+            <strong>Ranger Discord account</strong>
+            <p id="discordOauthStatus" class="dialog-status" aria-live="polite">Checking Discord sign-in...</p>
+          </div>
+          <div class="dialog-actions compact-actions">
+            <button id="discordOauthSignInBtn" class="button primary" type="button">Sign in with Discord</button>
+            <button id="discordOauthSignOutBtn" class="button secondary" type="button" hidden>Sign out</button>
+          </div>
+        </section>
         <div id="discordLinkSummary" class="discord-link-summary" hidden></div>
-        <form id="discordLinkForm" class="discord-link-form">
+        <details id="discordLegacyLinkDetails" class="discord-legacy-link">
+          <summary>Use a one-time Wayfinder code instead</summary>
+          <p class="dialog-help">Run <strong>/atlas link</strong> in Discord, then enter its code below.</p>
+          <form id="discordLinkForm" class="discord-link-form">
           <div id="discordLinkCodeFields">
             <label class="field-label" for="discordLinkCodeInput">One-time code</label>
             <input
@@ -535,7 +575,8 @@
             <button id="discordUnlinkBtn" class="button danger" type="button" hidden>Unlink</button>
             <button id="discordLinkCancelBtn" class="button secondary" type="button">Close</button>
           </div>
-        </form>
+          </form>
+        </details>
       </div>
     </dialog>
 
@@ -549,8 +590,8 @@
         <div class="receive-source-list" aria-label="Atlas sources">
           <section class="receive-source-option">
             <div>
-              <strong>Official GUILD Atlas</strong>
-              <span>Refresh the maintained Ranger copy while keeping your personal notes.</span>
+              <strong>Legacy GUILD entries</strong>
+              <span>Refresh older maintained routes and reference entries while keeping your notes. Official Trailmarks, Cities, and Towns already update automatically.</span>
             </div>
             <button id="receiveGuildBtn" class="button secondary" type="button">Review Official Atlas</button>
           </section>
@@ -585,7 +626,7 @@
         <button id="shareCancelBtn" class="field-note-close" type="button" aria-label="Cancel share code">&times;</button>
         <p class="field-note-kicker">Share Entries</p>
         <h2>Choose Entries to Share</h2>
-        <p id="shareSummary">Select the marks, trails, and ranges to include. Printed cities and towns are never included.</p>
+        <p id="shareSummary">Select the marks, trails, and ranges to include. Official Cities, Towns, and Trailmarks are maintained automatically and are never included.</p>
         <div class="share-select-actions">
           <button id="shareSelectAllBtn" class="button secondary" type="button">Select All</button>
           <button id="shareSelectNoneBtn" class="button secondary" type="button">Select None</button>
@@ -601,34 +642,145 @@
       </div>
     </dialog>
 
-    <dialog id="guildPublishDialog" class="field-note workflow-dialog">
+    <dialog id="guildPublishDialog" class="field-note workflow-dialog map-calibration-dialog">
       <div class="field-note-inner">
-        <button id="guildPublishCancelBtn" class="field-note-close" type="button" aria-label="Cancel guild publish">&times;</button>
-        <p class="field-note-kicker">Guild Atlas</p>
-        <h2>Publish Official Copy?</h2>
-        <p id="guildPublishSummary">
-          This will replace the official Guild Atlas with the selected entries.
-        </p>
-        <div class="share-select-actions">
-          <button id="guildSelectAllBtn" class="button secondary" type="button">Select All</button>
-          <button id="guildSelectNoneBtn" class="button secondary" type="button">Select None</button>
-        </div>
-        <div id="guildEntryList" class="share-entry-list" aria-label="Entries to publish"></div>
-        <form id="guildPassphraseForm" class="admin-password-form">
-          <label class="field-label" for="guildPassphraseInput">Marshal Passphrase</label>
-          <input id="guildPassphraseInput" class="text-input" type="password" autocomplete="current-password" />
-        </form>
-        <p id="guildPublishStatus" class="dialog-status" aria-live="polite"></p>
-        <div class="dialog-actions">
-          <button id="guildPublishConfirmBtn" class="button primary" type="button">Publish Guild Atlas</button>
-          <button id="guildPublishKeepBtn" class="button secondary" type="button">Keep Local Copy</button>
-        </div>
-        <p class="dialog-help">Anyone who loads the Guild Atlas code will receive this official copy. Personal notes on their own map are left alone.</p>
-        <section class="admin-recovery">
-          <h3>Archive Recovery</h3>
-          <p>Recover every unique entry ever retained from an uploaded share code or Guild Atlas publication. Recovered entries are added to this browser only.</p>
-          <button id="guildRecoverAllBtn" class="button secondary" type="button">Recover All Archived Entries</button>
+        <button id="guildPublishCancelBtn" class="field-note-close" type="button" aria-label="Close official Atlas administration">&times;</button>
+        <p class="field-note-kicker">Marshal Atlas Tools</p>
+        <h2>Official Atlas Administration</h2>
+        <p>Discord-verified Marshal permissions control official Trailmarks, Cities, Towns, recovery, and map calibration. The older GUILD code remains only for other maintained reference entries.</p>
+        <section id="officialSettlementSection" class="admin-recovery official-settlement-admin" hidden>
+          <h3>Official Cities &amp; Towns</h3>
+          <p id="officialSettlementSummary">Checking this browser for local City and Town entries...</p>
+          <button id="officialSettlementPublishBtn" class="button primary" type="button">Publish Local Cities &amp; Towns</button>
+          <p id="officialSettlementStatus" class="dialog-status" aria-live="polite"></p>
         </section>
+        <section id="trailmarkRecoverySection" class="admin-recovery trailmark-recovery" hidden>
+          <h3>Restore Lost Trailmarks</h3>
+          <p>Review historical Trailmark candidates retained before an accidental Guild Atlas overwrite. Nothing is restored until you select it.</p>
+          <div class="dialog-actions trailmark-recovery-actions">
+            <button id="trailmarkRecoveryLoadBtn" class="button secondary" type="button">Review Candidates</button>
+            <button id="trailmarkRecoverySelectAllBtn" class="button secondary" type="button" hidden>Select All</button>
+            <button id="trailmarkRecoverySelectNoneBtn" class="button secondary" type="button" hidden>Select None</button>
+          </div>
+          <div id="trailmarkRecoveryList" class="share-entry-list trailmark-recovery-list" aria-label="Archived Trailmarks available to restore" hidden></div>
+          <button id="trailmarkRecoveryRestoreBtn" class="button primary" type="button" hidden disabled>Restore Selected Trailmarks</button>
+          <p id="trailmarkRecoveryStatus" class="dialog-status" aria-live="polite"></p>
+        </section>
+        <section id="mapCalibrationSection" class="admin-recovery map-calibration-admin" hidden>
+          <h3>Map Calibration</h3>
+          <p>Pair exact outdoor Skyrim positions with the matching points on the illustrated map. The survey remains private to this browser until you preview and publish the calculated projection.</p>
+
+          <div class="calibration-survey" aria-labelledby="calibrationSurveyHeading">
+            <div class="calibration-survey-heading">
+              <div>
+                <h4 id="calibrationSurveyHeading">Illustrated Map Survey</h4>
+                <p id="calibrationSurveyProgress">No survey stops recorded yet.</p>
+              </div>
+              <span id="calibrationSurveyFitBadge" class="calibration-fit-badge is-incomplete">Not ready</span>
+            </div>
+
+            <ol class="calibration-survey-steps">
+              <li>Stand outdoors at a place you can identify precisely in Skyrim and on the illustrated map.</li>
+              <li>Choose <strong>Pick Exact Illustrated Point</strong>, then click that same place on the map.</li>
+              <li>Record the pair. Repeat across Skyrim, including the edges and central regions, before previewing the fit.</li>
+            </ol>
+
+            <div class="calibration-target-grid">
+              <label class="field-label" for="calibrationSurveyLabelInput">Location label</label>
+              <input id="calibrationSurveyLabelInput" class="text-input" type="text" maxlength="80" placeholder="Halted Stream Camp entrance" autocomplete="off" />
+              <div class="dialog-actions calibration-target-actions">
+                <button id="calibrationSurveyPickTargetBtn" class="button primary" type="button">Pick Exact Illustrated Point</button>
+              </div>
+              <select id="calibrationSurveyTargetSelect" class="text-input" hidden aria-hidden="true" tabindex="-1"></select>
+              <button id="calibrationSurveyUseSelectedBtn" class="button secondary" type="button" hidden>Use Selected Entry</button>
+            </div>
+
+            <div class="calibration-capture-grid">
+              <div class="calibration-capture-card">
+                <span>Illustrated point</span>
+                <strong id="calibrationSurveyTargetStatus">Pick the exact map point.</strong>
+                <small id="calibrationSurveyTargetCoordinates"></small>
+              </div>
+              <div class="calibration-capture-card">
+                <span>Skyrim position</span>
+                <strong id="calibrationSurveyPositionStatus">Waiting for Skyrim.</strong>
+                <small id="calibrationSurveyPositionCoordinates"></small>
+              </div>
+            </div>
+
+            <label id="calibrationSurveyBindRow" class="check-row calibration-bind-row" hidden>
+              <input id="calibrationSurveyBindTrailmarkInput" type="checkbox" />
+              <span>Legacy Trailmark binding</span>
+            </label>
+            <button id="calibrationSurveyRecordBtn" class="button primary calibration-record-button" type="button">Record Coordinate Pair</button>
+            <p id="calibrationSurveyStatus" class="dialog-status" aria-live="polite"></p>
+
+            <aside class="calibration-separation-note">
+              <strong>Trailmarks follow their Skyrim positions.</strong>
+              <span>The published calibration projects each Trailmark's physical access point onto the illustrated map. Stand at the real cache and use <em>Set Current Skyrim Position</em>; future calibration updates will reposition its map icon automatically.</span>
+            </aside>
+
+            <div id="calibrationSurveyMetrics" class="calibration-survey-metrics" aria-live="polite"></div>
+            <div id="calibrationSurveyObservationList" class="calibration-observation-list" aria-label="Recorded calibration stops"></div>
+
+            <div class="dialog-actions calibration-survey-actions">
+              <button id="calibrationSurveyPreviewBtn" class="button secondary" type="button" disabled>Preview Calculated Fit</button>
+              <button id="calibrationSurveyRevertBtn" class="button secondary" type="button" hidden>Revert Preview</button>
+              <button id="calibrationSurveyPrepareBtn" class="button primary" type="button" disabled>Prepare Publish Draft</button>
+              <button id="calibrationSurveyCopyBtn" class="button secondary" type="button">Copy Survey Backup</button>
+              <button id="calibrationSurveyClearBtn" class="button danger" type="button" disabled>Clear Survey</button>
+            </div>
+
+            <details class="calibration-survey-import">
+              <summary>Restore a survey backup</summary>
+              <textarea id="calibrationSurveyImportInput" class="text-input textarea calibration-import-json" rows="5" spellcheck="false" placeholder="Paste a survey backup here"></textarea>
+              <button id="calibrationSurveyImportBtn" class="button secondary" type="button">Import Backup</button>
+            </details>
+          </div>
+
+          <details id="mapCalibrationAdvanced" class="calibration-advanced">
+            <summary>Advanced calibration JSON and publishing</summary>
+            <div class="calibration-advanced-body">
+              <label class="field-label" for="mapCalibrationSelect">Calibration</label>
+              <select id="mapCalibrationSelect" class="text-input">
+                <option value="skyrim-illustrated">Skyrim coordinates to illustrated map</option>
+              </select>
+              <label class="field-label" for="mapCalibrationJson">Calibration JSON</label>
+              <textarea id="mapCalibrationJson" class="text-input textarea calibration-json" rows="10" spellcheck="false"></textarea>
+              <div class="dialog-actions">
+                <button id="mapCalibrationLoadBtn" class="button secondary" type="button">Load Active Version</button>
+                <button id="mapCalibrationPublishBtn" class="button primary" type="button">Publish New Version</button>
+              </div>
+              <p id="mapCalibrationStatus" class="dialog-status" aria-live="polite"></p>
+            </div>
+          </details>
+        </section>
+        <details id="legacyGuildTools" class="admin-recovery legacy-guild-tools">
+          <summary>Legacy GUILD Reference Layer</summary>
+          <div class="legacy-guild-tools-body">
+            <p>This compatibility tool replaces only older routes and reference entries received with code GUILD. It cannot remove or replace official Trailmarks, Cities, or Towns.</p>
+            <p id="guildPublishSummary">There are no legacy entries to publish.</p>
+            <div class="share-select-actions">
+              <button id="guildSelectAllBtn" class="button secondary" type="button">Select All</button>
+              <button id="guildSelectNoneBtn" class="button secondary" type="button">Select None</button>
+            </div>
+            <div id="guildEntryList" class="share-entry-list" aria-label="Non-Trailmark GUILD reference entries to publish"></div>
+            <form id="guildPassphraseForm" class="admin-password-form">
+              <label class="field-label" for="guildPassphraseInput">Legacy GUILD Passphrase</label>
+              <input id="guildPassphraseInput" class="text-input" type="password" autocomplete="current-password" />
+            </form>
+            <p id="guildPublishStatus" class="dialog-status" aria-live="polite"></p>
+            <div class="dialog-actions">
+              <button id="guildPublishConfirmBtn" class="button primary" type="button">Publish GUILD Reference Layer</button>
+              <button id="guildPublishKeepBtn" class="button secondary" type="button">Close</button>
+            </div>
+            <section class="admin-recovery">
+              <h3>Archive Recovery</h3>
+              <p>Recover every unique entry ever retained from an uploaded share code or GUILD publication. Recovered entries are added to this browser only.</p>
+              <button id="guildRecoverAllBtn" class="button secondary" type="button">Recover All Archived Entries</button>
+            </section>
+          </div>
+        </details>
         <section class="admin-recovery overwatch-admin">
           <h3>Overwatch</h3>
           <p>View currently active live-position links. Only the latest point is retained, and stale positions disappear automatically.</p>
@@ -699,7 +851,9 @@
       integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
       crossorigin=""
     ></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+    <script src="deployment-config.js"></script>
     <script src="supabase-config.js"></script>
-    <script src="app.js?v=20260801-last-outdoor-position"></script>
+    <script src="app.js?v=20260827-authoritative-atlas"></script>
   </body>
 </html>
