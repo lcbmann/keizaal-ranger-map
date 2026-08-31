@@ -69,9 +69,27 @@
   const SKYRIM_ATLAS_CODE = "SKYRIM";
   const SKYRIM_ATLAS_DATA = "data/skyrim-canon-atlas.generated.json";
   const LIVE_POSITION_URL = "http://127.0.0.1:38471/position";
-  const FIELD_EVENTS_URL = "http://127.0.0.1:38471/events";
+  const FIELD_BRIDGE_CLIENT_ID = (() => {
+    const key = "ranger-atlas-bridge-client-id-v1";
+    try {
+      const existing = window.sessionStorage.getItem(key);
+      if (existing) {
+        return existing;
+      }
+      const generated = typeof crypto.randomUUID === "function"
+        ? crypto.randomUUID()
+        : `atlas-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      window.sessionStorage.setItem(key, generated);
+      return generated;
+    } catch (_error) {
+      return `atlas-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    }
+  })();
+  const FIELD_BRIDGE_CLIENT_STARTED_AT = Date.now();
+  const FIELD_EVENTS_URL = `http://127.0.0.1:38471/events?client_id=${encodeURIComponent(FIELD_BRIDGE_CLIENT_ID)}`;
   const FIELD_STATE_URL = "http://127.0.0.1:38471/field-state";
   const NATIVE_MARKERS_URL = "http://127.0.0.1:38471/markers";
+  const FIELD_STATE_HEARTBEAT_MS = 2500;
   const FIELD_ACTION_CURSOR_KEY = "ranger-atlas-field-action-cursor-v1";
   const LAST_OUTDOOR_POSITION_KEY = "ranger-atlas-last-outdoor-position-v1";
   const SKYRIM_WORLDSPACE_FORM_ID = 0x0000003c;
@@ -103,6 +121,23 @@
   const OVERWATCH_POLL_MS = 5 * 1000;
   const TRAILMARK_DROP_POLL_MS = 4 * 1000;
   const TRAILMARK_DROP_POLL_LIMIT = 30;
+  const SKYRIM_DAY_NAMES = Object.freeze([
+    "Sundas", "Morndas", "Tirdas", "Middas", "Turdas", "Fredas", "Loredas",
+  ]);
+  const SKYRIM_MONTH_NAMES = Object.freeze([
+    "Morning Star", "Sun's Dawn", "First Seed", "Rain's Hand", "Second Seed", "Mid Year",
+    "Sun's Height", "Last Seed", "Hearthfire", "Frostfall", "Sun's Dusk", "Evening Star",
+  ]);
+  const SKYRIM_MONTH_LENGTHS = Object.freeze([31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]);
+  const SKYRIM_YEAR_LENGTH = SKYRIM_MONTH_LENGTHS.reduce((total, days) => total + days, 0);
+  // Published by https://keizaalonlineclock.netlify.app/. Keep this anchor
+  // explicit so a future server resynchronization is one small data update.
+  const MOONSHADOW_SERVER_CLOCK = Object.freeze({
+    realAnchorUnixMs: Date.parse("2026-08-31T15:19:30Z"),
+    skyrimAnchorSeconds: (8 * 3600) + (32 * 60),
+    timeScale: 1.9997,
+    dateAnchor: Object.freeze({ dayOfWeek: 0, day: 4, month: 9, year: 226 }),
+  });
 
   const categories = [
     { id: "city", label: "City", color: "#2f5878", icon: "city" },
@@ -179,7 +214,7 @@
     illustratedCalibration: ILLUSTRATED_CALIBRATION_PRESET.map((entry) => ({ ...entry })),
     illustratedCalibrationVersion: ILLUSTRATED_CALIBRATION_VERSION,
     mapDetailScale: 0.85,
-    darkMode: window.matchMedia?.("(prefers-color-scheme: dark)").matches === true,
+    darkMode: true,
     search: "",
     creatorFilter: "",
     selectedId: null,
@@ -190,6 +225,7 @@
     movingFeatureId: null,
     movingOriginalPoint: null,
     movingOriginalIllustratedPosition: null,
+    movingOriginalGamePosition: null,
     creatorName: "",
     livePositionEnabled: false,
     followLivePosition: false,
@@ -303,6 +339,7 @@
   const trailmarkRadiusLayer = L.layerGroup().addTo(map);
   const livePositionLayer = L.layerGroup().addTo(map);
   const overwatchPositionLayer = L.layerGroup().addTo(map);
+  const shareRegionLayer = L.layerGroup().addTo(map);
 
   const elements = {
     toolButtons: Array.from(document.querySelectorAll(".tool-button")),
@@ -353,6 +390,7 @@
     resetDisplaySettingsBtn: document.getElementById("resetDisplaySettingsBtn"),
     livePositionInput: document.getElementById("livePositionInput"),
     livePositionStatus: document.getElementById("livePositionStatus"),
+    skyrimTimeStatus: document.getElementById("skyrimTimeStatus"),
     trailmarkVisitsInput: document.getElementById("trailmarkVisitsInput"),
     trailmarkVisitsStatus: document.getElementById("trailmarkVisitsStatus"),
     discordLinkBtn: document.getElementById("discordLinkBtn"),
@@ -471,6 +509,8 @@
     shareReportBtn: document.getElementById("shareReportBtn"),
     shareCancelBtn: document.getElementById("shareCancelBtn"),
     shareKeepBtn: document.getElementById("shareKeepBtn"),
+    shareAreaBtn: document.getElementById("shareAreaBtn"),
+    shareClearAreaBtn: document.getElementById("shareClearAreaBtn"),
     shareSelectAllBtn: document.getElementById("shareSelectAllBtn"),
     shareSelectNoneBtn: document.getElementById("shareSelectNoneBtn"),
     exportBtn: document.getElementById("exportBtn"),
@@ -549,6 +589,7 @@
   let nativeMarkerPostChain = Promise.resolve();
   let nativeFieldStatePostChain = Promise.resolve();
   let nativeFieldStateKey = "";
+  let nativeFieldStateHeartbeatTimer = null;
   let clipboardSyncTimer = null;
   let clipboardDeleteArmTimer = null;
   let awakeRangerPollTimer = null;
@@ -557,6 +598,11 @@
   let calibrationSurvey = createEmptyCalibrationSurvey();
   let calibrationSurveyPickingTarget = false;
   let calibrationSurveyPreviewBase = null;
+  let shareRegionBounds = null;
+  let shareRegionPicking = false;
+  let shareRegionStart = null;
+  let shareRegionCurrent = null;
+  let shareRegionRestoreDragging = false;
 
   init();
 
@@ -578,6 +624,11 @@
     applyHelpHint();
     updateTrailmarkVisitControls();
     updateSharePositionControls();
+    updateSkyrimTimeStatus(null);
+    window.setInterval(() => {
+      const hasLiveGameTime = state.livePositionConnection === "linked";
+      updateSkyrimTimeStatus(state.livePositionSnapshot, !hasLiveGameTime);
+    }, 1000);
     if (isSupabaseConfigured()) {
       initializeSupabaseAuth();
       void refreshDiscordLink();
@@ -1214,15 +1265,22 @@
     elements.guildEntryList.addEventListener("change", updateGuildPublishDialogState);
     elements.overwatchToggleBtn.addEventListener("click", toggleOverwatch);
     closeDialogOnBackdrop(elements.guildPublishDialog);
-    elements.exportBtn.addEventListener("click", openShareDialog);
+    elements.exportBtn.addEventListener("click", () => openShareDialog({ resetRegion: true }));
     elements.exportMapBtn.addEventListener("click", exportVisibleMap);
     elements.shareCopyBtn.addEventListener("click", copySelectedShareCode);
     elements.shareReportBtn.addEventListener("click", copySelectedFieldReport);
     elements.shareCancelBtn.addEventListener("click", () => closeShareDialog());
     elements.shareKeepBtn.addEventListener("click", () => closeShareDialog());
+    elements.shareAreaBtn.addEventListener("click", beginShareRegionSelection);
+    elements.shareClearAreaBtn.addEventListener("click", clearShareRegionFilter);
     elements.shareSelectAllBtn.addEventListener("click", () => setShareEntryChecks(true));
     elements.shareSelectNoneBtn.addEventListener("click", () => setShareEntryChecks(false));
     elements.shareEntryList.addEventListener("change", updateShareDialogState);
+    elements.shareDialog.addEventListener("close", () => {
+      if (!shareRegionPicking) {
+        clearShareRegionSelection();
+      }
+    });
     closeDialogOnBackdrop(elements.shareDialog);
     elements.importBtn.addEventListener("click", openReceiveDialog);
     elements.receiveCancelBtn.addEventListener("click", () => closeReceiveDialog());
@@ -1332,7 +1390,7 @@
       lastDragEndedAt = Date.now();
     });
     map.on("zoomstart zoom zoomend", () => {
-      if (state.mode !== "route" && state.mode !== "range" && !map.dragging.enabled()) {
+      if (!shareRegionPicking && state.mode !== "route" && state.mode !== "range" && !map.dragging.enabled()) {
         map.dragging.enable();
       }
     });
@@ -1359,7 +1417,10 @@
       }
 
       if (event.key === "Escape") {
-        if (calibrationSurveyPickingTarget) {
+        if (shareRegionPicking) {
+          event.preventDefault();
+          cancelShareRegionSelection();
+        } else if (calibrationSurveyPickingTarget) {
           event.preventDefault();
           cancelCalibrationSurveyMapPick();
         } else if (state.movingFeatureId) {
@@ -1607,6 +1668,10 @@
     state.livePositionConnection = "connecting";
     updateLivePositionStatus("Connecting...", "connecting");
     pollLivePosition();
+    nativeFieldStateHeartbeatTimer = window.setInterval(
+      () => void syncNativeFieldState(true),
+      FIELD_STATE_HEARTBEAT_MS,
+    );
   }
 
   function startFieldActionPolling() {
@@ -1761,10 +1826,34 @@
     return getTrailmarkDistanceMeters(feature) <= TRAILMARK_VISIT_RADIUS_METERS;
   }
 
+  function sampleNativeRoutePoints(points, limit = 160) {
+    const source = Array.isArray(points) ? points : [];
+    if (source.length <= limit) {
+      return source;
+    }
+    const sampled = [];
+    for (let index = 0; index < limit; index += 1) {
+      sampled.push(source[Math.round((index * (source.length - 1)) / (limit - 1))]);
+    }
+    return sampled;
+  }
+
+  function hasLinkedTrailmarkDevice() {
+    return Boolean(
+      getStoredDiscordDeviceToken()
+      && (
+        state.discordLink
+        || (state.discordAuthSession?.user && state.rangerAccess?.active)
+      ),
+    );
+  }
+
   function createNativeFieldState() {
     const nearest = getNearestOfficialTrailmark();
     const nearestFeature = nearest?.feature;
     const visits = nearestFeature ? state.trailmarkVisitsByFeature.get(nearestFeature.id) : [];
+    const rangerProfile = normalizeDiscordProfile(state.rangerAccess?.profile || state.discordLink?.profile);
+    const selectedFeature = getSelectedFeature();
     const lastKnownPoint = getLastKnownOutdoorPoint();
     const playerDisplayPoint = getLivePositionDisplayPoint(lastKnownPoint, "illustrated");
     const playerPoint = playerDisplayPoint
@@ -1775,59 +1864,158 @@
           stale: Boolean(lastKnownPoint.stale),
         }
       : null;
-    const officialTrailmarks = playerPoint
-      ? state.features
+    const officialTrailmarks = state.features
         .filter(isOfficialTrailmark)
         .map((feature) => {
           const trailmarkPoint = getOfficialTrailmarkDisplayPoint(feature, "illustrated");
           const distanceMeters = getTrailmarkDistanceMeters(feature);
+          const hasDistance = Number.isFinite(distanceMeters);
           return {
             id: feature.id,
             title: feature.title || "Trailmark",
+            notes: feature.notes || "",
             x: trailmarkPoint?.x,
             y: trailmarkPoint?.y,
-            distance: distanceMeters / ATLAS_UNITS_TO_METERS,
-            distance_meters: distanceMeters,
-            within_range: distanceMeters <= TRAILMARK_VISIT_RADIUS_METERS,
+            distance: hasDistance ? distanceMeters / ATLAS_UNITS_TO_METERS : null,
+            distance_meters: hasDistance ? distanceMeters : null,
+            within_range: hasDistance && distanceMeters <= TRAILMARK_VISIT_RADIUS_METERS,
+            headquarters: isHeadquartersTrailmark(feature),
           };
         })
         .filter((feature) => Number.isFinite(feature.x) && Number.isFinite(feature.y))
-        .sort((left, right) => left.distance - right.distance)
-      : [];
-    const mapMarkers = playerPoint
-      ? getVisibleFeatures()
-        .filter((feature) => feature.type === "marker" && !isOfficialTrailmark(feature) && !isDefaultFeature(feature) && !isCanonFeature(feature))
+        .sort((left, right) => (left.distance ?? Infinity) - (right.distance ?? Infinity));
+    const settlements = state.features
+        .filter(isSettlementFeature)
         .map((feature) => {
           const point = getFeatureDisplayPoints(feature, "illustrated")[0];
+          const featureCategories = getFeatureCategories(feature);
+          return {
+            id: feature.id,
+            title: feature.title || "Settlement",
+            notes: feature.notes || "",
+            category: featureCategories.includes("city") ? "city" : "town",
+            source: feature.source || "default",
+            x: point?.x,
+            y: point?.y,
+          };
+        })
+        .filter((feature) => Number.isFinite(feature.x) && Number.isFinite(feature.y));
+    const mapMarkers = state.features
+        .filter((feature) => feature.type === "marker" && !isOfficialTrailmark(feature) && !isSettlementFeature(feature))
+        .map((feature) => {
+          const point = getFeatureDisplayPoints(feature, "illustrated")[0];
+          const distance = point && playerPoint
+            ? Math.hypot(point.x - playerPoint.x, point.y - playerPoint.y)
+            : null;
           return {
             id: feature.id,
             title: feature.title || "Atlas mark",
+            notes: feature.notes || "",
             category: feature.category || "landmark",
-            source: isGuildFeature(feature) ? "guild" : "personal",
+            source: isGuildFeature(feature)
+              ? "guild"
+              : isCanonFeature(feature) || isOfficialLocationFeatureSource(feature)
+                ? "official"
+                : "personal",
             x: point?.x,
             y: point?.y,
-            distance: point ? Math.hypot(point.x - playerPoint.x, point.y - playerPoint.y) : Infinity,
+            distance_meters: Number.isFinite(distance) ? distance * ATLAS_UNITS_TO_METERS : null,
           };
         })
         .filter((feature) => Number.isFinite(feature.x) && Number.isFinite(feature.y))
-        .sort((left, right) => left.distance - right.distance)
-        .slice(0, 80)
+        .sort((left, right) => (left.distance ?? Infinity) - (right.distance ?? Infinity))
+        .slice(0, 80);
+    const routes = state.features
+        .filter((feature) => feature.type === "route")
+        .slice(0, 16)
+        .map((feature) => ({
+          id: feature.id,
+          title: feature.title || "Route",
+          color: normalizeHexColor(feature.color) || (categoryById.route?.color || "#b08a3e"),
+          points: sampleNativeRoutePoints(getFeatureDisplayPoints(feature, "illustrated"))
+            .map((point) => ({ x: point.x, y: point.y })),
+        }))
+        .filter((feature) => feature.points.length >= 2);
+    const selectedPoint = selectedFeature
+      ? getFeatureDisplayPoints(selectedFeature, "illustrated")[0]
+      : null;
+    const selectedCategories = selectedFeature ? getFeatureCategories(selectedFeature) : [];
+    const selectedDistanceMeters = isOfficialTrailmark(selectedFeature)
+      ? getTrailmarkDistanceMeters(selectedFeature)
+      : null;
+    const selectedEntry = selectedFeature && selectedPoint
+      ? {
+          id: selectedFeature.id,
+          title: selectedFeature.title || "Atlas entry",
+          category: selectedCategories[0] || selectedFeature.category || selectedFeature.type || "landmark",
+          source: isGuildFeature(selectedFeature)
+            ? "guild"
+            : isCanonFeature(selectedFeature) || isDefaultFeature(selectedFeature)
+              ? "official"
+              : "personal",
+          notes: selectedFeature.notes || "",
+          x: selectedPoint.x,
+          y: selectedPoint.y,
+          distance_meters: Number.isFinite(selectedDistanceMeters) ? selectedDistanceMeters : null,
+          within_range: Number.isFinite(selectedDistanceMeters) && selectedDistanceMeters <= TRAILMARK_VISIT_RADIUS_METERS,
+          headquarters: isHeadquartersTrailmark(selectedFeature),
+        }
+      : null;
+    const overwatchRangers = state.overwatchEnabled
+      ? state.overwatchPositions
+          .map((position, index) => {
+            const point = getOverwatchDisplayPoint(position, "illustrated");
+            const rangerName = normalizeCreatorName(position.ranger_name) || "Unknown Ranger";
+            return {
+              id: String(position.discord_user_id || position.device_id || `${rangerName}-${index}`),
+              title: rangerName,
+              x: point?.x,
+              y: point?.y,
+              heading: Number(position.heading_degrees) || 0,
+              activity: formatRelativeTime(position.updated_at),
+            };
+          })
+          .filter((position) => Number.isFinite(position.x) && Number.isFinite(position.y))
       : [];
+    const nearestWithinRange = Boolean(
+      nearestFeature && Number.isFinite(nearest.distanceMeters)
+        && nearest.distanceMeters <= TRAILMARK_VISIT_RADIUS_METERS,
+    );
+    const discordDeviceLinked = hasLinkedTrailmarkDevice();
     return {
-      version: 1,
+      version: 2,
+      bridge_client: {
+        id: FIELD_BRIDGE_CLIENT_ID,
+        started_at_unix_ms: FIELD_BRIDGE_CLIENT_STARTED_AT,
+        origin: window.location.origin,
+      },
       ready: Boolean(state.livePositionEnabled && state.livePositionConnection === "linked" && getCurrentCreatorName()),
+      atlas_ready: Boolean(getCurrentCreatorName()),
       ranger_name: getCurrentCreatorName(),
-      ranger_profile: normalizeDiscordProfile(state.rangerAccess?.profile || state.discordLink?.profile),
+      ranger_profile: rangerProfile,
       awake_ranger_count: state.awakeRangerCount,
+      in_skyrim_count: state.inSkyrimRangerCount,
+      discord_online_count: state.discordOnlineCount,
+      calibration_version: Number(state.illustratedWorldCalibration?.version)
+        || Number(state.activeMapCalibrations["skyrim-illustrated"]?.version)
+        || 0,
+      trailmark_revision: Number(state.officialTrailmarksRevision) || 0,
+      settlement_revision: Number(state.officialSettlementsRevision) || 0,
       clipboard: {
         title: state.clipboard.title,
         body: state.clipboard.body,
         updated_at: state.clipboard.updatedAt,
       },
+      field_action_status: elements.statusBar?.textContent || "",
+      overwatch_enabled: state.overwatchEnabled,
+      overwatch_rangers: overwatchRangers,
       game_link: state.livePositionConnection === "linked" ? "Connected to Skyrim" : "Waiting for Skyrim",
       player_point: playerPoint,
       official_trailmarks: officialTrailmarks,
+      settlements,
       map_markers: mapMarkers,
+      routes,
+      selected_entry: selectedEntry,
       nearest_trailmark: nearestFeature
         ? {
             id: nearestFeature.id,
@@ -1836,7 +2024,11 @@
             point: getOfficialTrailmarkDisplayPoint(nearestFeature, "illustrated"),
             distance: nearest.distance,
             distance_meters: nearest.distanceMeters,
-            within_range: nearest.distanceMeters <= TRAILMARK_VISIT_RADIUS_METERS,
+            within_range: nearestWithinRange,
+            can_check_in: nearestWithinRange && state.trailmarkVisitsEnabled && Boolean(getCurrentCreatorName()),
+            can_leave_drop: nearestWithinRange && discordDeviceLinked,
+            discord_linked: discordDeviceLinked,
+            visits_enabled: state.trailmarkVisitsEnabled,
             recent_visits: Array.isArray(visits)
               ? visits.map((visit) => ({
                   ranger_name: normalizeCreatorName(visit.ranger_name) || "Unknown Ranger",
@@ -1922,6 +2114,20 @@
     }
   }
 
+  function runNativeFieldAction(workingMessage, operation) {
+    setStatus(workingMessage);
+    void syncNativeFieldState(true);
+    Promise.resolve()
+      .then(operation)
+      .catch((error) => {
+        console.error("Native Atlas action failed", error);
+        setStatus(getReadableError(error, "The in-game Atlas action could not be completed."));
+      })
+      .finally(() => {
+        void syncNativeFieldState(true);
+      });
+  }
+
   function handleFieldAction(event) {
     const eventId = Number(event.id);
     if (!Number.isFinite(eventId) || eventId <= state.fieldActionCursor) {
@@ -1930,28 +2136,49 @@
     state.fieldActionCursor = eventId;
     window.localStorage.setItem(FIELD_ACTION_CURSOR_KEY, String(eventId));
 
+    if (event.type === "refresh_atlas_snapshot") {
+      void syncNativeFieldState(true);
+      return;
+    }
+    if (event.type === "select_atlas_entry") {
+      const featureId = typeof event.payload?.feature_id === "string"
+        ? event.payload.feature_id.trim()
+        : "";
+      if (featureId && state.features.some((feature) => feature.id === featureId)) {
+        selectFeature(featureId);
+        void syncNativeFieldState(true);
+      }
+      return;
+    }
+
     if (event.type === "open_nearby_trailmark") {
-      void openNearbyTrailmarkDrop();
+      runNativeFieldAction("Opening the nearby Trailmark...", openNearbyTrailmarkDrop);
       return;
     }
     if (event.type === "record_nearby_trailmark_visit") {
-      void recordNearbyTrailmarkVisitFromFieldConsole();
+      runNativeFieldAction("Checking in at the nearby Trailmark...", recordNearbyTrailmarkVisitFromFieldConsole);
       return;
     }
     if (event.type === "refresh_nearby_trailmark_visits") {
-      void refreshNearbyTrailmarkVisitsFromFieldConsole();
+      runNativeFieldAction(
+        "Refreshing the Trailmark visitor log...",
+        refreshNearbyTrailmarkVisitsFromFieldConsole,
+      );
       return;
     }
     if (event.type === "submit_nearby_trailmark_drop") {
-      void submitNearbyTrailmarkDropFromFieldConsole(
-        event.payload?.message,
-        event.payload?.atlas_location_id,
-        event,
-      );
+      runNativeFieldAction("Sending the field drop through Wayfinder...", () => (
+        submitNearbyTrailmarkDropFromFieldConsole(
+          event.payload?.message,
+          event.payload?.atlas_location_id,
+          event,
+        )
+      ));
       return;
     }
     if (event.type === "create_mark_at_position") {
       createFieldMarkFromConsole(event);
+      void syncNativeFieldState(true);
       return;
     }
     if (event.type === "save_clipboard") {
@@ -1961,6 +2188,7 @@
         syncClipboardDialogInputs();
       }
       scheduleNativeClipboardSync();
+      setStatus("Field Notes saved from the in-game Atlas");
       return;
     }
     if (event.type !== "mark_here") {
@@ -2028,7 +2256,11 @@
     }
     const title = String(event.payload?.title || "Field note").trim().slice(0, 120) || "Field note";
     const notes = String(event.payload?.notes || "").trim().slice(0, 800);
-    const category = categoryById[event.payload?.category] ? event.payload.category : "landmark";
+    const requestedCategory = categoryById[event.payload?.category] ? event.payload.category : "landmark";
+    const restrictedCategory = ["trailmark", "city", "town"].includes(requestedCategory);
+    const category = restrictedCategory && !canManageOfficialLocations()
+      ? "landmark"
+      : requestedCategory;
     const feature = createFeature({
       type: "marker",
       category,
@@ -2076,6 +2308,8 @@
       return;
     }
     await refreshTrailmarkVisits(nearest.feature, true);
+    const refreshError = state.trailmarkVisitErrors.get(nearest.feature.id);
+    setStatus(refreshError || `Refreshed the visitor log for ${nearest.feature.title}`);
     void syncNativeFieldState(true);
   }
 
@@ -2119,15 +2353,17 @@
       setStatus("Write a field drop before sending it");
       return false;
     }
-    if (!state.discordLink || !getStoredDiscordDeviceToken()) {
+    if (!hasLinkedTrailmarkDevice()) {
       setStatus("Link Discord in the Atlas before leaving a field drop");
       return false;
     }
     if (Date.now() - Number(state.trailmarkVisitCooldowns[nearest.feature.id] || 0) >= TRAILMARK_VISIT_COOLDOWN_MS) {
-      if (!state.trailmarkVisitsEnabled || !getCurrentCreatorName()) {
-        setStatus("Enable Record visits before leaving a field drop");
+      if (!getCurrentCreatorName()) {
+        setStatus("A verified Ranger identity is required before leaving a field drop");
         return false;
       }
+      // Sending a field drop is itself an intentional check-in. Record that
+      // visit even when passive visit recording is disabled.
       await recordTrailmarkVisit(nearest.feature);
     }
     if (Date.now() - Number(state.trailmarkVisitCooldowns[nearest.feature.id] || 0) >= TRAILMARK_VISIT_COOLDOWN_MS) {
@@ -2175,8 +2411,8 @@
       return;
     }
 
-    if (!state.trailmarkVisitsEnabled || !getCurrentCreatorName()) {
-      setStatus("Enable Record visits and enter your name before opening a Trailmark drop");
+    if (!getCurrentCreatorName()) {
+      setStatus("A verified Ranger identity is required before opening a Trailmark drop");
       return;
     }
     if (state.trailmarkVisitInFlight) {
@@ -2195,6 +2431,8 @@
   function stopLivePositionPolling(clearPosition = true) {
     window.clearTimeout(livePositionPollTimer);
     livePositionPollTimer = null;
+    window.clearInterval(nativeFieldStateHeartbeatTimer);
+    nativeFieldStateHeartbeatTimer = null;
     if (livePositionRequest) {
       livePositionRequest.abort();
       livePositionRequest = null;
@@ -2209,6 +2447,7 @@
       trailmarkRadiusLayer.clearLayers();
       livePositionMarker = null;
       updateLivePositionStatus("Off", "off");
+      updateSkyrimTimeStatus(null);
       updateTrailmarkVisitControls();
     }
   }
@@ -2251,6 +2490,7 @@
           state.livePositionPoint ? "Last position" : "Game link unavailable",
           "unavailable",
         );
+        updateSkyrimTimeStatus(state.livePositionSnapshot, true);
         markLivePositionStale();
         if (wasLinked) {
           renderEditor();
@@ -2283,6 +2523,7 @@
     const hadCurrentOutdoorPosition = Boolean(getCurrentOutdoorGamePosition());
     state.livePositionConnection = "linked";
     state.livePositionSnapshot = snapshot;
+    updateSkyrimTimeStatus(snapshot);
 
     if (
       Number(snapshot.worldspace_form_id) === SKYRIM_WORLDSPACE_FORM_ID &&
@@ -3329,6 +3570,174 @@
     };
   }
 
+  function illustratedPointToWorldPosition(point, calibration = state.illustratedWorldCalibration) {
+    const target = normalizeCalibrationSurveyTarget(point);
+    if (!target) {
+      return {};
+    }
+
+    const normalized = normalizeIllustratedWorldCalibration(calibration);
+    if (!normalized) {
+      const canonicalPoint = inverseTransformPointForMapView(target, "illustrated");
+      return atlasPointToWorldPosition(applyGameLinkAtlasOffset(canonicalPoint));
+    }
+
+    const [a, b, xOffset] = normalized.x;
+    const [c, d, yOffset] = normalized.y;
+    const determinant = a * d - b * c;
+    if (![a, b, c, d, xOffset, yOffset, determinant].every(Number.isFinite)
+      || Math.abs(determinant) < 1e-9) {
+      return {};
+    }
+
+    const controls = normalized.controlPoints
+      .map(normalizeCalibrationSurveyObservation)
+      .filter(Boolean);
+    const exactControl = controls.find((observation) => (
+      Math.hypot(
+        observation.target.x - target.x,
+        observation.target.y - target.y,
+      ) < 0.01
+    ));
+    if (exactControl) {
+      return {
+        x: exactControl.gamePosition.x,
+        y: exactControl.gamePosition.y,
+        interior: false,
+        worldspaceFormId: SKYRIM_WORLDSPACE_FORM_ID,
+      };
+    }
+
+    const mapX = target.x - xOffset;
+    const mapY = target.y - yOffset;
+    const rankedControls = controls
+      .map((observation) => ({
+        cellX: observation.gamePosition.x / normalized.cellSize,
+        cellY: observation.gamePosition.y / normalized.cellSize,
+        distance: Math.hypot(
+          observation.target.x - target.x,
+          observation.target.y - target.y,
+        ),
+      }))
+      .sort((left, right) => left.distance - right.distance);
+    let weightedCellX = 0;
+    let weightedCellY = 0;
+    let weightTotal = 0;
+    rankedControls.forEach((control) => {
+      const weight = 1 / (Math.max(25, control.distance) ** 2);
+      weightedCellX += control.cellX * weight;
+      weightedCellY += control.cellY * weight;
+      weightTotal += weight;
+    });
+    const seeds = [
+      {
+        cellX: (mapX * d - b * mapY) / determinant,
+        cellY: (a * mapY - mapX * c) / determinant,
+      },
+      ...(weightTotal
+        ? [{ cellX: weightedCellX / weightTotal, cellY: weightedCellY / weightTotal }]
+        : []),
+      ...rankedControls.slice(0, 8),
+    ];
+    const derivativeStep = 0.005;
+    const lineSearchFactors = [1, 0.5, 0.25, 0.125, 0.0625, 0.03125];
+    let bestCandidate = null;
+
+    seeds.forEach((seed) => {
+      let cellX = seed.cellX;
+      let cellY = seed.cellY;
+      for (let iteration = 0; iteration < 32; iteration += 1) {
+        const projected = worldPositionToIllustratedPoint(
+          cellX * normalized.cellSize,
+          cellY * normalized.cellSize,
+          normalized,
+        );
+        const errorX = target.x - projected.x;
+        const errorY = target.y - projected.y;
+        const error = Math.hypot(errorX, errorY);
+        if (!bestCandidate || error < bestCandidate.error) {
+          bestCandidate = { cellX, cellY, error };
+        }
+        if (error < 0.15) {
+          break;
+        }
+
+        const projectedXPlus = worldPositionToIllustratedPoint(
+          (cellX + derivativeStep) * normalized.cellSize,
+          cellY * normalized.cellSize,
+          normalized,
+        );
+        const projectedXMinus = worldPositionToIllustratedPoint(
+          (cellX - derivativeStep) * normalized.cellSize,
+          cellY * normalized.cellSize,
+          normalized,
+        );
+        const projectedYPlus = worldPositionToIllustratedPoint(
+          cellX * normalized.cellSize,
+          (cellY + derivativeStep) * normalized.cellSize,
+          normalized,
+        );
+        const projectedYMinus = worldPositionToIllustratedPoint(
+          cellX * normalized.cellSize,
+          (cellY - derivativeStep) * normalized.cellSize,
+          normalized,
+        );
+        const derivativeSpan = derivativeStep * 2;
+        const j00 = (projectedXPlus.x - projectedXMinus.x) / derivativeSpan;
+        const j01 = (projectedYPlus.x - projectedYMinus.x) / derivativeSpan;
+        const j10 = (projectedXPlus.y - projectedXMinus.y) / derivativeSpan;
+        const j11 = (projectedYPlus.y - projectedYMinus.y) / derivativeSpan;
+        const jacobianDeterminant = j00 * j11 - j01 * j10;
+        if (!Number.isFinite(jacobianDeterminant) || Math.abs(jacobianDeterminant) < 1e-8) {
+          break;
+        }
+
+        let deltaX = (j11 * errorX - j01 * errorY) / jacobianDeterminant;
+        let deltaY = (-j10 * errorX + j00 * errorY) / jacobianDeterminant;
+        const deltaLength = Math.hypot(deltaX, deltaY);
+        if (deltaLength > 2) {
+          deltaX *= 2 / deltaLength;
+          deltaY *= 2 / deltaLength;
+        }
+        let accepted = false;
+        for (const factor of lineSearchFactors) {
+          const nextCellX = cellX + deltaX * factor;
+          const nextCellY = cellY + deltaY * factor;
+          const nextProjected = worldPositionToIllustratedPoint(
+            nextCellX * normalized.cellSize,
+            nextCellY * normalized.cellSize,
+            normalized,
+          );
+          const nextError = Math.hypot(
+            target.x - nextProjected.x,
+            target.y - nextProjected.y,
+          );
+          if (nextError < error) {
+            cellX = nextCellX;
+            cellY = nextCellY;
+            accepted = true;
+            break;
+          }
+        }
+        if (!accepted) {
+          break;
+        }
+      }
+    });
+
+    if (!bestCandidate || !Number.isFinite(bestCandidate.error) || bestCandidate.error > 2) {
+      return {};
+    }
+    const worldX = bestCandidate.cellX * normalized.cellSize;
+    const worldY = bestCandidate.cellY * normalized.cellSize;
+    return {
+      x: worldX,
+      y: worldY,
+      interior: false,
+      worldspaceFormId: SKYRIM_WORLDSPACE_FORM_ID,
+    };
+  }
+
   function applyGameLinkAtlasOffset(point) {
     if (!point) {
       return null;
@@ -3419,6 +3828,90 @@
     elements.livePositionStatus.classList.toggle("is-linked", status === "linked");
     elements.livePositionStatus.classList.toggle("is-unavailable", status === "unavailable");
     renderFieldOverview(getSelectedFeature());
+  }
+
+  function updateSkyrimTimeStatus(snapshot, stale = false) {
+    const liveGameTime = snapshot?.game_time;
+    const hasLiveGameTime = Boolean(
+      !stale
+      && liveGameTime
+      && Number.isFinite(Number(liveGameTime.hour))
+      && Number.isFinite(Number(liveGameTime.year)),
+    );
+    const gameTime = hasLiveGameTime ? liveGameTime : getMoonshadowServerGameTime();
+    const hourValue = Number(gameTime?.hour);
+    const day = Math.max(1, Math.floor(Number(gameTime?.day)) || 1);
+    const dayOfWeek = Math.floor(Number(gameTime?.day_of_week));
+    const month = Math.floor(Number(gameTime?.month));
+    const year = Math.floor(Number(gameTime?.year));
+    if (!gameTime || !Number.isFinite(hourValue) || !Number.isFinite(year)) {
+      elements.skyrimTimeStatus.hidden = true;
+      elements.skyrimTimeStatus.textContent = "";
+      elements.skyrimTimeStatus.classList.remove("is-stale");
+      elements.skyrimTimeStatus.classList.remove("is-calculated");
+      return;
+    }
+
+    const wrappedHour = ((hourValue % 24) + 24) % 24;
+    const hour = Math.floor(wrappedHour);
+    const minute = Math.floor((wrappedHour - hour) * 60);
+    const clock = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+    const dayName = SKYRIM_DAY_NAMES[dayOfWeek] || "Skyrim";
+    const monthName = SKYRIM_MONTH_NAMES[month] || "";
+    const sourceLabel = hasLiveGameTime ? "Skyrim live" : "Moonshadow";
+    elements.skyrimTimeStatus.textContent = `${clock} · ${dayName}, ${day} ${monthName}, 4E ${year} · ${sourceLabel}`;
+    elements.skyrimTimeStatus.hidden = false;
+    elements.skyrimTimeStatus.classList.remove("is-stale");
+    elements.skyrimTimeStatus.classList.toggle("is-calculated", !hasLiveGameTime);
+    elements.skyrimTimeStatus.title = hasLiveGameTime
+      ? `Live Skyrim calendar · timescale ${Number(gameTime.timescale) || 0}`
+      : "Calculated Moonshadow server calendar from the Keizaal Online clock anchor. No mod connection required.";
+  }
+
+  function getMoonshadowServerGameTime(nowUnixMs = Date.now()) {
+    const elapsedRealSeconds = (Number(nowUnixMs) - MOONSHADOW_SERVER_CLOCK.realAnchorUnixMs) / 1000;
+    const rawSkyrimSeconds = MOONSHADOW_SERVER_CLOCK.skyrimAnchorSeconds
+      + (elapsedRealSeconds * MOONSHADOW_SERVER_CLOCK.timeScale);
+    const dayOffset = Math.floor(rawSkyrimSeconds / 86400);
+    const secondsInDay = ((rawSkyrimSeconds % 86400) + 86400) % 86400;
+    const date = addSkyrimCalendarDays(MOONSHADOW_SERVER_CLOCK.dateAnchor, dayOffset);
+    return {
+      hour: secondsInDay / 3600,
+      day: date.day,
+      day_of_week: date.dayOfWeek,
+      month: date.month,
+      year: date.year,
+      timescale: MOONSHADOW_SERVER_CLOCK.timeScale,
+    };
+  }
+
+  function addSkyrimCalendarDays(anchor, dayOffset) {
+    let year = anchor.year;
+    let absoluteDay = anchor.day - 1 + SKYRIM_MONTH_LENGTHS
+      .slice(0, anchor.month)
+      .reduce((total, days) => total + days, 0) + dayOffset;
+
+    while (absoluteDay < 0) {
+      year -= 1;
+      absoluteDay += SKYRIM_YEAR_LENGTH;
+    }
+    while (absoluteDay >= SKYRIM_YEAR_LENGTH) {
+      absoluteDay -= SKYRIM_YEAR_LENGTH;
+      year += 1;
+    }
+
+    let month = 0;
+    while (absoluteDay >= SKYRIM_MONTH_LENGTHS[month]) {
+      absoluteDay -= SKYRIM_MONTH_LENGTHS[month];
+      month += 1;
+    }
+
+    return {
+      day: absoluteDay + 1,
+      dayOfWeek: ((anchor.dayOfWeek + dayOffset) % 7 + 7) % 7,
+      month,
+      year,
+    };
   }
 
   function renderLivePosition() {
@@ -3548,7 +4041,6 @@
   async function pollAwakeRangerCount() {
     window.clearTimeout(awakeRangerPollTimer);
     awakeRangerPollTimer = null;
-    const previousCount = state.awakeRangerCount;
     try {
       const summary = await callSupabaseRpc("get_atlas_presence_summary", {
         device_token_input: getOrCreateDiscordDeviceToken(),
@@ -3576,8 +4068,8 @@
         console.debug("Ranger activity count unavailable", fallbackError, error);
       }
     } finally {
-      if (state.livePositionEnabled && previousCount !== state.awakeRangerCount) {
-        void syncNativeFieldState(true);
+      if (state.livePositionEnabled) {
+        void syncNativeFieldState();
       }
       awakeRangerPollTimer = window.setTimeout(pollAwakeRangerCount, AWAKE_RANGER_POLL_MS);
     }
@@ -3682,6 +4174,7 @@
       elements.guildPublishDialog.close();
       overwatchPollTimer = window.setTimeout(pollOverwatchPositions, OVERWATCH_POLL_MS);
       setStatus("Overwatch enabled");
+      void syncNativeFieldState(true);
     } catch (error) {
       state.overwatchPassphrase = "";
       elements.overwatchToggleBtn.disabled = false;
@@ -3700,6 +4193,7 @@
     elements.overwatchStatus.textContent = "Overwatch closed.";
     overwatchPositionLayer.clearLayers();
     setStatus("Overwatch disabled");
+    void syncNativeFieldState(true);
   }
 
   async function pollOverwatchPositions() {
@@ -3723,18 +4217,38 @@
     });
     state.overwatchPositions = Array.isArray(positions) ? positions : [];
     renderOverwatchPositions();
+    if (state.overwatchEnabled) {
+      void syncNativeFieldState(true);
+    }
+  }
+
+  function getOverwatchDisplayPoint(position, viewId = state.mapView) {
+    const canonicalPoint = {
+      x: Number(position?.atlas_x),
+      y: Number(position?.atlas_y),
+    };
+    if (!Number.isFinite(canonicalPoint.x) || !Number.isFinite(canonicalPoint.y)) {
+      return null;
+    }
+    if (viewId !== "illustrated") {
+      return transformPointForMapView(canonicalPoint, viewId);
+    }
+    const gamePosition = atlasPointToWorldPosition(canonicalPoint);
+    if (Number.isFinite(gamePosition.x) && Number.isFinite(gamePosition.y)) {
+      return worldPositionToIllustratedPoint(gamePosition.x, gamePosition.y);
+    }
+    return transformPointForMapView(canonicalPoint, "illustrated");
   }
 
   function renderOverwatchPositions() {
     overwatchPositionLayer.clearLayers();
     state.overwatchPositions.forEach((position) => {
-      const x = Number(position.atlas_x);
-      const y = Number(position.atlas_y);
-      if (!Number.isFinite(x) || !Number.isFinite(y)) {
+      const point = getOverwatchDisplayPoint(position);
+      if (!point) {
         return;
       }
       const name = normalizeCreatorName(position.ranger_name) || "Unknown Ranger";
-      const marker = L.marker([y, x], {
+      const marker = L.marker([point.y, point.x], {
         interactive: true,
         keyboard: false,
         zIndexOffset: 2550,
@@ -4094,17 +4608,18 @@
     elements.trailmarkPresenceList.innerHTML = "";
     const recentVisit = Number(state.trailmarkVisitCooldowns[feature.id] || 0);
     const withinLastKnownRange = isTrailmarkWithinLastKnownRange(feature);
+    const discordLinked = hasLinkedTrailmarkDevice();
     const canLeaveDrop =
-      Boolean(state.discordLink) &&
+      discordLinked &&
       (Date.now() - recentVisit < TRAILMARK_VISIT_COOLDOWN_MS || withinLastKnownRange);
     elements.trailmarkDropBtn.disabled = !canLeaveDrop;
-    elements.trailmarkDropBtn.title = !state.discordLink
+    elements.trailmarkDropBtn.title = !discordLinked
       ? "Link Discord before leaving a drop"
       : Date.now() - recentVisit < TRAILMARK_VISIT_COOLDOWN_MS
         ? "Post a field drop to this Trailmark's Discord channel"
         : withinLastKnownRange
           ? "Use your last known outdoor position to access this Trailmark"
-        : "Arrive at this Trailmark with Record visits enabled before leaving a drop";
+        : "Move within range of this Trailmark before leaving a drop";
     if (state.trailmarkVisitsLoading.has(feature.id)) {
       elements.trailmarkPresenceStatus.textContent = "Checking the latest field record...";
       return;
@@ -4144,7 +4659,7 @@
       setStatus("Select an official Trailmark first");
       return;
     }
-    if (!state.discordLink) {
+    if (!hasLinkedTrailmarkDevice()) {
       setStatus("Link Discord before leaving a Trailmark drop");
       openDiscordLinkDialog();
       return;
@@ -4152,11 +4667,11 @@
     const recentVisit = Number(state.trailmarkVisitCooldowns[feature.id] || 0);
     if (Date.now() - recentVisit >= TRAILMARK_VISIT_COOLDOWN_MS) {
       if (!isTrailmarkWithinLastKnownRange(feature)) {
-        setStatus(`Arrive at ${feature.title} with Record visits enabled before leaving a drop`);
+        setStatus(`Move within range of ${feature.title} before leaving a drop`);
         return;
       }
-      if (!state.trailmarkVisitsEnabled || !getCurrentCreatorName()) {
-        setStatus("Enable Record visits and enter your name before leaving a drop");
+      if (!getCurrentCreatorName()) {
+        setStatus("A verified Ranger identity is required before leaving a drop");
         return;
       }
       if (state.trailmarkVisitInFlight) {
@@ -4202,7 +4717,7 @@
       elements.trailmarkDropStatus.textContent = "Write a message before sending the drop.";
       return;
     }
-    if (!deviceToken || !state.discordLink) {
+    if (!deviceToken || !hasLinkedTrailmarkDevice()) {
       elements.trailmarkDropStatus.textContent = "Link Discord before leaving a drop.";
       return;
     }
@@ -4268,7 +4783,7 @@
     selectFeature(feature.id);
     elements.trailmarkArrival.dataset.featureId = feature.id;
     elements.trailmarkArrivalTitle.textContent = feature.title;
-    const discordLinked = Boolean(result.discord_linked || state.discordLink);
+    const discordLinked = Boolean(result.discord_linked || hasLinkedTrailmarkDevice());
     elements.trailmarkArrivalText.textContent = discordLinked
       ? "Visit recorded. You can leave a field drop here through the Atlas."
       : "Visit recorded. Link Discord to leave a field drop through the Atlas.";
@@ -5138,6 +5653,7 @@
     state.movingFeatureId = null;
     state.movingOriginalPoint = null;
     state.movingOriginalIllustratedPosition = null;
+    state.movingOriginalGamePosition = null;
     const snapshot = state.undoStack.pop();
     updateUndoButton();
     if (!snapshot) {
@@ -5287,6 +5803,9 @@
   }
 
   function handleMapClick(event) {
+    if (shareRegionPicking) {
+      return;
+    }
     if (Date.now() - lastDragEndedAt < 140 || Date.now() < suppressNextClickUntil) {
       return;
     }
@@ -5329,6 +5848,12 @@
   }
 
   function handleDrawStart(event) {
+    if (shareRegionPicking) {
+      shareRegionStart = event.latlng;
+      shareRegionCurrent = event.latlng;
+      shareRegionLayer.clearLayers();
+      return;
+    }
     if (state.mode !== "route" && state.mode !== "range") {
       return;
     }
@@ -5341,6 +5866,11 @@
   }
 
   function handleDrawMove(event) {
+    if (shareRegionPicking && shareRegionStart) {
+      shareRegionCurrent = event.latlng;
+      renderShareRegionSelection();
+      return;
+    }
     if (!state.pointerStart || (state.mode !== "route" && state.mode !== "range")) {
       return;
     }
@@ -5367,7 +5897,11 @@
     setStatus(`Sketching ${state.mode === "range" ? "range" : "trail"} (${state.drawPoints.length} points)`);
   }
 
-  function handleDrawEnd() {
+  function handleDrawEnd(event) {
+    if (shareRegionPicking) {
+      finishShareRegionSelection(event?.latlng || shareRegionCurrent);
+      return;
+    }
     if (!state.pointerStart) {
       return;
     }
@@ -5557,8 +6091,23 @@
           if (!mapPoint) {
             return;
           }
-          if (isOfficialTrailmark(feature)) {
-            feature.illustratedPosition = { x: mapPoint.x, y: mapPoint.y };
+          if (isOfficialTrailmarkFeatureSource(feature)) {
+            const gamePosition = state.mapView === "illustrated"
+              ? illustratedPointToWorldPosition(mapPoint)
+              : atlasPointToWorldPosition(mapPoint);
+            if (!Number.isFinite(gamePosition.x) || !Number.isFinite(gamePosition.y)) {
+              cancelFeatureMove(false);
+              setStatus("This map point could not be translated to Skyrim coordinates; move the Trailmark closer to the calibrated region");
+              return;
+            }
+            feature.gamePosition = gamePosition;
+            feature.points = [removeGameLinkAtlasOffset(
+              worldPositionToAtlasPoint(gamePosition.x, gamePosition.y),
+            )];
+            feature.illustratedPosition = worldPositionToIllustratedPoint(
+              gamePosition.x,
+              gamePosition.y,
+            );
           } else {
             feature.illustratedPosition = { x: mapPoint.x, y: mapPoint.y };
             feature.points = [inverseTransformPointForMapView(mapPoint)];
@@ -5567,7 +6116,9 @@
           state.selectedIds = [feature.id];
           lastDragEndedAt = Date.now();
           renderAll();
-          setStatus("Review the new position, then confirm or cancel");
+          setStatus(isOfficialTrailmarkFeatureSource(feature)
+            ? "Review the new Trailmark position, then confirm to publish it for every Ranger"
+            : "Review the new position, then confirm or cancel");
         });
       }
       marker.bindTooltip(getFeatureTooltip(feature, category), { direction: "top", offset: [0, -24] });
@@ -5632,7 +6183,7 @@
       feature.type === "marker" &&
       !isDefaultFeature(feature) &&
       !isCanonFeature(feature) &&
-      !isOfficialTrailmarkFeatureSource(feature) &&
+      (!isOfficialTrailmarkFeatureSource(feature) || canManageTrailmarks()) &&
       (!isOfficialSettlementFeatureSource(feature) || canManageOfficialLocations())
     );
   }
@@ -6176,6 +6727,9 @@
     const canMove = canBeginFeatureMove(feature) || moving;
     elements.moveFeatureBtn.disabled = !canMove;
     elements.moveFeatureBtn.hidden = isDraft || moving;
+    elements.moveFeatureBtn.title = feature && isOfficialTrailmarkFeatureSource(feature)
+      ? "Marshal: move this Trailmark manually and update its Skyrim access coordinates"
+      : "Move this Atlas entry";
     const canSyncTrailmarkPosition = Boolean(
       feature && isOfficialTrailmark(feature) && canManageTrailmarks(),
     );
@@ -6271,7 +6825,7 @@
         feature.type === "marker" &&
         !isDefaultFeature(feature) &&
         !isCanonFeature(feature) &&
-        !isOfficialTrailmarkFeatureSource(feature) &&
+        (!isOfficialTrailmarkFeatureSource(feature) || canManageTrailmarks()) &&
         (!isOfficialSettlementFeatureSource(feature) || canManageOfficialLocations()) &&
         (!state.draftFeature || feature.id !== state.draftFeature.id),
     );
@@ -6280,11 +6834,9 @@
   function beginMoveSelectedFeature() {
     const feature = getSelectedFeature();
     if (!canBeginFeatureMove(feature)) {
-      setStatus(
-        isOfficialTrailmarkFeatureSource(feature)
-          ? "Official Trailmarks follow their Skyrim access position; use Set Current Skyrim Position"
-          : "Select a movable marker in Edit Atlas first",
-      );
+      setStatus(isOfficialTrailmarkFeatureSource(feature)
+        ? "Only a verified Ranger Marshal can move an official Trailmark"
+        : "Select a movable marker in Edit Atlas first");
       return;
     }
     pushUndo(`${feature.title} move`);
@@ -6293,8 +6845,13 @@
     state.movingOriginalIllustratedPosition = feature.illustratedPosition
       ? { ...feature.illustratedPosition }
       : null;
+    state.movingOriginalGamePosition = feature.gamePosition
+      ? { ...feature.gamePosition }
+      : null;
     renderAll();
-    setStatus("Drag the highlighted marker, then confirm or cancel");
+    setStatus(isOfficialTrailmarkFeatureSource(feature)
+      ? "Drag the Trailmark, then confirm to publish its illustrated and Skyrim access position"
+      : "Drag the highlighted marker, then confirm or cancel");
   }
 
   async function confirmFeatureMove() {
@@ -6305,7 +6862,17 @@
     }
     stampFeatureUpdate(feature);
     feature.updatedAt = new Date().toISOString();
-    if (isOfficialSettlementFeatureSource(feature)) {
+    if (isOfficialTrailmarkFeatureSource(feature)) {
+      try {
+        setStatus("Publishing official Trailmark position...");
+        await publishOfficialTrailmark(feature, `Moved ${feature.title} manually on the Atlas`);
+        discardLatestUndo(`${feature.title} move`);
+      } catch (error) {
+        console.error("Could not move official Trailmark", error);
+        setStatus(getReadableError(error, "Official Trailmark position could not be saved"));
+        return;
+      }
+    } else if (isOfficialSettlementFeatureSource(feature)) {
       try {
         setStatus("Publishing official settlement position...");
         await publishOfficialSettlement(feature, `Moved ${feature.title}`);
@@ -6322,6 +6889,7 @@
     state.movingFeatureId = null;
     state.movingOriginalPoint = null;
     state.movingOriginalIllustratedPosition = null;
+    state.movingOriginalGamePosition = null;
     saveState();
     renderAll();
     setStatus("Position updated");
@@ -6338,6 +6906,11 @@
       } else {
         delete feature.illustratedPosition;
       }
+      if (state.movingOriginalGamePosition) {
+        feature.gamePosition = { ...state.movingOriginalGamePosition };
+      } else {
+        delete feature.gamePosition;
+      }
     }
     const expectedLabel = feature ? `${feature.title} move` : "";
     const pendingUndo = state.undoStack[state.undoStack.length - 1];
@@ -6348,6 +6921,7 @@
     state.movingFeatureId = null;
     state.movingOriginalPoint = null;
     state.movingOriginalIllustratedPosition = null;
+    state.movingOriginalGamePosition = null;
     renderAll();
     if (showStatus) {
       setStatus("Move cancelled");
@@ -6429,6 +7003,7 @@
       setPanelView(state.workspaceMode === "field" ? "field" : "browse", false);
       renderAll();
       setStatus("Selection cleared");
+      void syncNativeFieldState();
       return;
     }
 
@@ -6453,6 +7028,7 @@
     const selectedFeatures = getSelectedFeatures();
     if (selectedFeatures.length > 1) {
       setStatus(`${selectedFeatures.length} entries selected`);
+      void syncNativeFieldState();
       return;
     }
     const feature = getSelectedFeature();
@@ -6460,6 +7036,7 @@
     if (isOfficialTrailmark(feature)) {
       void refreshTrailmarkVisits(feature);
     }
+    void syncNativeFieldState();
   }
 
   async function saveSelectedFeature() {
@@ -7041,13 +7618,34 @@
     return date.toISOString().slice(0, 10);
   }
 
-  function openShareDialog() {
-    const shareFeatures = getShareableFeatures();
+  function openShareDialog({ resetRegion = false } = {}) {
+    if (resetRegion) {
+      clearShareRegionSelection();
+    }
+    const allShareFeatures = getShareableFeatures();
     elements.shareStatus.textContent = "";
+    renderShareDialogEntries(allShareFeatures);
+    elements.shareDialog.showModal();
+    updateShareDialogState();
+    if (!allShareFeatures.length) {
+      setStatus("No personal or shared entries to export");
+    }
+  }
+
+  function renderShareDialogEntries(allShareFeatures = getShareableFeatures()) {
+    const shareFeatures = shareRegionBounds
+      ? allShareFeatures.filter(featureIntersectsShareRegion)
+      : allShareFeatures;
     elements.shareEntryList.innerHTML = "";
+    elements.shareAreaBtn.textContent = shareRegionBounds ? "Change Map Area" : "Select Map Area";
+    elements.shareAreaBtn.disabled = allShareFeatures.length === 0;
+    elements.shareClearAreaBtn.hidden = !shareRegionBounds;
 
     if (!shareFeatures.length) {
-      setStatus("No non-default entries to share");
+      elements.shareEntryList.innerHTML = shareRegionBounds
+        ? '<p class="share-empty-state">No shareable entries intersect this map area. Clear the area to return to the full list.</p>'
+        : '<p class="share-empty-state">There are no personal or received entries to export. Official Cities, Towns, and Trailmarks already load automatically for every Ranger.</p>';
+      updateShareDialogState();
       return;
     }
 
@@ -7072,14 +7670,100 @@
         `;
         elements.shareEntryList.appendChild(label);
       });
-
-    elements.shareDialog.showModal();
     updateShareDialogState();
   }
 
   function closeShareDialog() {
     elements.shareDialog.close();
     elements.shareStatus.textContent = "";
+  }
+
+  function beginShareRegionSelection() {
+    shareRegionPicking = true;
+    shareRegionBounds = null;
+    shareRegionStart = null;
+    shareRegionCurrent = null;
+    shareRegionLayer.clearLayers();
+    shareRegionRestoreDragging = map.dragging.enabled();
+    map.dragging.disable();
+    map.getContainer().classList.add("is-selecting-share-area");
+    if (elements.shareDialog.open) {
+      elements.shareDialog.close();
+    }
+    setStatus("Drag a rectangle around the Atlas entries you want to share. Press Esc to cancel");
+  }
+
+  function renderShareRegionSelection() {
+    if (!shareRegionStart || !shareRegionCurrent) {
+      return;
+    }
+    shareRegionLayer.clearLayers();
+    L.rectangle(L.latLngBounds(shareRegionStart, shareRegionCurrent), {
+      color: "#f0c763",
+      weight: 2,
+      opacity: 1,
+      fillColor: "#2b6a54",
+      fillOpacity: 0.22,
+      interactive: false,
+    }).addTo(shareRegionLayer);
+  }
+
+  function finishShareRegionSelection(endPoint) {
+    if (!shareRegionStart || !endPoint) {
+      return;
+    }
+    shareRegionCurrent = endPoint;
+    const startPixel = map.latLngToLayerPoint(shareRegionStart);
+    const endPixel = map.latLngToLayerPoint(shareRegionCurrent);
+    if (startPixel.distanceTo(endPixel) < 8) {
+      shareRegionStart = null;
+      shareRegionCurrent = null;
+      shareRegionLayer.clearLayers();
+      setStatus("Drag across a map area rather than clicking one point");
+      return;
+    }
+
+    shareRegionBounds = L.latLngBounds(shareRegionStart, shareRegionCurrent);
+    renderShareRegionSelection();
+    endShareRegionPicking();
+    suppressNextClickUntil = Date.now() + 220;
+    const matchingCount = getShareableFeatures().filter(featureIntersectsShareRegion).length;
+    setStatus(`${matchingCount} shareable ${matchingCount === 1 ? "entry" : "entries"} found in that map area`);
+    openShareDialog();
+  }
+
+  function cancelShareRegionSelection() {
+    clearShareRegionSelection();
+    setStatus("Map area selection cancelled");
+    openShareDialog();
+  }
+
+  function clearShareRegionFilter() {
+    shareRegionBounds = null;
+    shareRegionLayer.clearLayers();
+    renderShareDialogEntries();
+    const shareableCount = getShareableFeatures().length;
+    setStatus(`Showing all ${shareableCount} shareable ${shareableCount === 1 ? "entry" : "entries"}`);
+  }
+
+  function clearShareRegionSelection() {
+    const wasPicking = shareRegionPicking;
+    shareRegionBounds = null;
+    shareRegionStart = null;
+    shareRegionCurrent = null;
+    shareRegionLayer.clearLayers();
+    if (wasPicking) {
+      endShareRegionPicking();
+    }
+  }
+
+  function endShareRegionPicking() {
+    shareRegionPicking = false;
+    map.getContainer().classList.remove("is-selecting-share-area");
+    if (shareRegionRestoreDragging && !map.dragging.enabled()) {
+      map.dragging.enable();
+    }
+    shareRegionRestoreDragging = false;
   }
 
   async function copySelectedShareCode() {
@@ -7267,6 +7951,98 @@
       .join(" ");
   }
 
+  function featureIntersectsShareRegion(feature) {
+    if (!shareRegionBounds || !Array.isArray(feature?.points) || !feature.points.length) {
+      return !shareRegionBounds;
+    }
+    const points = feature.points
+      .map(transformPointForMapView)
+      .filter((point) => point && Number.isFinite(point.x) && Number.isFinite(point.y));
+    if (!points.length) {
+      return false;
+    }
+    if (points.some((point) => pointInsideShareBounds(point, shareRegionBounds))) {
+      return true;
+    }
+
+    const segmentCount = feature.type === "range" ? points.length : Math.max(0, points.length - 1);
+    for (let index = 0; index < segmentCount; index += 1) {
+      const nextIndex = (index + 1) % points.length;
+      if (segmentIntersectsShareBounds(points[index], points[nextIndex], shareRegionBounds)) {
+        return true;
+      }
+    }
+
+    if (feature.type !== "range" || points.length < 3) {
+      return false;
+    }
+    return shareBoundsCorners(shareRegionBounds).some((corner) => pointInsidePolygon(corner, points));
+  }
+
+  function pointInsideShareBounds(point, regionBounds) {
+    return point.x >= regionBounds.getWest()
+      && point.x <= regionBounds.getEast()
+      && point.y >= regionBounds.getSouth()
+      && point.y <= regionBounds.getNorth();
+  }
+
+  function segmentIntersectsShareBounds(start, end, regionBounds) {
+    let lower = 0;
+    let upper = 1;
+    const deltaX = end.x - start.x;
+    const deltaY = end.y - start.y;
+    const p = [-deltaX, deltaX, -deltaY, deltaY];
+    const q = [
+      start.x - regionBounds.getWest(),
+      regionBounds.getEast() - start.x,
+      start.y - regionBounds.getSouth(),
+      regionBounds.getNorth() - start.y,
+    ];
+
+    for (let index = 0; index < p.length; index += 1) {
+      if (p[index] === 0) {
+        if (q[index] < 0) {
+          return false;
+        }
+        continue;
+      }
+      const ratio = q[index] / p[index];
+      if (p[index] < 0) {
+        lower = Math.max(lower, ratio);
+      } else {
+        upper = Math.min(upper, ratio);
+      }
+      if (lower > upper) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  function shareBoundsCorners(regionBounds) {
+    return [
+      { x: regionBounds.getWest(), y: regionBounds.getSouth() },
+      { x: regionBounds.getWest(), y: regionBounds.getNorth() },
+      { x: regionBounds.getEast(), y: regionBounds.getSouth() },
+      { x: regionBounds.getEast(), y: regionBounds.getNorth() },
+    ];
+  }
+
+  function pointInsidePolygon(point, polygon) {
+    let inside = false;
+    for (let current = 0, previous = polygon.length - 1; current < polygon.length; previous = current, current += 1) {
+      const currentPoint = polygon[current];
+      const previousPoint = polygon[previous];
+      const crosses = (currentPoint.y > point.y) !== (previousPoint.y > point.y)
+        && point.x < ((previousPoint.x - currentPoint.x) * (point.y - currentPoint.y))
+          / (previousPoint.y - currentPoint.y) + currentPoint.x;
+      if (crosses) {
+        inside = !inside;
+      }
+    }
+    return inside;
+  }
+
   function getShareableFeatures() {
     return state.features.filter(
       (feature) => (
@@ -7295,7 +8071,10 @@
   function updateShareDialogState() {
     const selectedCount = elements.shareEntryList.querySelectorAll(".share-entry-checkbox:checked").length;
     const totalCount = elements.shareEntryList.querySelectorAll(".share-entry-checkbox").length;
-    elements.shareSummary.textContent = `${selectedCount} of ${totalCount} ${totalCount === 1 ? "entry" : "entries"} selected. Official Cities, Towns, and Trailmarks are maintained automatically and are not included.`;
+    const scope = shareRegionBounds ? " in the selected map area" : "";
+    elements.shareSummary.textContent = totalCount
+      ? `${selectedCount} of ${totalCount} ${totalCount === 1 ? "entry" : "entries"}${scope} selected. Official Cities, Towns, and Trailmarks are maintained automatically and are not included.`
+      : "Nothing needs to be shared from this Atlas yet.";
     elements.shareCopyBtn.disabled = selectedCount === 0;
     elements.shareReportBtn.disabled = selectedCount === 0;
   }
@@ -7308,6 +8087,8 @@
     elements.shareReportBtn.disabled = busy || !elements.shareEntryList.querySelector(".share-entry-checkbox:checked");
     elements.shareCancelBtn.disabled = busy;
     elements.shareKeepBtn.disabled = busy;
+    elements.shareAreaBtn.disabled = busy;
+    elements.shareClearAreaBtn.disabled = busy;
     elements.shareSelectAllBtn.disabled = busy;
     elements.shareSelectNoneBtn.disabled = busy;
   }

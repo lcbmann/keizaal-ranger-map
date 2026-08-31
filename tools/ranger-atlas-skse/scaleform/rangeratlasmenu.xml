@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<movie width="1920" height="1080" framerate="30">
+  <background color="#000000"/>
+  <frame>
+    <library>
+      <clip id="AtlasMapTile00" import="build/field-map-0-0.png"/>
+      <clip id="AtlasMapTile01" import="build/field-map-0-1.png"/>
+      <clip id="AtlasMapTile10" import="build/field-map-1-0.png"/>
+      <clip id="AtlasMapTile11" import="build/field-map-1-1.png"/>
+      <clip id="AtlasMapTile20" import="build/field-map-2-0.png"/>
+      <clip id="AtlasMapTile21" import="build/field-map-2-1.png"/>
+    </library>
+  </frame>
+</movie>

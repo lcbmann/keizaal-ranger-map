@@ -1,4 +1,6 @@
 build/
 vcpkg_installed/
 package/
+scaleform/build/
+scaleform/*.swf
 *.zip

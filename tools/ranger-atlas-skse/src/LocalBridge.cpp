@@ -2,11 +2,25 @@
 
 #include "LocalBridge.h"
 
+#include <nlohmann/json.hpp>
+
 namespace RangerAtlas::LocalBridge
 {
     namespace
     {
+        using json = nlohmann::json;
+
         constexpr std::uint16_t kBridgePort = 38471;
+        constexpr auto kFieldStateLease = std::chrono::seconds(8);
+
+        struct FieldStateOwner
+        {
+            std::string id;
+            std::string origin;
+            std::uint64_t started_at_unix_ms = 0;
+            int priority = 0;
+            std::chrono::steady_clock::time_point last_seen{};
+        };
 
         std::mutex g_snapshot_mutex;
         std::string g_snapshot;
@@ -14,6 +28,7 @@ namespace RangerAtlas::LocalBridge
         std::string g_native_marker_snapshot = R"({"version":1,"markers":[]})";
         std::mutex g_field_state_mutex;
         std::string g_field_state = R"({"ready":false})";
+        FieldStateOwner g_field_state_owner;
         std::mutex g_events_mutex;
         std::deque<std::string> g_events;
         std::uint64_t g_next_event_id = 0;
@@ -94,8 +109,69 @@ namespace RangerAtlas::LocalBridge
             return request;
         }
 
-        std::string get_events()
+        int field_state_origin_priority(std::string_view origin)
         {
+            if (origin == "http://localhost" || origin.starts_with("http://localhost:") ||
+                origin == "http://127.0.0.1" || origin.starts_with("http://127.0.0.1:")) {
+                return 20;
+            }
+            if (origin == "https://lcbmann.github.io") {
+                return 10;
+            }
+            return 0;
+        }
+
+        std::string query_parameter(std::string_view request, std::string_view name)
+        {
+            const auto target_start = request.find(' ');
+            if (target_start == std::string_view::npos) {
+                return {};
+            }
+            const auto target_end = request.find(' ', target_start + 1);
+            if (target_end == std::string_view::npos) {
+                return {};
+            }
+            const auto target = request.substr(target_start + 1, target_end - target_start - 1);
+            const auto query_start = target.find('?');
+            if (query_start == std::string_view::npos) {
+                return {};
+            }
+            const auto query = target.substr(query_start + 1);
+            const auto key = std::string(name) + '=';
+            std::size_t cursor = 0;
+            while (cursor < query.size()) {
+                const auto end = query.find('&', cursor);
+                const auto part = query.substr(cursor, end == std::string_view::npos ? query.size() - cursor : end - cursor);
+                if (part.starts_with(key)) {
+                    return std::string(part.substr(key.size(), 160));
+                }
+                if (end == std::string_view::npos) {
+                    break;
+                }
+                cursor = end + 1;
+            }
+            return {};
+        }
+
+        bool is_field_state_owner(std::string_view origin, std::string_view client_id)
+        {
+            std::scoped_lock lock(g_field_state_mutex);
+            if (g_field_state_owner.id.empty() ||
+                std::chrono::steady_clock::now() - g_field_state_owner.last_seen > kFieldStateLease ||
+                origin != g_field_state_owner.origin) {
+                return false;
+            }
+            if (!client_id.empty()) {
+                return client_id == g_field_state_owner.id;
+            }
+            return g_field_state_owner.id == std::string(origin) + "#legacy";
+        }
+
+        std::string get_events(std::string_view origin, std::string_view client_id)
+        {
+            if (!is_field_state_owner(origin, client_id)) {
+                return R"({"events":[],"bridge_owner":false})";
+            }
             std::scoped_lock lock(g_events_mutex);
             std::ostringstream body;
             body << R"({"events":[)";
@@ -105,7 +181,7 @@ namespace RangerAtlas::LocalBridge
                 }
                 body << g_events[index];
             }
-            body << "]}";
+            body << R"(],"bridge_owner":true})";
             return body.str();
         }
 
@@ -206,8 +282,12 @@ namespace RangerAtlas::LocalBridge
                 return;
             }
 
-            if (request_view.starts_with("GET /events ")) {
-                send_response(client, "200 OK", get_events(), origin);
+            if (request_view.starts_with("GET /events ") || request_view.starts_with("GET /events?")) {
+                send_response(
+                    client,
+                    "200 OK",
+                    get_events(origin, query_parameter(request_view, "client_id")),
+                    origin);
                 return;
             }
 
@@ -244,8 +324,12 @@ namespace RangerAtlas::LocalBridge
                     send_response(client, "400 Bad Request", R"({"error":"invalid_field_state"})", origin);
                     return;
                 }
-                UpdateFieldState(std::string(body));
-                send_response(client, "200 OK", R"({"ok":true})", origin);
+                const auto accepted = UpdateFieldState(std::string(body), origin);
+                send_response(
+                    client,
+                    "200 OK",
+                    accepted ? R"({"ok":true,"accepted":true})" : R"({"ok":true,"accepted":false})",
+                    origin);
                 return;
             }
 
@@ -356,10 +440,60 @@ namespace RangerAtlas::LocalBridge
         return get_native_marker_snapshot();
     }
 
-    void UpdateFieldState(std::string snapshot)
+    bool UpdateFieldState(std::string snapshot, std::string_view origin)
     {
+        const auto value = json::parse(snapshot, nullptr, false);
+        if (value.is_discarded() || !value.is_object()) {
+            return false;
+        }
+
+        std::string client_id;
+        std::uint64_t started_at_unix_ms = 0;
+        const auto bridge_client = value.find("bridge_client");
+        if (bridge_client != value.end() && bridge_client->is_object()) {
+            const auto id = bridge_client->find("id");
+            if (id != bridge_client->end() && id->is_string()) {
+                client_id = id->get<std::string>().substr(0, 160);
+            }
+            const auto started_at = bridge_client->find("started_at_unix_ms");
+            if (started_at != bridge_client->end() && started_at->is_number_unsigned()) {
+                started_at_unix_ms = started_at->get<std::uint64_t>();
+            } else if (started_at != bridge_client->end() && started_at->is_number_integer()) {
+                started_at_unix_ms = static_cast<std::uint64_t>((std::max)(started_at->get<std::int64_t>(), std::int64_t{ 0 }));
+            }
+        }
+        if (client_id.empty()) {
+            client_id = std::string(origin) + "#legacy";
+        }
+
+        const auto now = std::chrono::steady_clock::now();
+        const auto incoming_priority = field_state_origin_priority(origin);
         std::scoped_lock lock(g_field_state_mutex);
+        const auto owner_expired = g_field_state_owner.id.empty() ||
+            now - g_field_state_owner.last_seen > kFieldStateLease;
+        const auto same_owner = client_id == g_field_state_owner.id && origin == g_field_state_owner.origin;
+        const auto higher_priority = incoming_priority > g_field_state_owner.priority;
+        const auto newer_peer = incoming_priority == g_field_state_owner.priority &&
+            started_at_unix_ms > g_field_state_owner.started_at_unix_ms;
+        if (!owner_expired && !same_owner && !higher_priority && !newer_peer) {
+            return false;
+        }
+
+        const auto owner_changed = !same_owner;
         g_field_state = std::move(snapshot);
+        g_field_state_owner = {
+            .id = std::move(client_id),
+            .origin = std::string(origin),
+            .started_at_unix_ms = started_at_unix_ms,
+            .priority = incoming_priority,
+            .last_seen = now,
+        };
+        if (owner_changed) {
+            std::scoped_lock events_lock(g_events_mutex);
+            g_events.clear();
+            spdlog::info("Atlas bridge field-state owner changed to {} from {}.", g_field_state_owner.id, g_field_state_owner.origin);
+        }
+        return true;
     }
 
     std::string GetFieldState()

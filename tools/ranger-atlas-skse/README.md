@@ -1,154 +1,111 @@
 # Ranger Atlas SKSE Integration
 
-This project is being introduced in compatibility-gated stages.
+Ranger Atlas `0.18.6` is a native CommonLibSSE-NG/SKSE plugin with no ESP,
+ESM, ESL, Papyrus, or Skyrim Platform component. Its MapMenu surface is a
+custom Scaleform menu. Its compact nonblocking Travel View uses SKSE Menu
+Framework.
 
-## Field Console
+## Map Companion
 
-`0.12.0` adds an optional native **Field Console**. It is a real in-game C++
-window, not a Skyrim Platform script and not a temporary Skyrim map marker.
-Press `F7` after entering the outdoor Skyrim world to open it.
+Opening Skyrim's normal map with `M` places a full-screen illustrated Ranger
+Atlas surface over it. The implementation follows Skyrim's normal custom-menu
+pattern: a registered `IMenu`, a packaged SWF, and structured state supplied
+from C++. It does not depend on Map Menu Extension or copy its hooks. Skyrim's
+3D MapMenu is hidden while the Atlas is active so it cannot receive movement,
+cursor, or hover input. Pressing `Tab` switches to Skyrim's native map.
 
-The Menu Framework window is created only after that first `F7`
-press. Ranger Atlas performs no menu registration, texture loading, or UI
-rendering during Keizaal character selection and outdoor terrain startup.
+The companion renders:
 
-The console requires [SKSE Menu Framework](https://www.nexusmods.com/skyrimspecialedition/mods/120352)
-to be installed alongside Ranger Atlas. It is an SKSE DLL dependency, not an
-ESP/ESM/ESL. If it is absent, Ranger Atlas simply shows a notification and does
-not open the console; the rest of the local bridge remains unchanged.
-Install the dependencies listed on Menu Framework's Nexus requirements page
-first. At the time of this release those include SKSE, Address Library, and SSE
-Engine Fixes with its separate Preloader/root-game files. Alt-Tab Stuck Key Fix
-NG is recommended by Menu Framework but is not required by Ranger Atlas.
+- the calibrated illustrated Skyrim map and smoothed player heading;
+- all official Trailmarks, with an emphasized Headquarters marker;
+- authoritative Cities and Towns;
+- visible personal and Guild marks;
+- visible routes, bounded and sampled for stable rendering cost;
+- exact nearest-Trailmark distance, direction, and range state;
+- Trailmark directions, recent visitors, check-in, and Wayfinder field drops;
+- a field clipboard that can save notes or create a personal landmark;
+- linked Ranger identity, rank and medals;
+- separate in-Skyrim and Discord-online counts;
+- Skyrim's current in-game date and time.
 
-Keep the Atlas page open in a browser with **Live position** enabled. The page
-remains the local Atlas store and Discord/Supabase session; the in-game console
-uses the loopback bridge to drive it. This deliberately avoids putting a
-Discord device token or Supabase credential into the DLL.
+Clicking a mark selects the same entry in the browser Atlas. The native detail
+pane follows browser selection in return. Nearby Trailmark actions and field
+notes are available directly from the right panel and footer. Mouse wheel
+zooms, dragging pans, `Home` resets the view, `R` refreshes the browser
+snapshot, `Tab` or **Normal Map** switches to Skyrim's map, and `M` or `Escape`
+closes the active map surface. **Travel View** opens the compact nonblocking
+map. The footer's opening-mode control switches between:
 
-From the Field Console a Ranger can:
+- **M: Atlas | F7: Travel** (default); and
+- **M: Normal | F7: Atlas**.
 
-- see a bordered Skyrim atlas with a smoothly interpolated, heading-aware live player pointer, distinct Trailmark flags, exact range rings, and a gold route to the nearest Trailmark;
-- read distance in metres and compass direction, with the nearest three Trailmarks listed when travelling outside the 20-metre Trailmark radius;
-- see the closest official Trailmark, radius state, its notes, and recent visits;
-- record or refresh a nearby Trailmark visit;
-- write and send a field drop without tabbing out;
-- create and categorize a named field mark at the current outdoor position.
+The choice is saved per player in
+`Documents/My Games/Skyrim Special Edition/SKSE/RangerAtlas.ini` and survives
+mod upgrades.
 
-Opening with `F7` starts in interactive mode, which captures the cursor for the
-Field and Mark tabs without pausing the multiplayer world. **Travel view**
-releases Skyrim's controls and can use a Compact, Standard, or Large live map.
-`F7` closes either view; opening it again returns to the interactive console.
+If the SWF is missing, opening `M` falls back to the existing Menu Framework
+Map Companion. No map object is created, moved, or replicated, so either path
+remains local to the client and cannot produce shared SkyMP references.
 
-The resulting mark is saved directly into the local Atlas copy. Rangers can
-edit it later in **Edit Atlas**. Trails, ranges, sharing, and Guild publishing
-remain browser-only administrative work for this release.
+## Travel View and fallback console
 
-## Stage 1: local position reader
+In the default opening mode, press `F7` outdoors for the compact Travel View.
+It keeps Skyrim running and shows the live illustrated map, Ranger identity and
+presence, and nearest-Trailmark navigation in Pocket, Compact, Standard, or
+Large sizes. The same view is available from the full Atlas footer.
 
-The `0.12.0` build initializes as an SKSE DLL and waits for SKSE's
-post-load/new-game signal. It then reads the local player's position on
-Skyrim's main thread four times per second. A separate scheduler only queues
-one capture at a time; it never reads Skyrim state itself. Diagnostic logging
-and the readable position file remain throttled to once every five seconds.
-The plugin writes:
+The former full F7 console remains compiled only as a recovery path if the
+Scaleform Atlas asset is missing. Check-in, visitor logs, field drops, selected
+entry details, and Field Notes now live in the M Atlas instead of requiring a
+second interface.
 
-- a readable entry to `RangerAtlas.log`;
-- the latest coordinates and form IDs to `RangerAtlasPosition.json`.
+Trailmark is intentionally absent from the native category picker. Official
+Trailmarks, Cities, and Towns remain authoritative Marshal-controlled data.
 
-After the character enters the world, it also serves the same snapshot from
-`http://127.0.0.1:38471/position`. The bridge also accepts a complete official
-Trailmark snapshot at `POST /markers` and makes it available to the native
-Field Console. The bridge binds only to the local loopback
-interface and makes no outbound requests.
+## Runtime model
 
-It performs no position work during Keizaal login or character selection. It
-still has no ESP, ESM, or ESL and no outbound networking.
+The plugin waits for SKSE's post-load/new-game signal and then for an outdoor
+Tamriel world before registering controls, Menu Framework windows, or the
+MapMenu listener. It does no map or position work at title screens, character
+selection, or during a save transition.
 
-## Field Console control
+Player state is read on Skyrim's main thread four times per second. A worker
+serializes the already-captured values and updates the loopback bridge. Only a
+single main-thread capture can be pending. Human-readable position logging and
+the disk snapshot are throttled to once every 30 seconds.
 
-The `0.12.0` build uses one in-game shortcut after the character has entered
-the outdoor world:
+The bridge binds only to `127.0.0.1:38471` and exposes:
 
-- `F7` opens or closes the native Field Console when SKSE Menu Framework is
-  installed. Its Travel view can remain visible while moving.
+- `GET /position` for the latest local player sample;
+- `POST /field-state` and `GET /field-state` for the browser/native view model;
+- `GET /events` for a bounded queue of native field actions;
+- `POST /markers` and `GET /markers` as a compatibility fallback.
 
-Marks, Trailmark visits, and field drops are handled inside that console. The
-older `F8`, `F11`, and `Insert` shortcuts are no longer registered.
+The DLL makes no outbound request and stores no Discord or Supabase token. The
+browser Atlas remains the authenticated data owner and processes native field
+actions.
 
-The release package includes the compact map image used by the Field Console.
-The browser still remains the Atlas source of truth for sharing, Discord links,
-and remote data.
+## Performance boundaries
 
-The local bridge now exposes `GET /events` on loopback. It contains a bounded
-queue of recent field actions and never sends data outside the local computer.
-The website consumes each action once per browser using a local event cursor.
-Atlas shortcut events are consumed by the plugin after they are queued, without
-rewriting Skyrim's input event data, so they do not fall through to other menu
-or gameplay handlers.
-The native controls are intentionally limited to the outdoor Skyrim world;
-interiors are rejected because they do not have a stable position on the
-province map.
+The browser sends a compact native snapshot only when state changes. The
+native view caches parsed state and refreshes at most four times per second.
+Map payloads are capped at 80 ordinary marks and 16 visible routes, with each
+route sampled to at most 160 points. Texture loading is lazy and badge textures
+are cached.
 
-The plugin also waits for an outdoor Tamriel world instead of assuming that a
-normal save-load signal means the player is ready. This matters for SkyMP
-character selection and other server-managed transitions.
+## Compatibility
 
-## Optional native Skyrim map markers
+The `0.18.6` local test is built for the established Keizaal Skyrim
+`1.6.1170` environment and the older Address Library runtimes supported by the
+current universal CommonLibSSE-NG package. Bethesda's `1.7.x` executable line
+requires a separate dependency and licensing migration; it is not claimed by
+this binary until that build has been compiled and tested independently.
 
-The normal `0.8.0` release does not install a Skyrim Platform JavaScript plugin.
-The companion `ranger-atlas-skyrim-platform.js` plugin is experimental and performs the
-`placeAtMe`/`addToMap` operation from Skyrim Platform, one marker per update,
-only after outdoor Tamriel is confirmed. The C++ DLL never constructs
-`ExtraMapMarker` data. The Platform plugin waits for Skyrim's completed-load
-signal and for `MapMenu` to be open before it creates a marker. It creates one
-temporary marker at a time; closing the map disables those temporary markers.
-This separation is intentional for SkyMP's server-managed load transitions, but the
-JavaScript add-on is not part of the supported release because it can interfere with
-Keizaal login on some installations.
+Required runtime components:
 
-The DLL itself is dormant during the title screen and Keizaal login. Its
-position worker starts only after SKSE reports a post-load or new-game signal.
-The Platform plugin is completely dormant during title/login. It does not
-register a gameplay update path, call the local bridge, or run a startup hook.
-It registers the temporary gameplay update handler only after the native
-`MapMenu` opens, and unsubscribes it when the map closes. At that point the
-player is already in the world, so it can inspect Skyrim state and synchronize
-the temporary Trailmark markers safely.
-The Platform plugin also creates its loopback HTTP client lazily, after the
-completed-load/map-open path begins.
-
-The `0.8.0` build writes native lifecycle messages to `RangerAtlas.log`.
-
-Install the supported release from the archive:
-
-```text
-SKSE/Plugins/RangerAtlas.dll
-```
-
-If an older integration was installed, remove this file before launching:
-
-```text
-Data/Platform/Plugins/ranger-atlas-skyrim-platform.js
-```
-
-Keep the browser Atlas open with **Live position** enabled. The browser Atlas,
-position sharing, field actions, trailmark visits, and field drops work without
-Skyrim Platform. Only temporary native Skyrim map markers require the experimental
-JavaScript add-on.
-
-## Optional Trailmark visits
-
-The website can use the local position snapshot to detect arrival at an
-official Guild Trailmark. Visit recording is off by default and requires a
-name under **Signed As**. When enabled, the website sends only the Trailmark
-location ID, entered Ranger name, and visit time to Supabase. Exact
-coordinates and movement history remain on the player's computer.
-
-Discord linking is also optional. Wayfinder creates a one-time code, the
-website exchanges it for a browser-specific device token, and a Trailmark
-arrival can then request temporary access to the matching private Discord
-channel. The DLL itself still makes no outbound requests.
+- SKSE matching the installed Skyrim executable;
+- Address Library for SKSE Plugins;
+- SKSE Menu Framework and its listed requirements.
 
 ## Package layout
 
@@ -159,17 +116,32 @@ SKSE/
     RangerAtlas/
       field-map.jpg
       badges/
+Interface/
+  rangeratlasmenu.swf
 ```
 
-The Field Console includes a local working Clipboard. It autosaves through the
-browser Atlas on the same PC and can create a mark at the current Skyrim
-position or send a report after reaching an official Trailmark. Linked Discord
-rank and medal artwork is shown together as a compact ribbon from the packaged
-badge files.
-The identity area also shows the aggregate number of other Rangers whose live
-position has updated within the active presence window. Names and positions are
-not exposed by this count.
+The package includes a 4:3 optimized copy of the official illustrated map and
+all current Ranger rank and medal artwork. Illustrated Skyrim map artwork is by
+[@islor](https://www.instagram.com/islor/).
 
-The experimental Platform add-on is kept in the repository under
-`tools/ranger-atlas-platform`, but is deliberately excluded from the supported
-release archive.
+The unsupported historical Skyrim Platform marker experiment remains excluded
+from the release. If it was ever installed manually, remove:
+
+```text
+Data/Platform/Plugins/ranger-atlas-skyrim-platform.js
+Data/Platform/Plugins/ranger-atlas-native-marker-test.js
+```
+
+## Building the Scaleform surface
+
+The SWF is generated from the ActionScript 2 source in `scaleform/` with the
+open-source MTASC and swfmill toolchain. Set `MTASC_EXE`, `MTASC_CLASSPATH`,
+and `SWFMILL_EXE`, ensure `ffmpeg` is available, then run:
+
+```powershell
+.\scaleform\build-scaleform.ps1
+.\scaleform\build-scaleform.ps1 -Preview
+```
+
+The second command builds a populated Ruffle QA fixture; only
+`rangeratlasmenu.swf` belongs in the Skyrim package.

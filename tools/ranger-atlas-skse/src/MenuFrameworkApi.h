@@ -65,10 +65,10 @@ namespace RangerAtlas::MenuFramework
         return register_event && register_event(callback) >= 0;
     }
 
-    inline bool begin(const char* name, bool* open)
+    inline bool begin(const char* name, bool* open, int flags = 0)
     {
         const auto begin_window = function<bool (*)(const char*, bool*, int)>("igBegin");
-        return begin_window && begin_window(name, open, 0);
+        return begin_window && begin_window(name, open, flags);
     }
 
     inline void end()
@@ -89,6 +89,26 @@ namespace RangerAtlas::MenuFramework
     {
         if (const auto set_size = function<void (*)(Vec2, int)>("igSetNextWindowSize")) {
             set_size(size, 0);
+        }
+    }
+
+    inline void set_next_window_bg_alpha(float alpha)
+    {
+        if (const auto set_alpha = function<void (*)(float)>("igSetNextWindowBgAlpha")) {
+            set_alpha(alpha);
+        }
+    }
+
+    inline bool begin_child(const char* id, Vec2 size, bool border = false)
+    {
+        const auto begin = function<bool (*)(const char*, Vec2, int, int)>("igBeginChild_Str");
+        return begin && begin(id, size, border ? 1 : 0, 0);
+    }
+
+    inline void end_child()
+    {
+        if (const auto end = function<void (*)()>("igEndChild")) {
+            end();
         }
     }
 
@@ -275,6 +295,18 @@ namespace RangerAtlas::MenuFramework
     {
         if (const auto draw = function<void (*)(DrawList*, Vec2, Vec2, std::uint32_t, float, int, float)>("ImDrawList_AddRect")) {
             draw(draw_list, minimum, maximum, color, 0.0F, 0, thickness);
+        }
+    }
+
+    inline void draw_rect_filled(
+        DrawList* draw_list,
+        Vec2 minimum,
+        Vec2 maximum,
+        std::uint32_t color,
+        float rounding = 0.0F)
+    {
+        if (const auto draw = function<void (*)(DrawList*, Vec2, Vec2, std::uint32_t, float, int)>("ImDrawList_AddRectFilled")) {
+            draw(draw_list, minimum, maximum, color, rounding, 0);
         }
     }
 

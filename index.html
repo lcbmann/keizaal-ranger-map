@@ -11,7 +11,7 @@
       integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
       crossorigin=""
     />
-    <link rel="stylesheet" href="styles.css?v=20260828-headquarters-marker" />
+    <link rel="stylesheet" href="styles.css?v=20260831-clock-input-fix" />
   </head>
   <body>
     <div class="app-shell">
@@ -32,6 +32,7 @@
               </button>
             </div>
             <p>Keizaal Online</p>
+            <small id="skyrimTimeStatus" class="skyrim-time-status brand-skyrim-time" aria-live="polite" hidden></small>
           </div>
         </div>
         <div class="workspace-switch" role="group" aria-label="Atlas workspace">
@@ -64,7 +65,7 @@
             </button>
           </div>
           <div class="utility-actions">
-            <button id="clipboardBtn" class="settings-button" type="button" title="Open field clipboard" aria-label="Open field clipboard">
+            <button id="clipboardBtn" class="settings-button" type="button" title="Open Field Notes" aria-label="Open Field Notes">
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M9 5h6M9 3h6v4H9z" />
                 <path d="M7 5H5v16h14V5h-2M8 11h8M8 15h8" />
@@ -505,9 +506,9 @@
 
     <dialog id="clipboardDialog" class="field-note workflow-dialog clipboard-dialog">
       <div class="field-note-inner">
-        <button id="clipboardCloseBtn" class="field-note-close" type="button" aria-label="Close field clipboard">&times;</button>
-        <p class="field-note-kicker">Field Clipboard</p>
-        <h2>Working Notes</h2>
+        <button id="clipboardCloseBtn" class="field-note-close" type="button" aria-label="Close Field Notes">&times;</button>
+        <p class="field-note-kicker">Ranger Atlas</p>
+        <h2>Field Notes</h2>
         <p class="dialog-help">Pages save automatically in this browser. The open page is also synchronized with the linked in-game Field Console.</p>
         <div class="clipboard-workspace">
           <aside class="clipboard-pages" aria-label="Clipboard pages">
@@ -636,6 +637,8 @@
         <h2>Choose Entries to Share</h2>
         <p id="shareSummary">Select the marks, trails, and ranges to include. Official Cities, Towns, and Trailmarks are maintained automatically and are never included.</p>
         <div class="share-select-actions">
+          <button id="shareAreaBtn" class="button primary" type="button">Select Map Area</button>
+          <button id="shareClearAreaBtn" class="button secondary" type="button" hidden>Clear Area</button>
           <button id="shareSelectAllBtn" class="button secondary" type="button">Select All</button>
           <button id="shareSelectNoneBtn" class="button secondary" type="button">Select None</button>
         </div>
@@ -862,6 +865,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
     <script src="deployment-config.js"></script>
     <script src="supabase-config.js"></script>
-    <script src="app.js?v=20260828-headquarters-marker"></script>
+    <script src="app.js?v=20260831-clock-input-fix"></script>
   </body>
 </html>

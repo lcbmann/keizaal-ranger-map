@@ -1,41 +1,83 @@
-Ranger Atlas Field Console 0.14.3
+Ranger Atlas Native Map 0.18.6 - Local Test
 
-1. Download the RangerAtlas ZIP. In Vortex, use "Install From File", select
-   the ZIP, then enable and deploy the Ranger Atlas mod.
+Compatibility
 
-2. Install and enable SKSE Menu Framework with Vortex:
+This test build targets the established Keizaal Skyrim 1.6.1170 setup and the
+older Address Library runtimes supported by its CommonLibSSE-NG build. Do not
+update Skyrim to 1.7.x for this test. That runtime requires a separately built
+and validated dependency line.
+
+Installation
+
+1. In Vortex, use "Install From File", select the RangerAtlas 0.18.6 ZIP,
+   replace the older Ranger Atlas version, then enable and deploy it.
+
+2. Install and enable SKSE Menu Framework:
    https://www.nexusmods.com/skyrimspecialedition/mods/120352
 
-   Follow its Nexus requirements page first. It currently requires the SKSE
-   version for your Skyrim executable, Address Library for SKSE Plugins, and
-   SSE Engine Fixes (including its separate Preloader/root-game files).
-   Alt-Tab Stuck Key Fix NG is recommended there, but is not required by
-   Ranger Atlas. Keizaal may already provide some of these components.
+   Follow that mod's requirements for your installed Skyrim executable. These
+   normally include SKSE, Address Library for SKSE Plugins, and SSE Engine
+   Fixes. Ranger Atlas adds no ESP, ESM, or ESL.
 
-3. Launch Skyrim normally through Keizaal. Ranger Atlas adds no ESP, ESM, or
-   ESL, so no new entry should appear in Vortex's Plugins tab.
+3. Keep the Ranger Atlas website open. Sign in with Discord and enable Live
+   position. The browser remains the authenticated source of Atlas data; the
+   DLL communicates with it only through 127.0.0.1.
 
-4. Keep the Ranger Atlas page open in a browser. Enter your name, link Discord
-   once if you use Trailmark field drops, and enable Live position.
+4. Enter outdoor Tamriel before testing. Ranger Atlas remains dormant during
+   title screens, Keizaal character selection, and save loading.
 
-5. Enter the outdoor Skyrim world, then press F7 to open the interactive Field
-   Console. It captures the cursor so its tabs, buttons, and text fields work,
-   while the multiplayer world continues running around you.
+Controls
 
-6. Choose a Travel View size, then select "Begin Travel View" to release
-   Skyrim's controls and leave the live map on screen while moving. Green
-   flags show official Trailmarks, the gold route points to the nearest one,
-   and its distance and compass direction remain visible. Press F7 to close
-   it. Press F7 again whenever you need the interactive console.
+- The default is M: Atlas | F7: Travel. Press M to open the full-screen
+  illustrated Ranger Atlas over Skyrim's map.
+  It shows your projected position and heading, official Trailmarks and
+  settlements, Headquarters, visible routes and field marks, nearest-Trailmark
+  navigation and directions, Ranger presence and honors, and the current
+  Skyrim date and time. When in range, use the right panel to check in, refresh
+  recent visitors, or leave a Wayfinder field drop. Use Field Notes in the
+  footer to edit the browser-synced clipboard or create a personal landmark.
+  Travel View in the footer opens the compact nonblocking map.
 
-The package includes the compact Atlas map used by the Field Console. Keep the
-Data\\SKSE\\Plugins\\RangerAtlas\\field-map.jpg file installed alongside the DLL.
-It also includes Data\\SKSE\\Plugins\\RangerAtlas\\badges for linked Ranger rank
-and medal artwork. Keep that folder installed alongside the map.
+- Mouse wheel / drag: zoom and pan the illustrated map. Click a symbol to
+  select the same entry in the browser Atlas. Press Home to reset the view,
+  R to refresh it, or Tab / Normal Map to switch to Skyrim's map.
 
-The Clipboard tab saves working notes through the browser Atlas on this PC.
-Keep the Atlas page open while playing. Clipboard notes are not uploaded until
-you explicitly create a field mark or send them as a Trailmark field drop.
+- Use the opening-mode button in the Atlas footer to switch to
+  M: Normal | F7: Atlas. In that mode M remains Skyrim's ordinary map and F7
+  opens the full Ranger Atlas. The preference is saved automatically in:
 
-The console does not use Skyrim Platform JavaScript. If SKSE Menu Framework is
-missing, Ranger Atlas remains safe and F7 only displays a notification.
+  Documents\My Games\Skyrim Special Edition\SKSE\RangerAtlas.ini
+
+- Press F7 in the default mode, or choose Travel View from the full Atlas, to
+  keep a compact live map visible while Skyrim controls remain active. Pocket,
+  Compact, Standard, and Large sizes are available. Press F7 to close it.
+
+The M surface creates no native map markers or world references. While active,
+it hides Skyrim's MapMenu so native map movement and hover targets cannot run
+behind the illustrated Atlas. It remains free of any ESP/ESM/ESL load-order
+plugin. If its SWF is missing, Ranger Atlas uses the older Menu Framework
+  companion and the former field console as recovery fallbacks.
+
+Packaged assets
+
+Keep these files installed with the DLL:
+
+Data\SKSE\Plugins\RangerAtlas\field-map.jpg
+Data\SKSE\Plugins\RangerAtlas\badges\
+Data\Interface\rangeratlasmenu.swf
+
+The Clipboard autosaves through the local browser Atlas. It can create an
+ordinary categorized field mark at the current outdoor position or send its
+contents as a field drop when an official Trailmark is within range. Official
+Trailmarks, Cities, and Towns remain Marshal-controlled browser data.
+
+Diagnostics
+
+If the game closes or the companion does not appear, include:
+
+Documents\My Games\Skyrim Special Edition\SKSE\RangerAtlas.log
+
+Also report the Skyrim executable version, SKSE version, Menu Framework
+version, whether the failure happened at M or F7, and whether the browser Atlas
+was open. Position serialization is off the game thread and disk diagnostics
+are throttled to once every 30 seconds.
