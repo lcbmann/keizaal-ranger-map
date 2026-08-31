@@ -95,7 +95,7 @@ are cached.
 
 ## Compatibility
 
-The `0.18.6` local test is built for the established Keizaal Skyrim
+The `0.18.6` release is built for the established Keizaal Skyrim
 `1.6.1170` environment and the older Address Library runtimes supported by the
 current universal CommonLibSSE-NG package. Bethesda's `1.7.x` executable line
 requires a separate dependency and licensing migration; it is not claimed by

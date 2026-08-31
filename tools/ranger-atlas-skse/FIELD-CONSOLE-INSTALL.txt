@@ -1,10 +1,10 @@
-Ranger Atlas Native Map 0.18.6 - Local Test
+Ranger Atlas Native Map 0.18.6
 
 Compatibility
 
-This test build targets the established Keizaal Skyrim 1.6.1170 setup and the
+This release targets the established Keizaal Skyrim 1.6.1170 setup and the
 older Address Library runtimes supported by its CommonLibSSE-NG build. Do not
-update Skyrim to 1.7.x for this test. That runtime requires a separately built
+update Skyrim to 1.7.x for this release. That runtime requires a separately built
 and validated dependency line.
 
 Installation
