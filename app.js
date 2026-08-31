@@ -5495,8 +5495,11 @@
       return /^[a-z0-9-]+$/.test(id) && label ? { id, label } : null;
     };
     return {
-      version: 1,
+      version: Number(source.version) >= 2 ? 2 : 1,
       primary_badge: normalizeBadge(source.primary_badge),
+      qualifications: Array.isArray(source.qualifications)
+        ? source.qualifications.map(normalizeBadge).filter(Boolean).slice(0, 16)
+        : [],
       medals: Array.isArray(source.medals)
         ? source.medals.map(normalizeBadge).filter(Boolean).slice(0, 32)
         : [],
@@ -5516,7 +5519,7 @@
 
   function renderRangerProfile() {
     const profile = normalizeDiscordProfile(state.rangerAccess?.profile || state.discordLink?.profile);
-    const badges = [profile.primary_badge, ...profile.medals]
+    const badges = [profile.primary_badge, ...profile.qualifications, ...profile.medals]
       .filter((badge, index, all) => badge && all.findIndex((candidate) => candidate?.id === badge.id) === index);
     elements.rangerProfileCard.hidden = badges.length === 0;
     elements.rangerMedals.replaceChildren(...badges.map((medal) => {
