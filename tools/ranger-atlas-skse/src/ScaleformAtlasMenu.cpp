@@ -491,6 +491,7 @@ namespace RangerAtlas::ScaleformAtlasMenu
                     set_member(atlas_state, "mapKeyOpensAtlas", map_key_opens_atlas);
 
                     auto rank = std::string{};
+                    std::vector<std::string> honor_labels;
                     RE::GFxValue honors;
                     uiMovie->CreateArray(&honors);
                     const auto profile = state.find("ranger_profile");
@@ -499,17 +500,26 @@ namespace RangerAtlas::ScaleformAtlasMenu
                         if (primary_badge != profile->end() && primary_badge->is_object()) {
                             rank = value_string(*primary_badge, "label");
                         }
-                        const auto medals = profile->find("medals");
-                        if (medals != profile->end() && medals->is_array()) {
-                            for (const auto& medal : *medals) {
-                                if (!medal.is_object()) {
+                        const auto append_honors = [&](const char* key) {
+                            const auto badges = profile->find(key);
+                            if (badges == profile->end() || !badges->is_array()) {
+                                return;
+                            }
+                            for (const auto& badge : *badges) {
+                                if (!badge.is_object()) {
                                     continue;
                                 }
-                                const auto label = value_string(medal, "label");
-                                if (!label.empty()) {
-                                    honors.PushBack(RE::GFxValue(label));
+                                const auto label = value_string(badge, "label");
+                                if (!label.empty() &&
+                                    std::find(honor_labels.begin(), honor_labels.end(), label) == honor_labels.end()) {
+                                    honor_labels.push_back(label);
                                 }
                             }
+                        };
+                        append_honors("qualifications");
+                        append_honors("medals");
+                        for (const auto& label : honor_labels) {
+                            honors.PushBack(RE::GFxValue(label));
                         }
                     }
                     set_member(atlas_state, "rank", rank);

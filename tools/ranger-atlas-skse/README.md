@@ -1,6 +1,6 @@
 # Ranger Atlas SKSE Integration
 
-Ranger Atlas `0.18.6` is a native CommonLibSSE-NG/SKSE plugin with no ESP,
+Ranger Atlas `0.18.7` is a native CommonLibSSE-NG/SKSE plugin with no ESP,
 ESM, ESL, Papyrus, or Skyrim Platform component. Its MapMenu surface is a
 custom Scaleform menu. Its compact nonblocking Travel View uses SKSE Menu
 Framework.
@@ -24,7 +24,7 @@ The companion renders:
 - exact nearest-Trailmark distance, direction, and range state;
 - Trailmark directions, recent visitors, check-in, and Wayfinder field drops;
 - a field clipboard that can save notes or create a personal landmark;
-- linked Ranger identity, rank and medals;
+- linked Ranger identity, rank, qualifications, and medals;
 - separate in-Skyrim and Discord-online counts;
 - Skyrim's current in-game date and time.
 
@@ -95,7 +95,7 @@ are cached.
 
 ## Compatibility
 
-The `0.18.6` release is built for the established Keizaal Skyrim
+The `0.18.7` release is built for the established Keizaal Skyrim
 `1.6.1170` environment and the older Address Library runtimes supported by the
 current universal CommonLibSSE-NG package. Bethesda's `1.7.x` executable line
 requires a separate dependency and licensing migration; it is not claimed by
@@ -121,7 +121,7 @@ Interface/
 ```
 
 The package includes a 4:3 optimized copy of the official illustrated map and
-all current Ranger rank and medal artwork. Illustrated Skyrim map artwork is by
+all current Ranger rank, qualification, and medal artwork. Illustrated Skyrim map artwork is by
 [@islor](https://www.instagram.com/islor/).
 
 The unsupported historical Skyrim Platform marker experiment remains excluded

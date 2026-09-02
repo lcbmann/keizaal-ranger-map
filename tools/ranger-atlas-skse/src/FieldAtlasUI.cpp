@@ -460,16 +460,20 @@ namespace RangerAtlas::FieldAtlasUI
                 if (!primary_id.empty()) {
                     g_field_state_cache.badge_ids.push_back(primary_id);
                 }
-                for (const auto& medal : json_object_array(profile, "medals")) {
-                    const auto medal_id = json_string(medal, "id");
-                    if (!medal_id.empty() &&
-                        std::find(
-                            g_field_state_cache.badge_ids.begin(),
-                            g_field_state_cache.badge_ids.end(),
-                            medal_id) == g_field_state_cache.badge_ids.end()) {
-                        g_field_state_cache.badge_ids.push_back(medal_id);
+                const auto append_profile_badges = [&](std::string_view key) {
+                    for (const auto& badge : json_object_array(profile, key)) {
+                        const auto badge_id = json_string(badge, "id");
+                        if (!badge_id.empty() &&
+                            std::find(
+                                g_field_state_cache.badge_ids.begin(),
+                                g_field_state_cache.badge_ids.end(),
+                                badge_id) == g_field_state_cache.badge_ids.end()) {
+                            g_field_state_cache.badge_ids.push_back(badge_id);
+                        }
                     }
-                }
+                };
+                append_profile_badges("qualifications");
+                append_profile_badges("medals");
                 g_field_state_cache.awake_ranger_count =
                     static_cast<int>(json_number(g_field_state_cache.raw, "awake_ranger_count", -1.0));
                 g_field_state_cache.in_skyrim_count =

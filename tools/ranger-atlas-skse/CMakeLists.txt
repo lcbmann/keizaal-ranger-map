@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 
-project(RangerAtlas VERSION 0.18.6 LANGUAGES CXX)
+project(RangerAtlas VERSION 0.18.7 LANGUAGES CXX)
 
 find_package(CommonLibSSE CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)

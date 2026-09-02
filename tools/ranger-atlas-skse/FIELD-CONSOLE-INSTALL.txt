@@ -1,4 +1,4 @@
-Ranger Atlas Native Map 0.18.6
+Ranger Atlas Native Map 0.18.7
 
 Compatibility
 
@@ -9,7 +9,7 @@ and validated dependency line.
 
 Installation
 
-1. In Vortex, use "Install From File", select the RangerAtlas 0.18.6 ZIP,
+1. In Vortex, use "Install From File", select the RangerAtlas 0.18.7 ZIP,
    replace the older Ranger Atlas version, then enable and deploy it.
 
 2. Install and enable SKSE Menu Framework:
