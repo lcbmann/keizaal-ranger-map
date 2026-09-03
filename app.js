@@ -157,6 +157,7 @@
     { id: "landmark", label: "Landmark", color: "#5d5950" },
     // Keep new categories appended so existing compact share codes remain stable.
     { id: "dungeon", label: "Dungeon", color: "#5b4b70" },
+    { id: "research", label: "Research Site", color: "#56698f" },
   ];
 
   const categoryById = Object.fromEntries(categories.map((category) => [category.id, category]));
@@ -178,6 +179,10 @@
     other: "landmark",
     plant: "ingredient",
     resource: "ore",
+    research_site: "research",
+    researchsite: "research",
+    expedition: "research",
+    survey_site: "research",
     settlement: "city",
     station: "station",
     ranger_station: "station",
@@ -10063,6 +10068,7 @@
       landmark: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4 19 20H5z"/><path d="M9 20h6"/></svg>',
       ore: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 17 9 7l7-2 4 6-5 8z"/><path d="M9 7l6 12"/><path d="M16 5l-1 14"/></svg>',
       post: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v16"/><path d="M5 8c2 2 5 2 7 0 2 2 5 2 7 0"/><path d="M7 20h10"/></svg>',
+      research: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="5"/><path d="m14 14 5 5"/><path d="M10 7v6M7 10h6"/></svg>',
       range: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7 12 4l7 4v9l-7 3-7-3z"/><path d="M9 10h6v4H9z"/></svg>',
       route: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 18c5-9 9 1 14-8"/><circle cx="5" cy="18" r="1.5"/><circle cx="19" cy="10" r="1.5"/></svg>',
       station: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20h14"/><path d="M7 20V10l5-4 5 4v10"/><path d="M10 20v-5h4v5"/><path d="M9 11h6"/><path d="M12 6V3"/><path d="M10 3h4"/></svg>',
