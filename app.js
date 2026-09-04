@@ -302,7 +302,7 @@
 
   const map = L.map("map", {
     crs: L.CRS.Simple,
-    minZoom: -4,
+    minZoom: -6,
     maxZoom: 3,
     zoomSnap: 0.25,
     zoomDelta: 0.5,
@@ -621,6 +621,7 @@
     renderFilters();
     renderAll();
     bindEvents();
+    initializeResponsiveWorkspace();
     updateMapDensity();
     syncViewInputsFromState();
     [0, 100, 500, 1500, 3000].forEach((delay) => window.setTimeout(clearRestoredSearchInput, delay));
@@ -5705,6 +5706,38 @@
     elements.undoBtn.disabled = state.undoStack.length === 0;
   }
 
+  function setCompactPane(pane) {
+    const selected = ["map", "tools", "details"].includes(pane) ? pane : "tools";
+    document.documentElement.dataset.compactPane = selected;
+    document.querySelectorAll("button[data-compact-pane]").forEach((button) => {
+      button.setAttribute("aria-pressed", String(button.dataset.compactPane === selected));
+    });
+  }
+
+  function initializeResponsiveWorkspace() {
+    setCompactPane("tools");
+    document.querySelectorAll("button[data-compact-pane]").forEach((button) => {
+      button.addEventListener("click", () => setCompactPane(button.dataset.compactPane));
+    });
+
+    // Leaflet tracks window changes, but the map also changes size when panels
+    // open, the header wraps, or the browser's portrait controls appear.
+    let previousFitZoom = map.getBoundsZoom(bounds);
+    let resizeFrame;
+    const observer = new ResizeObserver(() => {
+      window.cancelAnimationFrame(resizeFrame);
+      resizeFrame = window.requestAnimationFrame(() => {
+        const wasFitted = map.getZoom() <= previousFitZoom + 0.01;
+        map.invalidateSize({ animate: false });
+        previousFitZoom = map.getBoundsZoom(bounds);
+        if (wasFitted) {
+          map.fitBounds(bounds, { animate: false });
+        }
+      });
+    });
+    observer.observe(map.getContainer());
+  }
+
   function setWorkspaceMode(mode) {
     const nextMode = mode === "edit" ? "edit" : "field";
     if (state.workspaceMode === nextMode) {
@@ -5718,6 +5751,7 @@
     }
 
     state.workspaceMode = nextMode;
+    setCompactPane("tools");
     if (nextMode === "field") {
       state.mode = "select";
       map.dragging.enable();
@@ -5744,6 +5778,10 @@
   }
 
   function setPanelView(view, announce = true) {
+    if (view === "details") {
+      setCompactPane("details");
+      document.getElementById("atlasDetails").scrollTop = 0;
+    }
     if (state.workspaceMode === "field") {
       state.panelView = view === "details" && state.selectedId ? "details" : "field";
     } else {
@@ -5788,6 +5826,9 @@
       cancelDrawing(false, false);
     }
     state.mode = mode;
+    if (mode !== "select") {
+      setCompactPane("map");
+    }
     map.dragging[mode === "route" || mode === "range" ? "disable" : "enable"]();
     map.getContainer().classList.toggle("is-drawing", mode === "route" || mode === "range");
 
@@ -6848,6 +6889,7 @@
       return;
     }
     pushUndo(`${feature.title} move`);
+    setCompactPane("map");
     state.movingFeatureId = feature.id;
     state.movingOriginalPoint = { ...feature.points[0] };
     state.movingOriginalIllustratedPosition = feature.illustratedPosition

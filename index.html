@@ -11,7 +11,7 @@
       integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
       crossorigin=""
     />
-    <link rel="stylesheet" href="styles.css?v=20260831-clock-input-fix" />
+    <link rel="stylesheet" href="styles.css?v=20260904-portrait" />
   </head>
   <body>
     <div class="app-shell">
@@ -92,7 +92,7 @@
       </header>
 
       <main class="workspace">
-        <aside class="tool-rail" aria-label="Map tools and signature">
+        <aside id="rangerTools" class="tool-rail" aria-label="Map tools and signature">
           <div class="draw-toolbar edit-workspace-controls" aria-label="Cartography tools">
             <p class="tool-rail-label">Cartography</p>
             <div class="segmented" role="group">
@@ -203,7 +203,12 @@
           </section>
         </section>
 
-        <aside class="panel ledger-panel">
+        <nav class="compact-navigation" aria-label="Map and workspace panels">
+          <button type="button" data-compact-pane="map" aria-pressed="false" aria-controls="map">Map only</button>
+          <button type="button" data-compact-pane="tools" aria-pressed="true" aria-controls="rangerTools">Ranger &amp; tools</button>
+          <button type="button" data-compact-pane="details" aria-pressed="false" aria-controls="atlasDetails">Details &amp; entries</button>
+        </nav>
+        <aside id="atlasDetails" class="panel ledger-panel">
           <nav class="panel-tabs edit-workspace-controls" aria-label="Atlas side panel">
             <button class="panel-tab-button" type="button" data-panel-view="details">Details</button>
             <button class="panel-tab-button is-active" type="button" data-panel-view="browse">Browse Atlas</button>
@@ -865,6 +870,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
     <script src="deployment-config.js"></script>
     <script src="supabase-config.js"></script>
-    <script src="app.js?v=20260902-research-sites"></script>
+    <script src="app.js?v=20260904-portrait"></script>
   </body>
 </html>
