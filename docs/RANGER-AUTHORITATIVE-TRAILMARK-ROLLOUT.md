@@ -49,7 +49,7 @@ controls any official location.
 ### Permissions
 
 The protected permission is `trailmarks.manage`. It is granted to active Ranger
-Commander, Ranger Captain, and Ranger Marshal accounts. Ordinary Rangers can
+First Captain, Captain, and Marshal accounts. Ordinary Rangers can
 always read official locations but cannot create or edit Cities, Towns, or
 Trailmarks, and cannot retire, recover, or calibrate Trailmarks.
 
@@ -136,7 +136,7 @@ name for `Ranger name` and locks the field while the Discord session is active.
 
 Expected policy:
 
-- active Commander, Captain, or Marshal: include `trailmarks.manage`;
+- active First Captain, Captain, or Marshal: include `trailmarks.manage`;
 - other active Rangers: an empty permissions array;
 - former or removed Rangers: `active_input = false`;
 - never expose the Supabase service-role key to Discord messages, the website,

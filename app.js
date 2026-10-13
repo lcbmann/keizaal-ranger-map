@@ -3279,7 +3279,7 @@
       return;
     }
     if (!canManageTrailmarks()) {
-      setStatus("Ranger Marshal permission required");
+      setStatus("Marshal permission required");
       return;
     }
     const gamePosition = getCurrentOutdoorGamePosition();
@@ -3434,7 +3434,7 @@
 
   async function publishMapCalibrationDraft() {
     if (!canManageTrailmarks()) {
-      elements.mapCalibrationStatus.textContent = "Ranger Marshal permission required.";
+      elements.mapCalibrationStatus.textContent = "Marshal permission required.";
       return;
     }
     let calibration;
@@ -5495,10 +5495,15 @@
 
   function normalizeDiscordProfile(value) {
     const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const rankBadges = {
+      "ranger-commander": { id: "first-captain", label: "First Captain" },
+      "ranger-captain": { id: "captain", label: "Captain" },
+      "ranger-marshal": { id: "marshal", label: "Marshal" },
+    };
     const normalizeBadge = (badge) => {
       const id = String(badge?.id || "").toLowerCase();
       const label = String(badge?.label || "").trim().slice(0, 60);
-      return /^[a-z0-9-]+$/.test(id) && label ? { id, label } : null;
+      return /^[a-z0-9-]+$/.test(id) && label ? (rankBadges[id] || { id, label }) : null;
     };
     return {
       version: Number(source.version) >= 2 ? 2 : 1,
@@ -6488,7 +6493,7 @@
       feature.updatedAt = new Date().toISOString();
       if (getFeatureCategories(feature).includes("trailmark")) {
         if (!canManageTrailmarks()) {
-          setStatus("Only Ranger Marshals can create official Trailmarks");
+          setStatus("Only Marshals can create official Trailmarks");
           return;
         }
         const gamePosition = getCurrentOutdoorGamePosition();
@@ -6517,7 +6522,7 @@
       }
       if (isSettlementFeature(feature)) {
         if (!canManageOfficialLocations()) {
-          setStatus("Only Ranger Marshals can create official Cities and Towns");
+          setStatus("Only Marshals can create official Cities and Towns");
           return;
         }
         feature.illustratedPosition = transformPointForMapView(feature.points[0], "illustrated");
@@ -6884,7 +6889,7 @@
     const feature = getSelectedFeature();
     if (!canBeginFeatureMove(feature)) {
       setStatus(isOfficialTrailmarkFeatureSource(feature)
-        ? "Only a verified Ranger Marshal can move an official Trailmark"
+        ? "Only a verified Marshal can move an official Trailmark"
         : "Select a movable marker in Edit Atlas first");
       return;
     }
@@ -7015,7 +7020,7 @@
 
     if (isOfficialCategoryId(event.target.value) && !canManageOfficialLocations()) {
       event.target.checked = false;
-      setStatus("Only Ranger Marshals can create official Trailmarks, Cities, and Towns");
+      setStatus("Only Marshals can create official Trailmarks, Cities, and Towns");
       return;
     }
 
@@ -7110,7 +7115,7 @@
     const isTrailmarkUpdate = isOfficialTrailmark(feature) || getFeatureCategories(updatedFeature).includes("trailmark");
     if (isTrailmarkUpdate) {
       if (!canManageTrailmarks()) {
-        setStatus("Only Ranger Marshals can edit official Trailmarks");
+        setStatus("Only Marshals can edit official Trailmarks");
         return;
       }
       if (updatedFeature.type !== "marker") {
@@ -7149,7 +7154,7 @@
     const isSettlementUpdate = isOfficialSettlementFeatureSource(feature) || isSettlementFeature(updatedFeature);
     if (isSettlementUpdate) {
       if (!canManageOfficialLocations()) {
-        setStatus("Only Ranger Marshals can edit official Cities and Towns");
+        setStatus("Only Marshals can edit official Cities and Towns");
         return;
       }
       if (!isSettlementFeature(updatedFeature)) {
@@ -8369,7 +8374,7 @@
 
   async function loadTrailmarkRecoveryCandidates() {
     if (!canManageTrailmarks()) {
-      elements.trailmarkRecoveryStatus.textContent = "Discord-verified Ranger Marshal permission is required.";
+      elements.trailmarkRecoveryStatus.textContent = "Discord-verified Marshal permission is required.";
       return;
     }
     if (!isSupabaseConfigured()) {
@@ -8605,7 +8610,7 @@
 
   async function publishOfficialTrailmark(feature, reason) {
     if (!canManageTrailmarks()) {
-      throw new Error("Ranger Marshal permission required");
+      throw new Error("Marshal permission required");
     }
     if (feature?.type !== "marker" || !getFeatureCategories(feature).includes("trailmark")) {
       throw new Error("Official Trailmarks must be marker entries with the Trailmark category");
@@ -8699,7 +8704,7 @@
 
   async function publishOfficialSettlement(feature, reason, { refresh = true } = {}) {
     if (!canManageOfficialLocations()) {
-      throw new Error("Ranger Marshal permission required");
+      throw new Error("Marshal permission required");
     }
     if (!isSettlementFeature(feature)) {
       throw new Error("Official settlements must be City or Town markers");
@@ -8746,7 +8751,7 @@
   async function publishLocalOfficialSettlements() {
     const candidates = getLocalSettlementPublishCandidates();
     if (!canManageOfficialLocations()) {
-      elements.officialSettlementStatus.textContent = "Ranger Marshal permission required.";
+      elements.officialSettlementStatus.textContent = "Marshal permission required.";
       return;
     }
     if (!candidates.length) {
@@ -8776,7 +8781,7 @@
 
   async function retireOfficialTrailmarks(features, reason) {
     if (!canManageTrailmarks()) {
-      throw new Error("Ranger Marshal permission required");
+      throw new Error("Marshal permission required");
     }
     const featureIds = features
       .filter(isOfficialTrailmarkFeatureSource)
